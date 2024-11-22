@@ -2,7 +2,7 @@
 #' @title Mass Cytometry Cell Subpopulation Identification
 #' @description MC_CSI enables high-throughput processing of SCP data acquired from MC using up to ~675 available workflows and subsequently assesses the performance of all processing workflows based on comprehensive criteria from the perspective of CSI studies, functioning similarly to a combination of MCprocess() and CSIassess(), while utilizing less memory during execution.
 #'
-#' @param name Character, the filename of all the files in the "assess_res" folder which will store assessment results.
+#' @param name Character, the filename of all the files in the "assess_res" folder which will store the assessment results.
 #' @param datapath Character, the absolute path of the folder storing the FCS raw data files and metadata file.
 #' @param mergeM Character, the method of merging multiple FCS files. When multiple FCS files are selected, cells can be combined using one of the four different methods including "Fixed", "Ceil", "All" and "Min".
 #'   <br>**Fixed**: a fixed num (specified by fixedNum) of cells are sampled (with replacement when the total number of cell is less than fixedNum) from each FCS file and combined for analysis.
@@ -37,16 +37,16 @@
 #' @param save_processed_res Character, the form of data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store files of the assessment and processed results.
 #'
-#' @return the data processing and performance assessment output files, which are located in the **process_res** and **assess_res** folders, respectively.
+#' @return The data processing and performance assessment output files, which are located in the **process_res** and **assess_res** folders, respectively.
 #'   ## Results of Data Processing
 #'   The **process_res** folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter `save_processed_res`: "no" denotes that the results would not be saved; "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder \[*default ="one_folder"*\].
 #'   ## Results of Performance Assessment
 #'   The **assess_res** folder stores the results of performance assessment, which includes 3 files:
 #'   <br>(**1**) **_Ranking_Table.csv** contains the overall ranking results of all data processing workflows, where the "Rank" column represents the overall ranking, and the "Value" column shows the scores for different assessment criteria.
 #'   <br>(**2**) **_Ranking_Figure.pdf** visualizes the overall ranking results to help users better understand the differences among various data processing workflows. Different colors represent different performance assessment levels: dark green indicates "superior," light green indicates "good," and red indicates "poor."
-#'   <br>(**3**) **_assess.RData** contains 2 lists, "table" and "table2", which provide the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+#'   <br>(**3**) **_assess.RData** contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
 #'   ## Records
-#'   In addition, **log.txt** and **info_saved.RData** files are also generated simultaneously. **log.txt** records the processing details while **info_saved.RData** records the information related to "metadata" and "index_protein".
+#'   In addition, the files **log.txt** and **info_saved.RData** are also generated simultaneously. **log.txt** records the processing details while **info_saved.RData** records the information related to "metadata" and "index_protein".
 #' @export
 #'
 #' @examples
@@ -76,7 +76,8 @@ MC_CSI <- function(name, datapath,
 ) {
   metadata <- paste0(datapath, "/metadata.csv")
   if (save_processed_res == "one_RData") {
-    MCprocess_res <- MCprocess(datapath = datapath,
+    MCprocess_res <- MCprocess(name = name,
+                               datapath = datapath,
                                metadata = metadata,
                                studytype = "CSI", mergeM = mergeM, fixedNum = fixedNum,
                                compensationM = compensationM,
@@ -87,14 +88,15 @@ MC_CSI <- function(name, datapath,
                                beads_mass = beads_mass,
                                index_protein = index_protein,
                                save_processed_res = save_processed_res,
+                               savepath = savepath,
                                cores = cores)
-    if (!dir.exists(paste0(savepath, "/process_res"))) {
-      dir.create(paste0(savepath, "/process_res"), recursive = T)
-    }
-    save(MCprocess_res, file = paste0(savepath, "/process_res/", name, ".RData"))
-    MCprocess_assess_res <- CSIassess(MCprocess_res, clusteringM = clusteringM, Phenograph_k = Phenograph_k, ncluster = ncluster, DEP = DEP, cores = cores)
-  } else if (save_processed_res %in% c("no", "one_folder")) {
+    MCprocess_assess_res <- CSIassess(name = name, data = MCprocess_res, clusteringM = clusteringM,
+                                      Phenograph_k = Phenograph_k, ncluster = ncluster, DEP = DEP,
+                                      save_processed_res = save_processed_res,savepath = savepath,
+                                      cores = cores)
+  } else if (save_processed_res == "one_folder") {
     MCprocess_assess_res <- oneStep_process_assess(
+      name = name,
       datapath = datapath,
       metadata = metadata,
       techique = "MC",
@@ -116,10 +118,5 @@ MC_CSI <- function(name, datapath,
     )
   }
 
-  if (!dir.exists(paste0(savepath, "/assess_res"))) {
-    dir.create(paste0(savepath, "/assess_res"), recursive = T)
-  }
-  save(MCprocess_assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
-  # write.csv(MCprocess_assess_res$table, file = paste0(savepath, "/assess_res/", name, "_assess_table.csv"))
   Ranking(MCprocess_assess_res, name = name, savepath = paste0(savepath, "/assess_res"))
 }

@@ -31,16 +31,84 @@ Process(
   CATALYSTM = c("flow", "nnls"),
   beads_mass = c(140, 151, 153, 165, 175),
   index_protein = NULL,
-  save_processed_res = c("no", "one_folder", "one_RData"),
+  save_processed_res = "one_folder",
   savepath = "./",
   cores = floor(parallel::detectCores()/2)
 )
 }
 \arguments{
-\item{cores}{}
+\item{name}{Character, the filename of the RData file when the "save_processed_res" parameter is set to "one_RData".}
+
+\item{datapath}{Character, the absolute path of the folder storing the FCS raw data files and metadata file.}
+
+\item{techique}{Character, the technique type used in acquiring the SCP data.}
+
+\item{studytype}{Character, the type of your study, including "CSI (Cell Subpopulation Identification)" and "PTI (Pseudotime Trajectory Inference)".}
+
+\item{mergeM}{Character, the method of merging multiple FCS files. When multiple FCS files are selected, cells can be combined using one of the four different methods including "Fixed", "Ceil", "All" and "Min".
+\if{html}{\out{<br>}}\strong{Fixed}: a fixed num (specified by fixedNum) of cells are sampled (with replacement when the total number of cell is less than fixedNum) from each FCS file and combined for analysis.
+\if{html}{\out{<br>}}\strong{Ceil}: up to a fixed number (specified by fixedNum) of cells are sampled without replacement from each FCS file and combined for analysis.
+\if{html}{\out{<br>}}\strong{All}: all cells from each FCS file are combined for analysis.
+\if{html}{\out{<br>}}\strong{Min}: The minimum number of cells among all the selected FCS files are sampled from each FCS file and combined for analysis.}
+
+\item{fixedNum}{Integer, the fixed number of cells to be extracted from each FCS file.
+\if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
+
+\item{compensationM}{Character, the method(s) of compensation for flow cytometry data including "AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto" and "None". Compensation refers to the processing step of removing unwanted spillover resulting from signal crosstalk and spectral overlap across detection channels.
+\if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
+
+\item{transformationM}{Character, the method(s) of transformation for flow cytometry data including "Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value", "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation", "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Scale Transformation", "Truncate Transformation" and "None". Transformation refers to the processing step of adjusting the data with a heavily skewed distribution to a normal distribution.
+\if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
+
+\item{normalizationM}{Character, the method(s) of normalization for flow cytometry data, including "Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore" and "None". Normalization refers to the processing step of eliminating signal decay and technical variability across all files and batches over long-term data acquisition.
+\if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
+
+\item{signalcleanM}{Character, the method(s) of signal clean for flow cytometry data, including "FlowAI", "FlowClean", "FlowCut" and "None". Signal cleaning refers to the processing step of identifying and removing abrupt signal shifts and changes that derive from (i) abrupt changes in the flow rate, (ii) clogs within the capillary tubes, (iii) temporary disruptions in cytometer fluidics, and (iv) unstable data acquisition.
+\if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
+
+\item{spillpath}{Character, the absolute filepath(s) of compensation beads or cells. The spillover information for a particular experiment is often obtained by running several tubes of beads or cells stained with a single color that can then be used to determine a spillover matrix for use.
+\if{html}{\out{<br>}}Only needed when "FlowCore" is included in the argument of "compensationM".The filenames of the FCS files must correspond to the names of stain channels. If the original FCS files contain a pre-calculated spillover matrix as the value of the $SPILLOVER, $spillover or $SPILL keywords, this can be set as NULL.}
+
+\item{FSC}{Character, the name of the forward scatter parameter.
+\if{html}{\out{<br>}}Only needed when "FlowCore" is included in the argument of "compensationM".}
+
+\item{SSC}{Character, the name of the side scatter parameter.
+\if{html}{\out{<br>}}Only needed when "FlowCore" is included in the argument of "compensationM".}
+
+\item{control.dir}{Character, the absolute path of the folder storing the FCS files of single-color controls.
+\if{html}{\out{<br>}}Only needed when "AutoSpill" is included in the argument of "compensationM".}
+
+\item{control.def.file}{Character, the absolute filepath of the CSV file defining the filenames and corresponding channels of the single-color controls.
+\if{html}{\out{<br>}}Only needed when "AutoSpill" is included in the argument of "compensationM".}
+
+\item{single_pos_fcs}{Character, the absolute filepath of the FCS file containing stained samples and control antibody-capture beads/pooled single-stained beads.
+\if{html}{\out{<br>}}Only needed when "CATALYST" is included in the argument of "compensationM".}
+
+\item{single_pos_mass}{Integer, the masses corresponding to barcode channels.
+\if{html}{\out{<br>}}Only needed when "CATALYST" is included in the argument of "compensationM".}
+
+\item{CATALYSTM}{Character, the method for solving linear system, including "flow" and "nnls".
+\if{html}{\out{<br>}}Only needed when "CATALYST" is included in the argument of "compensationM".}
+
+\item{beads_mass}{Integer, the masses of the corresponding calibration beads.
+\if{html}{\out{<br>}}Only needed when "Bead-based Normalization" is included in the argument of "normalizationM".}
+
+\item{index_protein}{Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
+\if{html}{\out{<br>}}It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".}
+
+\item{save_processed_res}{Character, the form of data processing output files. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
+
+\item{savepath}{Character, the absolute path of the folder which will store the processed results.}
+
+\item{cores}{Integer, the number of CPU cores to be employed for performing parallel computing.
+\if{html}{\out{<br>}}To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.}
+}
+\value{
+The \strong{process_res} folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter \code{save_processed_res}: "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder [\emph{default ="one_folder"}].
+\if{html}{\out{<br>}}In addition, the files \strong{log.txt} and \strong{info_saved.RData} are also generated simultaneously. \strong{log.txt} records the processing details while \strong{info_saved.RData} records the information related to "metadata" and "index_protein".
 }
 \description{
-Process
+Process() enables high-throughput processing for SCP data acquired from FC or MC by the most available workflows respectively, based on parallel computing (each workflow is distinct by combining different methods of compensation, transformation, normalization and signal clean), which facilitates the subsequent application of performance assessment, ranking and plotting.
 }
 \examples{
 \donttest{

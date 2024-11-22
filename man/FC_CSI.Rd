@@ -34,7 +34,7 @@ FC_CSI(
 )
 }
 \arguments{
-\item{name}{Character, the filename of all the files in the "assess_res" folder which will store assessment results.}
+\item{name}{Character, the filename of all the files in the "assess_res" folder which will store the assessment results.}
 
 \item{datapath}{Character, the absolute path of the folder storing the FCS raw data files and metadata file.}
 
@@ -105,7 +105,7 @@ The \strong{process_res} folder stores the results of various data processing wo
 The \strong{assess_res} folder stores the results of performance assessment, which includes 3 files:
 \if{html}{\out{<br>}}(\strong{1}) \strong{_Ranking_Table.csv} contains the overall ranking results of all data processing workflows, where the "Rank" column represents the overall ranking, and the "Value" column shows the scores for different assessment criteria.
 \if{html}{\out{<br>}}(\strong{2}) \strong{_Ranking_Figure.pdf} visualizes the overall ranking results to help users better understand the differences among various data processing workflows. Different colors represent different performance assessment levels: dark green indicates "superior," light green indicates "good," and red indicates "poor."
-\if{html}{\out{<br>}}(\strong{3}) \strong{_assess.RData} contains 2 lists, "table" and "table2", which provide the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+\if{html}{\out{<br>}}(\strong{3}) \strong{_assess.RData} contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
 }
 
 \subsection{Records}{
@@ -114,7 +114,7 @@ In addition, \strong{log.txt} and \strong{info_saved.RData} files are also gener
 }
 }
 \description{
-FC_CSI enables high-throughput processing of SCP data acquired from FC using up to ~960 available workflows and subsequently assesses the performance of all processing workflows based on comprehensive criteria from the perspective of CSI studies, functioning similarly to a combination of FCprocess() and CSIassess(), while utilizing less memory during execution.
+FC_CSI() enables high-throughput processing of SCP data acquired from FC using up to ~960 available workflows and subsequently assesses the performance of all processing workflows based on comprehensive criteria from the perspective of CSI studies, functioning similarly to a combination of FCprocess() and CSIassess(), while utilizing less memory during execution.
 }
 \examples{
 \donttest{

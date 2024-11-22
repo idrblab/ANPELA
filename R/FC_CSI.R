@@ -1,8 +1,8 @@
 
 #' @title Flow Cytometry Cell Subpopulation Identification
-#' @description FC_CSI enables high-throughput processing of SCP data acquired from FC using up to ~960 available workflows and subsequently assesses the performance of all processing workflows based on comprehensive criteria from the perspective of CSI studies, functioning similarly to a combination of FCprocess() and CSIassess(), while utilizing less memory during execution.
+#' @description FC_CSI() enables high-throughput processing of SCP data acquired from FC using up to ~960 available workflows and subsequently assesses the performance of all processing workflows based on comprehensive criteria from the perspective of CSI studies, functioning similarly to a combination of FCprocess() and CSIassess(), while utilizing less memory during execution.
 #'
-#' @param name Character, the filename of all the files in the "assess_res" folder which will store assessment results.
+#' @param name Character, the filename of all the files in the "assess_res" folder which will store the assessment results.
 #' @param datapath Character, the absolute path of the folder storing the FCS raw data files and metadata file.
 #' @param mergeM Character, the method of merging multiple FCS files. When multiple FCS files are selected, cells can be combined using one of the four different methods including "Fixed", "Ceil", "All" and "Min".
 #'   <br>**Fixed**: a fixed num (specified by fixedNum) of cells are sampled (with replacement when the total number of cell is less than fixedNum) from each FCS file and combined for analysis.
@@ -48,7 +48,7 @@
 #'   The **assess_res** folder stores the results of performance assessment, which includes 3 files:
 #'   <br>(**1**) **_Ranking_Table.csv** contains the overall ranking results of all data processing workflows, where the "Rank" column represents the overall ranking, and the "Value" column shows the scores for different assessment criteria.
 #'   <br>(**2**) **_Ranking_Figure.pdf** visualizes the overall ranking results to help users better understand the differences among various data processing workflows. Different colors represent different performance assessment levels: dark green indicates "superior," light green indicates "good," and red indicates "poor."
-#'   <br>(**3**) **_assess.RData** contains 2 lists, "table" and "table2", which provide the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+#'   <br>(**3**) **_assess.RData** contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
 #'   ## Records
 #'   In addition, **log.txt** and **info_saved.RData** files are also generated simultaneously. **log.txt** records the processing details while **info_saved.RData** records the information related to "metadata" and "index_protein".
 #' @export
@@ -81,7 +81,8 @@ FC_CSI <- function(name, datapath,
 
   metadata <- paste0(datapath, "/metadata.csv")
   if (save_processed_res == "one_RData") {
-    FCprocess_res <- FCprocess(datapath = datapath,
+    FCprocess_res <- FCprocess(name = name,
+                               datapath = datapath,
                                metadata = metadata,
                                studytype = "CSI", mergeM = mergeM, fixedNum = fixedNum,
                                compensationM = compensationM,
@@ -92,14 +93,15 @@ FC_CSI <- function(name, datapath,
                                control.dir = control.dir, control.def.file = control.def.file,
                                index_protein = index_protein,
                                save_processed_res = save_processed_res,
+                               savepath = savepath,
                                cores = cores)
-    if (!dir.exists(paste0(savepath, "/process_res"))) {
-      dir.create(paste0(savepath, "/process_res"), recursive = T)
-    }
-    save(FCprocess_res, file = paste0(savepath, "/process_res/", name, ".RData"))
-    FCprocess_assess_res <- CSIassess(FCprocess_res, clusteringM = clusteringM, Phenograph_k = Phenograph_k, ncluster = ncluster, DEP = DEP, cores = cores)
-  }  else if (save_processed_res %in% c("no", "one_folder")) {
+    FCprocess_assess_res <- CSIassess(name = name, data = FCprocess_res, clusteringM = clusteringM,
+                                      Phenograph_k = Phenograph_k, ncluster = ncluster, DEP = DEP,
+                                      save_processed_res = save_processed_res,savepath = savepath,
+                                      cores = cores)
+  } else if (save_processed_res == "one_folder") {
     FCprocess_assess_res <- oneStep_process_assess(
+      name = name,
       datapath = datapath,
       metadata = metadata,
       techique = "FC",
@@ -120,10 +122,6 @@ FC_CSI <- function(name, datapath,
       savepath = savepath
     )
   }
-  if (!dir.exists(paste0(savepath, "/assess_res"))) {
-    dir.create(paste0(savepath, "/assess_res"), recursive = T)
-  }
-  save(FCprocess_assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
-  # write.csv(FCprocess_assess_res$table, file = paste0(savepath, "/assess_res/", name, "_assess_table.csv"))
+
   Ranking(FCprocess_assess_res, name = name, savepath = paste0(savepath, "/assess_res"))
 }

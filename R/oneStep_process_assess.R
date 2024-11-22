@@ -1,107 +1,3 @@
-Process <- function(
-    name,
-    datapath,
-    techique = c("MC", "FC"),
-    studytype = c("CSI", "PTI"),
-    mergeM = c("Fixed", "Ceil", "All", "Min"),
-    fixedNum = 200,
-    compensationM = c("AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto", "None"),
-    transformationM = c("Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value",
-                        "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation",
-                        "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Scale Transformation", "Truncate Transformation",
-                        "None"),
-    normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "None"),
-    signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "None"),
-    spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H",
-    control.dir = NULL, control.def.file = NULL,
-    single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = c("flow", "nnls"),
-    beads_mass = c(140, 151, 153, 165, 175),
-    index_protein = NULL,
-    save_processed_res = c("no", "one_folder", "one_RData"),
-    savepath = "./",
-    cores = floor(parallel::detectCores()/2)
-){
-  metadata <- paste0(datapath, "/metadata.csv")
-  if (techique == "MC"){
-    MCprocess_res <- MCprocess(datapath = datapath,
-                               metadata = metadata,
-                               studytype = studytype, mergeM = mergeM, fixedNum = fixedNum,
-                               compensationM = compensationM,
-                               transformationM = transformationM,
-                               normalizationM = normalizationM,
-                               signalcleanM = signalcleanM,
-                               single_pos_fcs = single_pos_fcs, single_pos_mass = single_pos_mass, CATALYSTM = "nnls",
-                               beads_mass = beads_mass,
-                               index_protein = index_protein,
-                               save_processed_res = save_processed_res,
-                               savepath = savepath,
-                               cores = cores)
-    if (save_processed_res == "one_RData"){
-      if (!dir.exists(paste0(savepath, "/process_res"))) {
-        dir.create(paste0(savepath, "/process_res"), recursive = T)
-      }
-      save(MCprocess_res, file = paste0(savepath, "/process_res/", name, ".RData"))
-    }
-    return(MCprocess_res)
-  } else if (techique == "FC"){
-    FCprocess_res <- FCprocess(datapath = datapath,
-                               metadata = metadata,
-                               studytype = studytype, mergeM = mergeM, fixedNum = fixedNum,
-                               compensationM = compensationM,
-                               transformationM = transformationM,
-                               normalizationM = normalizationM,
-                               signalcleanM = signalcleanM,
-                               spillpath = spillpath, FSC = FSC, SSC = SSC,
-                               control.dir = control.dir, control.def.file = control.def.file,
-                               index_protein = index_protein,
-                               save_processed_res = save_processed_res,
-                               savepath = savepath,
-                               cores = cores)
-    if (save_processed_res == "one_RData"){
-      if (!dir.exists(paste0(savepath, "/process_res"))) {
-        dir.create(paste0(savepath, "/process_res"), recursive = T)
-      }
-      save(FCprocess_res, file = paste0(savepath, "/process_res/", name, ".RData"))
-    }
-    return(FCprocess_res)
-  }
-}
-
-
-Assess <- function(
-    name, data = NULL, respath =NULL,
-    studytype = c("CSI", "PTI"),
-    clusteringM = "FlowSOM",
-    ncluster = 8,
-    Phenograph_k = 30,
-    DEP = NULL,
-
-    TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE",
-            "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
-    pathwayhierarchy = NULL,
-    cores = floor(parallel::detectCores()/2),
-    save_processed_res = c("no", "one_folder", "one_RData"),
-    savepath = "./"
-){
-  if(studytype == "CSI"){
-    assess_res <- CSIassess(data = data, respath = respath, clusteringM = clusteringM,
-                            Phenograph_k = Phenograph_k, ncluster = ncluster,
-                            DEP = DEP, cores = cores,
-                            save_processed_res = save_processed_res)
-
-
-  } else if (studytype == "PTI"){
-    assess_res <- PTIassess(data = data, respath = respath, TIM = TIM, pathwayhierarchy = pathwayhierarchy,
-                            cores = cores,save_processed_res = save_processed_res)
-  }
-  if (!dir.exists(paste0(savepath, "/assess_res"))) {
-    dir.create(paste0(savepath, "/assess_res"), recursive = T)
-  }
-  save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
-  Ranking(assess_res, name = name, savepath = paste0(savepath, "/assess_res"))
-  return(assess_res)
-}
-
 oneStep_process_assess <- function(
     # the parameters of data processing
   datapath,
@@ -131,6 +27,7 @@ oneStep_process_assess <- function(
   index_protein = NULL,
 
   # the parameters of workflow assessment
+  name,
   clusteringM = c("FlowSOM", "PhenoGraph"),
   ncluster = 8,
   Phenograph_k = 30,
@@ -146,7 +43,7 @@ oneStep_process_assess <- function(
 
   # other parameters
   cores = floor(parallel::detectCores()/2),
-  save_processed_res = c("no", "one_folder", "one_RData"),
+  save_processed_res ="one_folder",
   savepath = "./"
 ){
 
@@ -616,7 +513,7 @@ oneStep_process_assess <- function(
   time = proc.time()
 
   table <- foreach::foreach(i = 1:nrow(workflow), .options.snow = opts,
-                            .packages = c("dplyr", "flowCore", "foreach", "magrittr"), .combine = rbind) %dopar% {
+                            .packages = c("dplyr", "flowCore", "foreach", "magrittr","mclust"), .combine = rbind) %dopar% {
 
                               print(i)
                               ########### start data processing ###########
@@ -1053,5 +950,11 @@ oneStep_process_assess <- function(
     table2["Correspondence"][table2["Correspondence"] < 0.8 & table2["Correspondence"] > 0.6] <- 8
     table2["Correspondence"][table2["Correspondence"] <= 0.6] <- 1
   }
-  return(list(table = table, table2 = table2))
+
+  assess_res <- list(table = table, table2 = table2)
+  if (!dir.exists(paste0(savepath, "/assess_res"))) {
+    dir.create(paste0(savepath, "/assess_res"), recursive = T)
+  }
+  save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
+  return(assess_res)
 }

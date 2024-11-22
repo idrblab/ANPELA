@@ -5,6 +5,7 @@
 \title{CSI (Cell Subpopulation Identification) Assess}
 \usage{
 CSIassess(
+  name,
   data,
   respath,
   clusteringM = c("FlowSOM", "PhenoGraph", "Mclust"),
@@ -15,15 +16,18 @@ CSIassess(
   Cc_metric = "relative weighted consistency (CWrel)",
   ntop = NULL,
   DEP = NULL,
-  save_processed_res = c("no", "one_folder", "one_RData"),
+  save_processed_res = "one_folder",
+  savepath = "./",
   cores = floor(parallel::detectCores()/2),
   ...
 )
 }
 \arguments{
-\item{data}{Character, the resulting RData file of the function "Process", "FCprocess" or "MCprocess" when the "save_processed_res" parameter in these functions is set to "one_RData".}
+\item{name}{Character, the filename of the RData file in the "assess_res" folder which will store the assessment results.}
 
-\item{respath}{Character, the absolute path of the folder storing the resulting RData files of the function "Process", "FCprocess" or "MCprocess" when the "save_processed_res" parameter in these functions is set to "one_folder".}
+\item{data}{Character, the absolute filepath of the resulting RData file of the function "Process", "FCprocess" or "MCprocess" when the \code{save_processed_res} parameter in these functions is set to "one_RData".}
+
+\item{respath}{Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the \code{save_processed_res} parameter in these functions is set to "one_folder".}
 
 \item{clusteringM}{Character, the method of clustering the processed data prior to performance assessment, including "FlowSOM" and "PhenoGraph".
 \if{html}{\out{<br>}}\strong{FlowSOM}: a widely used cluster clustering algorithm designed for high-dimensional cytometry data (the number of clusters needs to be specified). ANPELA uses the function “SOM” in R package "FlowSOM" to implement the algorithm.
@@ -56,20 +60,19 @@ CSIassess(
 
 \item{DEP}{Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.}
 
-\item{save_processed_res}{Character, the form of data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
+\item{save_processed_res}{Character, the form of data processing output files. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
+
+\item{savepath}{Character, the absolute path of the folder which will store the assessment results.}
 
 \item{cores}{Integer, the number of CPU cores to be employed for performing parallel computing.
 \if{html}{\out{<br>}}To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.}
-
-\item{name}{Character, the filename of all the files in the "assess_res" folder which will store the assessment results.}
-
-\item{savepath}{Character, the absolute path of the folder which will store files of the assessment and processed results.}
 }
 \value{
-A list containing 2 tables, "table" and "table2", which provide the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+The \strong{assess_res} folder stores the assessment output file named \code{name}\strong{_assess.RData}, which contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+\if{html}{\out{<br>}}In addition, the file \strong{log.txt} is also generated simultaneously, recording the processing details.
 }
 \description{
-CSIassess assesses processing performance of all workflows which are used while running the function ""FCprocess" or "MCprocess" based on comprehensive criteria (each with distinct underlying theories) from the perspective of CSI studies.
+CSIassess() assesses processing performance of all workflows which are used while running the function ""FCprocess" or "MCprocess" based on comprehensive criteria (each with distinct underlying theories) from the perspective of CSI studies.
 }
 \examples{
 \donttest{

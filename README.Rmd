@@ -20,7 +20,32 @@ knitr::opts_chunk$set(
 
 The goal of ANPELA is to ...
 
-## Installation
+## Contents
+
+- [Overview](#overview)
+- [Repo Contents](#repo-contents)
+- [System Requirements](#system-requirements)
+- [Installation Guide](#installation-guide)
+- [Demo](#demo)
+- [Instuctions for Use](#instructions-for-use)
+
+## Overview
+
+## Repo Contents
+
+## System Requirements
+
+All software dependencies and operating systems (including version numbers)
+
+Versions the software has been tested on
+
+Any required non-standard hardware
+
+## Installation Guide
+
+Instructions
+
+Typical install time on a "normal" desktop computer
 
 You can install the development version of ANPELA like so:
 
@@ -28,7 +53,17 @@ You can install the development version of ANPELA like so:
 # FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
 ```
 
-## Example
+## Demo
+
+Instructions to run on data
+
+Expected output
+
+Expected run time for demo on a "normal" desktop computer
+
+## Instructions for Use
+
+How to run the software on your data
 
 This is a basic example which shows you how to solve a common problem:
 

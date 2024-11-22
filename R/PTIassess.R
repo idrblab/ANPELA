@@ -1,21 +1,20 @@
 
 #' @title PTI (Pseudotime Trajectory Inference) Assess
-#' @description PTIassess assesses processing performance of all workflows which are used while running the function "FCprocess" or "MCprocess" based on comprehensive criteria (each with distinct underlying theories) from the perspective of PTI studies.
-#' @param name Character, the filename of all the files in the "assess_res" folder which will store the assessment results.
-#' @param data Character, the resulting RData file of the function "Process", "FCprocess" or "MCprocess" when the "save_processed_res" parameter in these functions is set to "one_RData".
-#' @param respath Character, the absolute path of the folder storing the resulting RData files of the function "Process", "FCprocess" or "MCprocess" when the "save_processed_res" parameter in these functions is set to "one_folder".
-#' @param TIM The method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear", "scorpius_distManh","slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps" and "prinCurves_diffMaps".
+#' @description PTIassess() assesses processing performance of all workflows which are used while running the function "FCprocess" or "MCprocess" based on comprehensive criteria (each with distinct underlying theories) from the perspective of PTI studies.
+#' @param name Character, the filename of the RData file in the "assess_res" folder which will store the assessment results.
+#' @param data Character, the absolute filepath of the resulting RData file of the function "Process", "FCprocess" or "MCprocess" when the `save_processed_res` parameter in these functions is set to "one_RData".
+#' @param respath Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the `save_processed_res` parameter in these functions is set to "one_folder".
+#' @param TIM Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".
 #' @param Cc_metric Character, the assessing metric under Criterion Cc for the "PTI" study type, including "Spearman correlation" and "Kendall Rank Correlation".
 #'   <br>**Spearman correlation**: a metric that measures the monotonic relationship between two ranked variables by measuring how well the relationship between the variables can be described by a monotonic function, with values closer to ±1 indicating a stronger monotonic association.*
 #'   <br>**Kendall Rank Correlation**: a metric that evaluates the similarity between two rankings by calculating the proportion of concordant and discordant pairs, with higher values indicating a stronger agreement in the relative ordering between the variables.
 #' @param pathwayhierarchy Character, the absolute filepath of the pathway hierarchy file.
-#' @param save_processed_res Character, the form of data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
-#' @param save_processed_res Character, the form of data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
-#' @param savepath Character, the absolute path of the folder which will store files of the assessment and processed results.
-#'
-#' @return A list containing 2 tables, "table" and "table2", which provide the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+#' @param save_processed_res Character, the form of data processing output files. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
+#' @param savepath Character, the absolute path of the folder which will store the assessment results.
+#' @return The **assess_res** folder stores the assessment output file named `name`**_assess.RData**, which contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+#'   <br>In addition, the file **log.txt** is also generated simultaneously, recording the processing details.
 #' @export
 #'
 #' @examples
@@ -23,12 +22,14 @@
 #' }
 
 
-PTIassess <- function(data, respath,
+
+PTIassess <- function(name, data, respath,
                       TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE",
                               "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
                       Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
                       pathwayhierarchy = NULL,
-                      save_processed_res = c("no", "one_folder","one_RData"),
+                      save_processed_res = "one_folder",
+                      savepath = "./",
                       cores = floor(parallel::detectCores()/2),
                       ...) {
   # data
@@ -39,7 +40,7 @@ PTIassess <- function(data, respath,
     }else if (any(sapply(data, is.null))) {
       stop("The parameter of 'data' is incorrect. Please check the data.")
     }
-  } else if (save_processed_res %in% c("no", "one_folder")) {
+  } else if (save_processed_res == "one_folder") {
     info_saved <- try(load(paste0(respath, "/info_saved.RData")), silent = T)
     datapath <- list.files(paste0(respath, "/process_res/"), pattern = "\\.RData$", full.names = T)
     if (class(info_saved) == "try-error") {
@@ -183,7 +184,7 @@ PTIassess <- function(data, respath,
     parallel::stopCluster(cl)
     print(proc.time()-time)
     # parallel end
-  }else if (save_processed_res %in% c("no", "one_folder")) {
+  }else if (save_processed_res == "one_folder") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))
     cl <- parallel::makeCluster(cores, type = "SOCK")
@@ -317,6 +318,10 @@ PTIassess <- function(data, respath,
   table2["Correspondence"][table2["Correspondence"] < 0.8 & table2["Correspondence"] > 0.6] <- 8
   table2["Correspondence"][table2["Correspondence"] <= 0.6] <- 1
 
-  return(list(table = table, table2 = table2))
+  assess_res <- list(table = table, table2 = table2)
+  if (!dir.exists(paste0(savepath, "/assess_res"))) {
+    dir.create(paste0(savepath, "/assess_res"), recursive = T)
+  }
+  save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
+  return(assess_res)
 }
-

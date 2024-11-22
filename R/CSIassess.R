@@ -1,9 +1,9 @@
 
 #' @title CSI (Cell Subpopulation Identification) Assess
-#' @description CSIassess assesses processing performance of all workflows which are used while running the function ""FCprocess" or "MCprocess" based on comprehensive criteria (each with distinct underlying theories) from the perspective of CSI studies.
-#' @param name Character, the filename of all the files in the "assess_res" folder which will store the assessment results.
-#' @param data Character, the resulting RData file of the function "Process", "FCprocess" or "MCprocess" when the "save_processed_res" parameter in these functions is set to "one_RData".
-#' @param respath Character, the absolute path of the folder storing the resulting RData files of the function "Process", "FCprocess" or "MCprocess" when the "save_processed_res" parameter in these functions is set to "one_folder".
+#' @description CSIassess() assesses processing performance of all workflows which are used while running the function ""FCprocess" or "MCprocess" based on comprehensive criteria (each with distinct underlying theories) from the perspective of CSI studies.
+#' @param name Character, the filename of the RData file in the "assess_res" folder which will store the assessment results.
+#' @param data Character, the absolute filepath of the resulting RData file of the function "Process", "FCprocess" or "MCprocess" when the `save_processed_res` parameter in these functions is set to "one_RData".
+#' @param respath Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the `save_processed_res` parameter in these functions is set to "one_folder".
 #' @param clusteringM Character, the method of clustering the processed data prior to performance assessment, including "FlowSOM" and "PhenoGraph".
 #'   <br>**FlowSOM**: a widely used cluster clustering algorithm designed for high-dimensional cytometry data (the number of clusters needs to be specified). ANPELA uses the function “SOM” in R package "FlowSOM" to implement the algorithm.
 #'   <br>**PhenoGraph**: a well-designed clustering algorithm developed to define phenotypes in high-dimensional single-cell data (the number of clusters need not be specified). ANPELA uses the function “Rphenograph” in R package "cytofkit".
@@ -29,10 +29,10 @@
 #' @param DEP Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
-#' @param save_processed_res Character, the form of data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
-#' @param savepath Character, the absolute path of the folder which will store files of the assessment and processed results.
-#'
-#' @return A list containing 2 tables, "table" and "table2", which provide the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+#' @param save_processed_res Character, the form of data processing output files. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
+#' @param savepath Character, the absolute path of the folder which will store the assessment results.
+#' @return The **assess_res** folder stores the assessment output file named `name`**_assess.RData**, which contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+#'   <br>In addition, the file **log.txt** is also generated simultaneously, recording the processing details.
 #' @export
 #'
 #' @examples
@@ -40,7 +40,8 @@
 #' }
 
 
-CSIassess <- function(data, respath,
+
+CSIassess <- function(name, data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
                       ncluster = 8,
@@ -49,7 +50,8 @@ CSIassess <- function(data, respath,
                       Cc_metric = "relative weighted consistency (CWrel)",
                       ntop = NULL,
                       DEP = NULL,
-                      save_processed_res = c("no", "one_folder","one_RData"),
+                      save_processed_res = "one_folder",
+                      savepath = "./",
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # data & info_saved & process_res
@@ -59,7 +61,7 @@ CSIassess <- function(data, respath,
     }else if (any(sapply(data, is.null))) {
       stop("The parameter of 'data' is incorrect. Please check the data.")
     }
-  } else if (save_processed_res %in% c("no", "one_folder")) {
+  } else if (save_processed_res == "one_folder") {
     info_saved <- try(load(paste0(respath, "/info_saved.RData")), silent = T)
     datapath <- list.files(paste0(respath, "/process_res/"), pattern = "\\.RData$", full.names = T)
     if (class(info_saved) == "try-error") {
@@ -121,7 +123,7 @@ CSIassess <- function(data, respath,
       } else if (ntop >= length(data$index_TIclass) || ntop %% 1 != 0 || ntop <= 0) {
         stop("The value of 'ntop' is incorrect. It should be positive whole number and less than the number of your selected markers.")
       }
-    } else if (save_processed_res %in% c("no", "one_folder")) {
+    } else if (save_processed_res == "one_folder") {
       if (missing(ntop)) {
         ntop <- floor(length(info_saved$index_TIclass)/2)
       } else if (ntop >= length(info_saved$index_TIclass) || ntop %% 1 != 0 || ntop <= 0) {
@@ -138,7 +140,7 @@ CSIassess <- function(data, respath,
     cat("*************************************************************************", "\n")
     if (save_processed_res == "one_RData") {
       cat(paste0(colnames(data$AP2_pro1_frame_classTI[vapply(data$AP2_pro1_frame_classTI, Negate(is.null), NA)][[1]][[1]]@exprs), collapse = "\n"), "\n")
-    } else if (save_processed_res %in% c("no", "one_folder")) {
+    } else if (save_processed_res == "one_folder") {
       load(datapath[1])
       cat(paste0(colnames(res[[1]]@exprs), collapse = "\n"), "\n")
       rm(res)
@@ -373,7 +375,7 @@ CSIassess <- function(data, respath,
     parallel::stopCluster(cl)
     print(proc.time()-time)
     # parallel end
-  } else if (save_processed_res %in% c("no", "one_folder")) {
+  } else if (save_processed_res == "one_folder") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))
     cl <- parallel::makeCluster(cores, type = "SOCK",outfile="log.txt")
@@ -619,5 +621,10 @@ CSIassess <- function(data, respath,
   table2["Correspondence"][table2["Correspondence"] < 0.8 & table2["Correspondence"] > 0.5] <- 8
   table2["Correspondence"][table2["Correspondence"] <= 0.5] <- 1
 
-  return(list(table = table, table2 = table2))
+  assess_res <- list(table = table, table2 = table2)
+  if (!dir.exists(paste0(savepath, "/assess_res"))) {
+    dir.create(paste0(savepath, "/assess_res"), recursive = T)
+  }
+  save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
+  return(assess_res)
 }

@@ -33,7 +33,7 @@ MC_CSI(
 )
 }
 \arguments{
-\item{name}{Character, the filename of all the files in the "assess_res" folder which will store assessment results.}
+\item{name}{Character, the filename of all the files in the "assess_res" folder which will store the assessment results.}
 
 \item{datapath}{Character, the absolute path of the folder storing the FCS raw data files and metadata file.}
 
@@ -87,7 +87,7 @@ MC_CSI(
 \item{savepath}{Character, the absolute path of the folder which will store files of the assessment and processed results.}
 }
 \value{
-the data processing and performance assessment output files, which are located in the \strong{process_res} and \strong{assess_res} folders, respectively.
+The data processing and performance assessment output files, which are located in the \strong{process_res} and \strong{assess_res} folders, respectively.
 \subsection{Results of Data Processing}{
 
 The \strong{process_res} folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter \code{save_processed_res}: "no" denotes that the results would not be saved; "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder [\emph{default ="one_folder"}].
@@ -98,12 +98,12 @@ The \strong{process_res} folder stores the results of various data processing wo
 The \strong{assess_res} folder stores the results of performance assessment, which includes 3 files:
 \if{html}{\out{<br>}}(\strong{1}) \strong{_Ranking_Table.csv} contains the overall ranking results of all data processing workflows, where the "Rank" column represents the overall ranking, and the "Value" column shows the scores for different assessment criteria.
 \if{html}{\out{<br>}}(\strong{2}) \strong{_Ranking_Figure.pdf} visualizes the overall ranking results to help users better understand the differences among various data processing workflows. Different colors represent different performance assessment levels: dark green indicates "superior," light green indicates "good," and red indicates "poor."
-\if{html}{\out{<br>}}(\strong{3}) \strong{_assess.RData} contains 2 lists, "table" and "table2", which provide the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
+\if{html}{\out{<br>}}(\strong{3}) \strong{_assess.RData} contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
 }
 
 \subsection{Records}{
 
-In addition, \strong{log.txt} and \strong{info_saved.RData} files are also generated simultaneously. \strong{log.txt} records the processing details while \strong{info_saved.RData} records the information related to "metadata" and "index_protein".
+In addition, the files \strong{log.txt} and \strong{info_saved.RData} are also generated simultaneously. \strong{log.txt} records the processing details while \strong{info_saved.RData} records the information related to "metadata" and "index_protein".
 }
 }
 \description{
