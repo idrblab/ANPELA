@@ -2,7 +2,7 @@ oneStep_process_assess <- function(
     # the parameters of data processing
   datapath,
   metadata,
-  techique = c("MC", "FC"),
+  technique = c("MC", "FC"),
   studytype = c("CSI", "PTI"),
   mergeM = c("Fixed", "Ceil", "All", "Min"),
   fixedNum = 200,
@@ -94,9 +94,9 @@ oneStep_process_assess <- function(
 
   # compensationM
   if (missing(compensationM)) {
-    if (techique == "MC") {
+    if (technique == "MC") {
       compensationM <- c("CATALYST", "CytoSpill", "None")
-    } else if (techique == "FC") {
+    } else if (technique == "FC") {
       compensationM <- c("AutoSpill", "FlowCore", "MetaCyto", "None")
     }
   } else {
@@ -117,9 +117,9 @@ oneStep_process_assess <- function(
 
   # normalizationM
   if (missing(normalizationM)) {
-    if (techique == "MC") {
+    if (technique == "MC") {
       normalizationM <- c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "None")
-    } else if (techique == "FC") {
+    } else if (technique == "FC") {
       normalizationM <- c("GaussNorm", "WarpSet", "ZScore", "None")
     }
   } else {
@@ -129,9 +129,9 @@ oneStep_process_assess <- function(
 
   # signalcleanM
   if (missing(signalcleanM)) {
-    if (techique == "MC") {
+    if (technique == "MC") {
       signalcleanM <- c("FlowAI", "FlowCut", "None")
-    } else if (techique == "FC") {
+    } else if (technique == "FC") {
       signalcleanM <- c("FlowAI", "FlowClean", "FlowCut", "None")
     }
   } else {
@@ -197,9 +197,9 @@ oneStep_process_assess <- function(
 
   # b1
   if (is.null(b1)) {
-    if (techique == "MC") {
+    if (technique == "MC") {
       b1 <- 1/5
-    } else if (techique == "FC") {
+    } else if (technique == "FC") {
       b1 <- 1/150
     }
   } else if (b1 == 0) {
@@ -209,9 +209,9 @@ oneStep_process_assess <- function(
 
   # b2
   if (is.null(b2)) {
-    if (techique == "MC") {
+    if (technique == "MC") {
       b2 <- 1/5
-    } else if (techique == "FC") {
+    } else if (technique == "FC") {
       b2 <- 1/150
     }
   } else if (b2 == 0) {
@@ -221,9 +221,9 @@ oneStep_process_assess <- function(
 
   # b3
   if (is.null(b3)) {
-    if (techique == "MC") {
+    if (technique == "MC") {
       b3 <- 1/5
-    } else if (techique == "FC") {
+    } else if (technique == "FC") {
       b3 <- 1/150
     }
   } else if (b3 == 0) {
@@ -454,10 +454,10 @@ oneStep_process_assess <- function(
     cat("*************************************************************************", "\n")
     cat(paste0(common_protein, collapse = "\n"), "\n")
     cat("*************************************************************************", "\n")
-    if (techique == "MC") {
+    if (technique == "MC") {
       cat("Please enter the marker names which are separated by the comma on a single line.
           \nFor example, CD103(La139Di), CCR6(Pr141Di), CD19(Nd142Di), C-KIT(Nd143Di), CD11b(Nd144Di)")
-    } else if (techique == "FC") {
+    } else if (technique == "FC") {
       cat("Please enter the marker names which are separated by the comma on a single line.
           \nFor example, CD43(FITC.A), CD34(APC.A), CD90(BV421.A), CD45RA(BV510.A)")
     }
