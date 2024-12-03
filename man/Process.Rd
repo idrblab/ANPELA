@@ -7,7 +7,7 @@
 Process(
   name,
   datapath,
-  techique = c("MC", "FC"),
+  technique = c("MC", "FC"),
   studytype = c("CSI", "PTI"),
   mergeM = c("Fixed", "Ceil", "All", "Min"),
   fixedNum = 200,
@@ -41,7 +41,7 @@ Process(
 
 \item{datapath}{Character, the absolute path of the folder storing the FCS raw data files and metadata file.}
 
-\item{techique}{Character, the technique type used in acquiring the SCP data.}
+\item{technique}{Character, the technique type used in acquiring the SCP data.}
 
 \item{studytype}{Character, the type of your study, including "CSI (Cell Subpopulation Identification)" and "PTI (Pseudotime Trajectory Inference)".}
 
@@ -96,7 +96,7 @@ Process(
 \item{index_protein}{Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
 \if{html}{\out{<br>}}It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".}
 
-\item{save_processed_res}{Character, the form of data processing output files. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
+\item{save_processed_res}{Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
 
 \item{savepath}{Character, the absolute path of the folder which will store the processed results.}
 
@@ -105,7 +105,7 @@ Process(
 }
 \value{
 The \strong{process_res} folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter \code{save_processed_res}: "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder [\emph{default ="one_folder"}].
-\if{html}{\out{<br>}}In addition, the files \strong{log.txt} and \strong{info_saved.RData} are also generated simultaneously. \strong{log.txt} records the processing details while \strong{info_saved.RData} records the information related to "metadata" and "index_protein".
+\if{html}{\out{<br>}}In addition, the file \strong{info_saved.RData} is also generated simultaneously, recording the information related to "metadata" and "index_protein".
 }
 \description{
 Process() enables high-throughput processing for SCP data acquired from FC or MC by the most available workflows respectively, based on parallel computing (each workflow is distinct by combining different methods of compensation, transformation, normalization and signal clean), which facilitates the subsequent application of performance assessment, ranking and plotting.

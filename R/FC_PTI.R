@@ -35,7 +35,7 @@
 #' @param pathwayhierarchy Character, the absolute filepath of the pathway hierarchy file.
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
-#' @param save_processed_res Character, the form of data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
+#' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store files of the assessment and processed results.
 #'
 #' @return the data processing and performance assessment output files, which are located in the **process_res** and **assess_res** folders, respectively.

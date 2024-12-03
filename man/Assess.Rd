@@ -25,7 +25,7 @@ Assess(
 \arguments{
 \item{name}{Character, the filename of the RData file in the "assess_res" folder which will store the assessment results.}
 
-\item{data}{Character, the absolute filepath of the resulting RData file of the function "Process", "FCprocess" or "MCprocess" when the \code{save_processed_res} parameter in these functions is set to "one_RData".}
+\item{data}{Character, the R object resulting from the function "Process", "FCprocess" or "MCprocess", or obtained by loading from the resulting RData file of these funcitons when the \code{save_processed_res} parameter in these functions is set to "one_RData".}
 
 \item{respath}{Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the \code{save_processed_res} parameter in these functions is set to "one_folder".}
 
@@ -50,7 +50,7 @@ Assess(
 \item{cores}{Integer, the number of CPU cores to be employed for performing parallel computing.
 \if{html}{\out{<br>}}To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.}
 
-\item{save_processed_res}{Character, the form of data processing output files. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
+\item{save_processed_res}{Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
 
 \item{savepath}{Character, the absolute path of the folder which will store the assessment results.}
 }
