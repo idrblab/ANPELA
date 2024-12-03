@@ -2,8 +2,8 @@
 #' @title Ranking
 #' @description Ranking ranks all workflows assessed by the function "CSIassess" and "PTIassess" based on collective consideration of values and grades (classified by well-defined cutoffs) under each criterion.
 #'
-#' @param data Character, the resulting R object of the function "CSIassess" or "PTIassess".
 #' @param name Character, the filename of the overall ranking data and figure file.
+#' @param data Character, the R object resulting from the function "Assess" "CSIassess" or "PTIassess", or obtained by loading from the resulting RData file of these funcitons.
 #' @param savepath Character, the absolute path of the folder which will store the overall ranking data and figure file.
 #'
 #' @return A CSV file named "_Ranking_Table.csv", recording the overall ranking and the values of criteria. <br>A PDF file named "_Ranking_Figure.pdf", helping users better understand the differences among various data processing workflows, where the different colors represent different performance assessment levels: dark green indicates "superior," light green indicates "good," and red indicates "poor".

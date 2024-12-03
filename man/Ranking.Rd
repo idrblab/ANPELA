@@ -7,7 +7,7 @@
 Ranking(data, name = "0", savepath = "./")
 }
 \arguments{
-\item{data}{Character, the resulting R object of the function "CSIassess" or "PTIassess".}
+\item{data}{Character, the R object resulting from the function "Assess" "CSIassess" or "PTIassess", or obtained by loading from the resulting RData file of these funcitons.}
 
 \item{name}{Character, the filename of the overall ranking data and figure file.}
 

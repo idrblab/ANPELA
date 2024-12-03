@@ -2,7 +2,7 @@
 #' @description Process() enables high-throughput processing for SCP data acquired from FC or MC by the most available workflows respectively, based on parallel computing (each workflow is distinct by combining different methods of compensation, transformation, normalization and signal clean), which facilitates the subsequent application of performance assessment, ranking and plotting.
 #' @param name Character, the filename of the RData file when the "save_processed_res" parameter is set to "one_RData".
 #' @param datapath Character, the absolute path of the folder storing the FCS raw data files and metadata file.
-#' @param techique Character, the technique type used in acquiring the SCP data.
+#' @param technique Character, the technique type used in acquiring the SCP data.
 #' @param studytype Character, the type of your study, including "CSI (Cell Subpopulation Identification)" and "PTI (Pseudotime Trajectory Inference)".
 #' @param mergeM Character, the method of merging multiple FCS files. When multiple FCS files are selected, cells can be combined using one of the four different methods including "Fixed", "Ceil", "All" and "Min".
 #'   <br>**Fixed**: a fixed num (specified by fixedNum) of cells are sampled (with replacement when the total number of cell is less than fixedNum) from each FCS file and combined for analysis.
@@ -41,10 +41,10 @@
 #'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
-#' @param save_processed_res Character, the form of data processing output files. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
+#' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store the processed results.
 #' @return The **process_res** folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter `save_processed_res`: "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder \[*default ="one_folder"*\].
-#'   <br>In addition, the files **log.txt** and **info_saved.RData** are also generated simultaneously. **log.txt** records the processing details while **info_saved.RData** records the information related to "metadata" and "index_protein".
+#'   <br>In addition, the file **info_saved.RData** is also generated simultaneously, recording the information related to "metadata" and "index_protein".
 
 #' @export
 #'
@@ -55,7 +55,7 @@
 Process <- function(
     name,
     datapath,
-    techique = c("MC", "FC"),
+    technique = c("MC", "FC"),
     studytype = c("CSI", "PTI"),
     mergeM = c("Fixed", "Ceil", "All", "Min"),
     fixedNum = 200,
@@ -76,7 +76,7 @@ Process <- function(
     cores = floor(parallel::detectCores()/2)
 ){
   metadata <- paste0(datapath, "/metadata.csv")
-  if (techique == "MC"){
+  if (technique == "MC"){
     MCprocess_res <- MCprocess(name = name,
                                datapath = datapath,
                                metadata = metadata,
@@ -93,7 +93,7 @@ Process <- function(
                                cores = cores)
 
     return(MCprocess_res)
-  } else if (techique == "FC"){
+  } else if (technique == "FC"){
     FCprocess_res <- FCprocess(name = name,
                                datapath = datapath,
                                metadata = metadata,
