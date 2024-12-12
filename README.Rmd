@@ -34,10 +34,7 @@ knitr::include_graphics("vignettes/figures/home.png")
 - [Repo Contents](#repo-contents)
 - [System Requirements](#system-requirements)
 - [Installation Guide](#installation-guide)
-<<<<<<< HEAD
 - [Example Data](#example-data)
-=======
->>>>>>> 3653f0e114c2f147dbd0db3bc462b59750e0bf38
 - [Usage and Examples](#usage-and-examples)
 
 ## Overview
@@ -154,7 +151,6 @@ devtools::install_github("idrblab/ANPELA")
 
 During the installation of `ANPELA`, the appearance of the error message “ERROR: dependency ‘package_name’ is not available for package ‘`ANPELA`’” indicates that the required imported package, ‘package_name’, has not been successfully installed. Users should refer to the detailed reinstallation instructions described in **Tool 3** to resolve this issue and ensure the proper installation of the missing package before proceeding with the `ANPELA` installation.
 
-<<<<<<< HEAD
 ## Example Data
 
 You can use the example data provided in `ANPELA` to try it out.
@@ -167,9 +163,6 @@ You can use the example data provided in `ANPELA` to try it out.
 
 **MC_PTI example data**: A gated single-cell proteomic temporal dataset encoding the activation dynamics of 14 CD8+ cell intracellular markers perturbed by tetradecanoylphorbol acetate (PMA)/ionomycin at 8 sequential timepoints (0, 1, 5, 15, 30, 60, 120 and 240 min). [Download_882 KB](http://idrblab.cn/anpela2024/example_data/MC_PTI.zip)
 
-
-=======
->>>>>>> 3653f0e114c2f147dbd0db3bc462b59750e0bf38
 ## Usage and Examples
 
 For the usage and examples of `ANPELA`, users can refer to the vignette "How to Use `ANPELA`" built in the package.
