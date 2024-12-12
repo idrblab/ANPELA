@@ -24,7 +24,10 @@ codesize](https://img.shields.io/github/languages/code-size/idrblab/NOREVA)](htt
 - [Repo Contents](#repo-contents)
 - [System Requirements](#system-requirements)
 - [Installation Guide](#installation-guide)
+<<<<<<< HEAD
 - [Example Data](#example-data)
+=======
+>>>>>>> 3653f0e114c2f147dbd0db3bc462b59750e0bf38
 - [Usage and Examples](#usage-and-examples)
 
 ## Overview
@@ -189,6 +192,7 @@ to the detailed reinstallation instructions described in **Tool 3** to
 resolve this issue and ensure the proper installation of the missing
 package before proceeding with the `ANPELA` installation.
 
+<<<<<<< HEAD
 ## Example Data
 
 You can use the example data provided in `ANPELA` to try it out.
@@ -218,6 +222,8 @@ perturbed by tetradecanoylphorbol acetate (PMA)/ionomycin at 8
 sequential timepoints (0, 1, 5, 15, 30, 60, 120 and 240 min).
 [Download_882 KB](http://idrblab.cn/anpela2024/example_data/MC_PTI.zip)
 
+=======
+>>>>>>> 3653f0e114c2f147dbd0db3bc462b59750e0bf38
 ## Usage and Examples
 
 For the usage and examples of `ANPELA`, users can refer to the vignette

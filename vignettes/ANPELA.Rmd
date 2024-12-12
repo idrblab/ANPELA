@@ -86,14 +86,22 @@ You can use the example data provided in `ANPELA` to try it out.
 
 **MC_PTI example data**: A gated single-cell proteomic temporal dataset encoding the activation dynamics of 14 CD8+ cell intracellular markers perturbed by tetradecanoylphorbol acetate (PMA)/ionomycin at 8 sequential timepoints (0, 1, 5, 15, 30, 60, 120 and 240 min). [Download_882 KB](http://idrblab.cn/anpela2024/example_data/MC_PTI.zip)
 
+<<<<<<< HEAD
 `ANPELA` requires specified data formats (you can refer to the example data), which include (**1**) the FCS raw data files (mandatory); (**2**) the CSV metadata file for sample annotation (mandatory); (**3**) the CSV pathway hierarchy file for PTI studies (optional); and (**4**) the prior knowledge data file (optional). The metadata file should include the columns of “filename” and “condition” for CSI studies, and the columns of “filename” and “timepoint” for PTI studies.
+=======
+`ANPELA` requires specified data formats (you can refer to the sample data), which include (**1**) the FCS raw data files (mandatory); (**2**) the CSV metadata file for sample annotation (mandatory); (**3**) the CSV pathway hierarchy file for PTI studies (optional); and (**4**) the prior knowledge data file (optional). The metadata file should include the columns of “filename” and “condition” for CSI studies, and the columns of “filename” and “timepoint” for PTI studies.
+>>>>>>> 3653f0e114c2f147dbd0db3bc462b59750e0bf38
 
 -	“filename” indicates to the file name of each analyzed FCS file, which should be exactly the same as the base name without extension of each input FCS file;
 -	“condition” refers to the corresponding biological phenotypes of each FCS file;
 -	“timepoint” refers to the physical collection time of each FCS file to indicate the collection sequence.
 
 
+<<<<<<< HEAD
 Reading the FCS files, the metadata file and the pathway hierarchy file is a crucial step before data processing. Let's take the MC_PTI example data from a research about signal transduction as an example. Download MC_PTI sample data and position the files to the working directory.
+=======
+Reading the FCS files, the metadata file and the pathway hierarchy file is a crucial step before data processing. Let's take the MC_PTI sample data from a research about signal transduction as an example. Download MC_PTI sample data and position the files to the working directory.
+>>>>>>> 3653f0e114c2f147dbd0db3bc462b59750e0bf38
 
 ```{r read, eval=FALSE}
 datapath <- "Your/Working/Directory/ANPELA/"
