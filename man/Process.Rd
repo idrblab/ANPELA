@@ -11,16 +11,18 @@ Process(
   studytype = c("CSI", "PTI"),
   mergeM = c("Fixed", "Ceil", "All", "Min"),
   fixedNum = 200,
-  compensationM = c("AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto", "None"),
+  compensationM = c("AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto",
+    "spillR", "None"),
   transformationM = c("Arcsinh Transformation", "Asinh with Non-negative Value",
     "Asinh with Randomized Negative Value", "Biexponential Transformation",
     "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation",
     "Linear Transformation", "Ln Transformation", "Log Transformation",
-    "Logicle Transformation", "Quadratic Transformation", "Scale Transformation",
-    "Truncate Transformation", "None"),
+    "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation",
+    "Truncate Transformation", "Centered Log Ratio Transformation", "None"),
   normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore",
-    "None"),
-  signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "None"),
+    "Mean Normalization", "Min-max Normalization", "None"),
+  signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None"),
+  workflow = NULL,
   spillpath = NULL,
   FSC = "FSC-H",
   SSC = "SSC-H",
@@ -30,6 +32,11 @@ Process(
   single_pos_mass = NULL,
   CATALYSTM = c("flow", "nnls"),
   beads_mass = c(140, 151, 153, 165, 175),
+  sce_bead = NULL,
+  marker_to_barc = NULL,
+  min_cells = 150,
+  max_bins = 500,
+  step = 500,
   index_protein = NULL,
   save_processed_res = "one_folder",
   savepath = "./",
@@ -54,17 +61,20 @@ Process(
 \item{fixedNum}{Integer, the fixed number of cells to be extracted from each FCS file.
 \if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
 
-\item{compensationM}{Character, the method(s) of compensation for flow cytometry data including "AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto" and "None". Compensation refers to the processing step of removing unwanted spillover resulting from signal crosstalk and spectral overlap across detection channels.
+\item{compensationM}{Character, the method(s) of compensation for flow cytometry data including "AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto" , "spillR" and "None". Compensation refers to the processing step of removing unwanted spillover resulting from signal crosstalk and spectral overlap across detection channels.
 \if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
 
-\item{transformationM}{Character, the method(s) of transformation for flow cytometry data including "Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value", "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation", "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Scale Transformation", "Truncate Transformation" and "None". Transformation refers to the processing step of adjusting the data with a heavily skewed distribution to a normal distribution.
+\item{transformationM}{Character, the method(s) of transformation for flow cytometry data including "Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value", "Biexponential Transformation", "Box-Cox Transformation", "Centered Log Ratio Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation", "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation", "Truncate Transformation" and "None". Transformation refers to the processing step of adjusting the data with a heavily skewed distribution to a normal distribution.
 \if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
 
-\item{normalizationM}{Character, the method(s) of normalization for flow cytometry data, including "Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore" and "None". Normalization refers to the processing step of eliminating signal decay and technical variability across all files and batches over long-term data acquisition.
+\item{normalizationM}{Character, the method(s) of normalization for flow cytometry data, including "Bead-based Normalization", "GaussNorm", "Mean Normalization", "Min-max Normalization", "WarpSet", "ZScore" and "None". Normalization refers to the processing step of eliminating signal decay and technical variability across all files and batches over long-term data acquisition.
 \if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
 
-\item{signalcleanM}{Character, the method(s) of signal clean for flow cytometry data, including "FlowAI", "FlowClean", "FlowCut" and "None". Signal cleaning refers to the processing step of identifying and removing abrupt signal shifts and changes that derive from (i) abrupt changes in the flow rate, (ii) clogs within the capillary tubes, (iii) temporary disruptions in cytometer fluidics, and (iv) unstable data acquisition.
+\item{signalcleanM}{Character, the method(s) of signal clean for flow cytometry data, including "FlowAI", "FlowClean", "FlowCut", "PeacoQC" and "None". Signal cleaning refers to the processing step of identifying and removing abrupt signal shifts and changes that derive from (i) abrupt changes in the flow rate, (ii) clogs within the capillary tubes, (iii) temporary disruptions in cytometer fluidics, and (iv) unstable data acquisition.
 \if{html}{\out{<br>}}For details of each method, please refer to the \strong{Methods Introduction}.}
+
+\item{workflow}{Character, the combinations of data processing methods specified by users according to their research interests.
+\if{html}{\out{<br>}}It is a vector includes one or more method combinations, typically in the format of "compensation method name_ transformation method name_ normalization method name_ signal clean method name ", for example: c("None_Biexponential Transformation_None_None","CytoSpill_FlowVS Transformation_None_FlowCut").}
 
 \item{spillpath}{Character, the absolute filepath(s) of compensation beads or cells. The spillover information for a particular experiment is often obtained by running several tubes of beads or cells stained with a single color that can then be used to determine a spillover matrix for use.
 \if{html}{\out{<br>}}Only needed when "FlowCore" is included in the argument of "compensationM".The filenames of the FCS files must correspond to the names of stain channels. If the original FCS files contain a pre-calculated spillover matrix as the value of the $SPILLOVER, $spillover or $SPILL keywords, this can be set as NULL.}
@@ -92,6 +102,21 @@ Process(
 
 \item{beads_mass}{Integer, the masses of the corresponding calibration beads.
 \if{html}{\out{<br>}}Only needed when "Bead-based Normalization" is included in the argument of "normalizationM".}
+
+\item{sce_bead}{SingleCellExperiment, the SingleCellExperiment object for the bead experiment.
+\if{html}{\out{<br>}}Only needed when "spillR" is included in the argument of "compensationM".}
+
+\item{marker_to_barc}{Data frame, the table that maps the marker to the barcode in the beads experiment.
+\if{html}{\out{<br>}}Only needed when "spillR" is included in the argument of "compensationM".}
+
+\item{min_cells}{Integer, the minimum amount of cells (nonzero values) that should be present in one bin.
+\if{html}{\out{<br>}}Only needed when "PeacoQC" is included in the argument of "signalcleanM". Lowering this parameter can affect the robustness of the peak detection.}
+
+\item{max_bins}{Integer, the maximum number of bins that can be used in the cleaning process.
+\if{html}{\out{<br>}}Only needed when "PeacoQC" is included in the argument of "signalcleanM". If this value is lowered, larger bins will be made.}
+
+\item{step}{Integer, the step in events_per_bin to which the parameter is reduced to.
+\if{html}{\out{<br>}}Only needed when "PeacoQC" is included in the argument of "signalcleanM".}
 
 \item{index_protein}{Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
 \if{html}{\out{<br>}}It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".}

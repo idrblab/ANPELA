@@ -14,12 +14,14 @@
 #' @param fixedNum Integer, the fixed number of cells to be extracted from each FCS file.
 #' @param compensationM Character, the method(s) of compensation for flow cytometry data including "AutoSpill", "FlowCore", "MetaCyto" and "None". Compensation refers to the processing step of removing unwanted spillover resulting from signal crosstalk and spectral overlap across detection channels.
 #'   <br>For details of each method, please refer to the **Methods Introduction**.
-#' @param transformationM Character, the method(s) of transformation for flow cytometry data including "Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value", "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation", "LnTransform", "Log Transformation", "Logicle Transformation", "QuadraticTransform", "ScaleTransform", "TruncateTransform" and "None". Transformation refers to the processing step of adjusting the data with a heavily skewed distribution to a normal distribution.
+#' @param transformationM Character, the method(s) of transformation for flow cytometry data including "Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value", "Biexponential Transformation", "Box-Cox Transformation", "Centered Log Ratio Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation", "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation", "Truncate Transformation"and "None". Transformation refers to the processing step of adjusting the data with a heavily skewed distribution to a normal distribution.
 #'   <br>For details of each method, please refer to the **Methods Introduction**.
-#' @param normalizationM Character, the method(s) of normalization for flow cytometry data, including "GaussNorm", "WarpSet" "ZScore" and "None". Normalization refers to the processing step of eliminating signal decay and technical variability across all files and batches over long-term data acquisition.
+#' @param normalizationM Character, the method(s) of normalization for flow cytometry data, including "GaussNorm", "Mean Normalization", "Min-max Normalization", "WarpSet", "ZScore" and "None". Normalization refers to the processing step of eliminating signal decay and technical variability across all files and batches over long-term data acquisition.
 #'   <br>For details of each method, please refer to the **Methods Introduction**.
-#' @param signalcleanM Character, tharacter, the method(s) of signal clean for flow cytometry data, including "FlowAI", "FlowClean", "FlowCut" and "None". Signal cleaning refers to the processing step of identifying and removing abrupt signal shifts and changes that derive from (i) abrupt changes in the flow rate, (ii) clogs within the capillary tubes, (iii) temporary disruptions in cytometer fluidics, and (iv) unstable data acquisition.
+#' @param signalcleanM Character, the method(s) of signal clean for flow cytometry data, including "FlowAI", "FlowClean", "FlowCut", "PeacoQC" and "None". Signal cleaning refers to the processing step of identifying and removing abrupt signal shifts and changes that derive from (i) abrupt changes in the flow rate, (ii) clogs within the capillary tubes, (iii) temporary disruptions in cytometer fluidics, and (iv) unstable data acquisition.
 #'   <br>For details of each method, please refer to the **Methods Introduction**.
+#' @param workflow Character, the combinations of data processing methods specified by users according to their research interests.
+#'   <br>It is a vector includes one or more method combinations, typically in the format of "compensation method name_ transformation method name_ normalization method name_ signal clean method name ", for example: c("None_Biexponential Transformation_None_None","CytoSpill_FlowVS Transformation_None_FlowCut").
 #' @param spillpath Character, the absolute filepath(s) of compensation beads or cells. The spillover information for a particular experiment is often obtained by running several tubes of beads or cells stained with a single color that can then be used to determine a spillover matrix for use.
 #'   <br>Only needed when "FlowCore" is included in the argument of "compensationM".The filenames of the FCS files must correspond to the names of stain channels. If the original FCS files contain a pre-calculated spillover matrix as the value of the $SPILLOVER, $spillover or $SPILL keywords, this can be set as NULL.
 #' @param FSC Character, the name of the forward scatter parameter.
@@ -50,6 +52,12 @@
 #'   <br>Only needed when "Linear Transformation" is included in the argument of "transformationM".
 #' @param Truncatea Double, the value at which to truncate.
 #'   <br>Only needed when "TruncateTransform" is included in the argument of "transformationM".
+#' @param min_cells Integer, the minimum amount of cells (nonzero values) that should be present in one bin.
+#'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM". Lowering this parameter can affect the robustness of the peak detection.
+#' @param max_bins Integer, the maximum number of bins that can be used in the cleaning process.
+#'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM". If this value is lowered, larger bins will be made.
+#' @param step Integer, the step in events_per_bin to which the parameter is reduced to.
+#'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM".
 #' @param index_protein Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
 #'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
@@ -73,10 +81,11 @@ FCprocess <- function(name,
                       compensationM = c("AutoSpill", "FlowCore", "MetaCyto", "None"),
                       transformationM = c("Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value",
                                           "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation",
-                                          "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Scale Transformation", "Truncate Transformation",
-                                          "None"),
-                      normalizationM = c("GaussNorm", "WarpSet", "ZScore", "None"),
-                      signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "None"),
+                                          "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation", "Truncate Transformation",
+                                          "Centered Log Ratio Transformation", "None"),
+                      normalizationM = c("GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None"),
+                      signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None"),
+                      workflow = NULL,
                       spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H",
                       control.dir = NULL, control.def.file = NULL,
                       logbase = 10,
@@ -86,6 +95,7 @@ FCprocess <- function(name,
                       Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
                       lineara = 2, linearb = 0,
                       Truncatea = 1,
+                      min_cells = 150, max_bins = 500, step = 500,
                       index_protein = NULL,
                       save_processed_res = "one_folder",
                       savepath = "./",
@@ -146,8 +156,8 @@ FCprocess <- function(name,
   if (missing(transformationM)) {
     transformationM <- c("Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value",
                          "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation",
-                         "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Scale Transformation", "Truncate Transformation",
-                         "None")
+                         "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation", "Truncate Transformation",
+                         "Centered Log Ratio Transformation", "None")
   } else {
     transformationM <- match.arg(transformationM, several.ok = TRUE)
   }
@@ -155,7 +165,7 @@ FCprocess <- function(name,
 
   # normalizationM
   if (missing(normalizationM)) {
-    normalizationM <- c("GaussNorm", "WarpSet", "ZScore", "None")
+    normalizationM <- c("GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None")
   } else {
     normalizationM <- match.arg(normalizationM, several.ok = TRUE)
   }
@@ -163,14 +173,14 @@ FCprocess <- function(name,
 
   # signalcleanM
   if (missing(signalcleanM)) {
-    signalcleanM <- c("FlowAI", "FlowClean", "FlowCut", "None")
+    signalcleanM <- c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None")
   } else {
     signalcleanM <- match.arg(signalcleanM, several.ok = TRUE)
   }
 
 
   # control.dir
-  if ("AutoSpill" %in% compensationM) {
+  if ("AutoSpill" %in% compensationM & is.null(workflow)|any(grepl("AutoSpill", workflow))) {
     if (is.null(control.dir)) {
       message("The parameter of 'control.dir' is missing. 'AutoSpill' compensation method can't be performed without the control files.")
       compensationM <- setdiff(compensationM, "AutoSpill")
@@ -181,7 +191,7 @@ FCprocess <- function(name,
 
 
   # control.def.file
-  if ("AutoSpill" %in% compensationM) {
+  if ("AutoSpill" %in% compensationM & is.null(workflow)|any(grepl("AutoSpill", workflow))) {
     if (is.null(control.def.file)) {
       message("The parameter of 'control.def.file' is missing. 'AutoSpill' compensation method can't be performed.")
       compensationM <- setdiff(compensationM, "AutoSpill")
@@ -329,7 +339,7 @@ FCprocess <- function(name,
   rm(AP2_downsample_expr_classTI)
 
   # spillpath
-  if ("FlowCore" %in% compensationM) {
+  if ("FlowCore" %in% compensationM & is.null(workflow)|any(grepl("FlowCore", workflow))) {
     if (is.null(spillpath)) { # 没有提供spillpath参数
 
       if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILL"]])))) {
@@ -348,7 +358,7 @@ FCprocess <- function(name,
   }
 
   # MetaCyto
-  if ("MetaCyto" %in% compensationM) {
+  if ("MetaCyto" %in% compensationM & is.null(workflow)|any(grepl("MetaCyto", workflow))) {
     if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILL"]])))) {
     } else {
       message("Some/All of your FCS files don't contain a pre-calculated spillover matrix. 'MetaCyto' can't be performed without the spillover matrix.")
@@ -379,22 +389,37 @@ FCprocess <- function(name,
   Segment2 <- Segment <- floor(min(ncell_frame)/3)
 
   # workflow
-  workflow <- expand.grid(compensation = compensationM, transformation = transformationM, normalization = normalizationM, signalclean = signalcleanM, stringsAsFactors = FALSE)
-  rownames(workflow) <- paste(workflow$compensation,
-                              workflow$transformation,
-                              workflow$normalization,
-                              workflow$signalclean, sep = "_")
+  if(is.null(workflow)){
+    workflow <- expand.grid(compensation = compensationM, transformation = transformationM, normalization = normalizationM, signalclean = signalcleanM, stringsAsFactors = FALSE)
+    rownames(workflow) <- paste(workflow$compensation,
+                                workflow$transformation,
+                                workflow$normalization,
+                                workflow$signalclean, sep = "_")
+  } else {
+    workflow <- try(lapply(strsplit(workflow, "_"), unlist))
+    if (class(workflow) == "try-error") {
+      stop("The format of parameter 'workflow' is incorrect. Please input the workflow in the correct format.")
+    } else {
+      workflow <- as.data.frame(do.call(rbind, workflow), stringsAsFactors = FALSE)
+      colnames(workflow) <- c("compensation", "transformation", "normalization", "signalclean")
+      rownames(workflow) <- paste(workflow$compensation,
+                                  workflow$transformation,
+                                  workflow$normalization,
+                                  workflow$signalclean, sep = "_")
+    }
+  }
 
 
   # parallel start
   opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = nrow(workflow), style = 3), n))
-  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = "log.txt")
+  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = "process_log.txt")
   doSNOW::registerDoSNOW(cl)
   time = proc.time()
 
   AP2_pro1_frame_classTI <- foreach::foreach(i = 1:nrow(workflow), .options.snow = opts,
                                              .packages = c("stringr", "flowStats", "flowAI", "flowCore", "flowClean", "flowCut", "flowTrans", "magrittr")) %dopar% {
                                                try(source("./processing.R"), silent = T)
+                                               set.seed(123)
                                                AP2_comp_frame <- try(comp_anpela(data = AP2_pro0_frame, method = workflow[i,1], index = index_TIclass,
                                                                                  spillpath = spillpath, spillname = spillname, FSC = FSC,  SSC = SSC,
                                                                                  control.dir = control.dir, control.def.file = control.def.file), silent = T)
@@ -435,7 +460,9 @@ FCprocess <- function(name,
 
                                                AP2_sigcl_frame <- try(sigcl_anpela(data = AP2_norm_frame, method = workflow[i,4], index = index_TIclass,
                                                                                    Segment = Segment,
-                                                                                   Segment2 = Segment2), silent = T)
+                                                                                   Segment2 = Segment2,
+                                                                                   min_cells = min_cells, max_bins = max_bins, step = step, technique = "FC"),
+                                                                      silent = T)
                                                if (class(AP2_sigcl_frame) == "try-error") {
                                                  # AP2_sigcl_frame <- AP2_norm_frame
                                                  return(NULL)

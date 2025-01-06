@@ -6,16 +6,18 @@ oneStep_process_assess <- function(
   studytype = c("CSI", "PTI"),
   mergeM = c("Fixed", "Ceil", "All", "Min"),
   fixedNum = 200,
-  compensationM = c("AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto", "None"),
+  compensationM = c("AutoSpill", "CATALYST", "CytoSpill", "FlowCore", "MetaCyto", "spillR", "None"),
   transformationM = c("Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value",
                       "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation",
-                      "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Scale Transformation", "Truncate Transformation",
-                      "None"),
-  normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "None"),
-  signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "None"),
+                      "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation", "Truncate Transformation",
+                      "Centered Log Ratio Transformation", "None"),
+  normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None"),
+  signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None"),
+  workflow = NULL,
   spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H",
   control.dir = NULL, control.def.file = NULL,
   single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = c("flow", "nnls"),
+  bc_key = NULL, ss_exp = NULL,
   logbase = 10,
   b1 = NULL,
   b2 = NULL,
@@ -24,6 +26,7 @@ oneStep_process_assess <- function(
   lineara = 2, linearb = 0,
   Truncatea = 1,
   beads_mass = c(140, 151, 153, 165, 175),
+  min_cells = 150, max_bins = 500, step = 500,
   index_protein = NULL,
 
   # the parameters of workflow assessment
@@ -95,7 +98,7 @@ oneStep_process_assess <- function(
   # compensationM
   if (missing(compensationM)) {
     if (technique == "MC") {
-      compensationM <- c("CATALYST", "CytoSpill", "None")
+      compensationM <- c("CATALYST", "CytoSpill", "spillR", "None")
     } else if (technique == "FC") {
       compensationM <- c("AutoSpill", "FlowCore", "MetaCyto", "None")
     }
@@ -108,8 +111,8 @@ oneStep_process_assess <- function(
   if (missing(transformationM)) {
     transformationM <- c("Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value",
                          "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation",
-                         "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Scale Transformation", "Truncate Transformation",
-                         "None")
+                         "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation", "Truncate Transformation",
+                         "Centered Log Ratio Transformation", "None")
   } else {
     transformationM <- match.arg(transformationM, several.ok = TRUE)
   }
@@ -118,9 +121,9 @@ oneStep_process_assess <- function(
   # normalizationM
   if (missing(normalizationM)) {
     if (technique == "MC") {
-      normalizationM <- c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "None")
+      normalizationM <- c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None")
     } else if (technique == "FC") {
-      normalizationM <- c("GaussNorm", "WarpSet", "ZScore", "None")
+      normalizationM <- c("GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None")
     }
   } else {
     normalizationM <- match.arg(normalizationM, several.ok = TRUE)
@@ -130,9 +133,9 @@ oneStep_process_assess <- function(
   # signalcleanM
   if (missing(signalcleanM)) {
     if (technique == "MC") {
-      signalcleanM <- c("FlowAI", "FlowCut", "None")
+      signalcleanM <- c("FlowAI", "FlowCut", "PeacoQC", "None")
     } else if (technique == "FC") {
-      signalcleanM <- c("FlowAI", "FlowClean", "FlowCut", "None")
+      signalcleanM <- c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None")
     }
   } else {
     signalcleanM <- match.arg(signalcleanM, several.ok = TRUE)
@@ -140,7 +143,7 @@ oneStep_process_assess <- function(
 
 
   # control.dir
-  if ("AutoSpill" %in% compensationM) {
+  if ("AutoSpill" %in% compensationM & is.null(workflow)|any(grepl("AutoSpill", workflow))) {
     if (is.null(control.dir)) {
       message("The parameter of 'control.dir' is missing. 'AutoSpill' compensation method can't be performed without the control files.")
       compensationM <- setdiff(compensationM, "AutoSpill")
@@ -151,7 +154,7 @@ oneStep_process_assess <- function(
 
 
   # control.def.file
-  if ("AutoSpill" %in% compensationM) {
+  if ("AutoSpill" %in% compensationM & is.null(workflow)|any(grepl("AutoSpill", workflow))) {
     if (is.null(control.def.file)) {
       message("The parameter of 'control.def.file' is missing. 'AutoSpill' compensation method can't be performed.")
       compensationM <- setdiff(compensationM, "AutoSpill")
@@ -162,7 +165,7 @@ oneStep_process_assess <- function(
 
 
   # single_pos_fcs
-  if ("CATALYST" %in% compensationM) {
+  if ("CATALYST" %in% compensationM & is.null(workflow)|any(grepl("CATALYST", workflow))) {
     if (is.null(single_pos_fcs)) {
       message("The parameter of 'single_pos_fcs' is missing. 'CATALYST' compensation method can't be performed.")
       compensationM <- setdiff(compensationM, "CATALYST")
@@ -173,7 +176,7 @@ oneStep_process_assess <- function(
 
 
   # single_pos_mass
-  if ("CATALYST" %in% compensationM) {
+  if ("CATALYST" %in% compensationM & is.null(workflow)|any(grepl("CATALYST", workflow))) {
     if (!is.numeric(single_pos_mass)) {
       stop("The parameter of 'single_pos_mass' is incorrect. Please input a vector of numeric masses corresponding to barcode channels.")
     }
@@ -181,7 +184,7 @@ oneStep_process_assess <- function(
 
 
   # CATALYSTM
-  if ("CATALYST" %in% compensationM) {
+  if ("CATALYST" %in% compensationM & is.null(workflow)|any(grepl("CATALYST", workflow))) {
     if (missing(CATALYSTM)) {
       CATALYSTM <- "nnls"
     } else {
@@ -189,6 +192,22 @@ oneStep_process_assess <- function(
     }
   }
 
+  #ss_exp
+  if ("spillR" %in% compensationM & is.null(workflow)|any(grepl("spillR", workflow))) {
+    if (is.null(ss_exp)) {
+      message("The parameter of 'ss_exp' is missing. 'spillR' compensation method can't be performed.")
+      compensationM <- setdiff(compensationM, "spillR")
+    } else if (is.character(single_pos_fcs) &&  !file.exists(single_pos_fcs)) {
+      stop("The parameter of 'ss_exp' is incorrect. Please input the absolute filepath of the .fcs file containing stained samples and control antibody-capture beads/pooled single-stained beads.")
+    }
+  }
+
+  #bc_key
+  if ("spillR" %in% compensationM & is.null(workflow)|any(grepl("spillR", workflow))) {
+    if (!is.numeric(bc_key)) {
+      stop("The parameter of 'single_pos_mass' is incorrect. Please input a vector of numeric masses corresponding to barcode channels.")
+    }
+  }
 
   # logbase
   if (logbase <= 0 || logbase == 1) {
@@ -232,9 +251,10 @@ oneStep_process_assess <- function(
 
 
   # beads_mass
-  if ("Bead-based Normalization" %in% normalizationM) {
+  if ("Bead-based Normalization" %in% normalizationM & is.null(workflow)|any(grepl("Bead-based Normalization", workflow))) {
     if (missing(beads_mass)) {
-      beads_mass <- c(140, 151, 153, 165, 175)
+      message("The parameter of 'beads_mass' is missing. 'Bead-based Normalization' normalization method can't be performed.")
+      compensationM <- setdiff(normalizationM, "Bead-based Normalization")
     } else if (!is.numeric(beads_mass)) {
       stop("The parameter of 'beads_mass' is incorrect. Please input the masses of the corresponding calibration beads.")
     }
@@ -420,7 +440,7 @@ oneStep_process_assess <- function(
   rm(AP2_downsample_expr_classTI)
 
   # spillpath
-  if ("FlowCore" %in% compensationM) {
+  if ("FlowCore" %in% compensationM & is.null(workflow)|any(grepl("FlowCore", workflow))) {
     if (is.null(spillpath)) { # 没有提供spillpath参数
 
       if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILL"]])))) {
@@ -439,7 +459,7 @@ oneStep_process_assess <- function(
   }
 
   # MetaCyto
-  if ("MetaCyto" %in% compensationM) {
+  if ("MetaCyto" %in% compensationM & is.null(workflow)|any(grepl("MetaCyto", workflow))) {
     if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILL"]])))) {
     } else {
       message("Some/All of your FCS files don't contain a pre-calculated spillover matrix. 'MetaCyto' can't be performed without the spillover matrix.")
@@ -475,12 +495,25 @@ oneStep_process_assess <- function(
   Segment2 <- Segment <- floor(min(ncell_frame)/3)
 
   # workflow
-  workflow <- expand.grid(compensation = compensationM, transformation = transformationM, normalization = normalizationM, signalclean = signalcleanM,
-                          stringsAsFactors = FALSE)
-  rownames(workflow) <- paste(workflow$compensation,
-                              workflow$transformation,
-                              workflow$normalization,
-                              workflow$signalclean, sep = "_")
+  if(is.null(workflow)){
+    workflow <- expand.grid(compensation = compensationM, transformation = transformationM, normalization = normalizationM, signalclean = signalcleanM, stringsAsFactors = FALSE)
+    rownames(workflow) <- paste(workflow$compensation,
+                                workflow$transformation,
+                                workflow$normalization,
+                                workflow$signalclean, sep = "_")
+  } else {
+    workflow <- try(lapply(strsplit(workflow, "_"), unlist))
+    if (class(workflow) == "try-error") {
+      stop("The format of parameter 'workflow' is incorrect. Please input the workflow in the correct format.")
+    } else {
+      workflow <- as.data.frame(do.call(rbind, workflow), stringsAsFactors = FALSE)
+      colnames(workflow) <- c("compensation", "transformation", "normalization", "signalclean")
+      rownames(workflow) <- paste(workflow$compensation,
+                                  workflow$transformation,
+                                  workflow$normalization,
+                                  workflow$signalclean, sep = "_")
+    }
+  }
 
   # known_marker
   if (studytype == "CSI"){
@@ -508,22 +541,31 @@ oneStep_process_assess <- function(
 
   # parallel start
   opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = nrow(workflow), style = 3), n))
-  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = "log.txt")
+  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = "onestep_log.txt")
   doSNOW::registerDoSNOW(cl)
   time = proc.time()
 
   table <- foreach::foreach(i = 1:nrow(workflow), .options.snow = opts,
                             .packages = c("dplyr", "flowCore", "foreach", "magrittr","mclust"), .combine = rbind) %dopar% {
 
-                              print(i)
+                              #print(i)
                               ########### start data processing ###########
 
                               try(source("./processing.R"), silent = T)
+                              set.seed(123)
+                              # if(file.exists(paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))) {
+                              #   load(paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))
+                              #   load(paste0(savepath, "/info_saved.RData"))
+                              #   dataFileNames <- info_saved$dataFileNames
+                              #   metadata  <-  info_saved$metadata
+                              #   index_TIclass  <-  info_saved$index_TIclass
+                              # } else {
                               AP2_comp_frame <- try(comp_anpela(data = AP2_pro0_frame, method = workflow[i,1], index = index_TIclass,
                                                                 spillpath = spillpath, spillname = spillname, FSC = FSC,  SSC = SSC,
                                                                 control.dir = control.dir, control.def.file = control.def.file,
                                                                 single_pos_fcs = single_pos_fcs, single_pos_mass = single_pos_mass,
-                                                                CATALYSTM = CATALYSTM), silent = T)
+                                                                CATALYSTM = CATALYSTM,
+                                                                bc_key = bc_key, ss_exp = ss_exp), silent = T)
                               if (class(AP2_comp_frame) == "try-error") {
                                 res <- data.frame(Ca = NA, Cb = NA, Cc = NA, Cd = NA)
                                 rownames(res) <- rownames(workflow)[i]
@@ -565,7 +607,8 @@ oneStep_process_assess <- function(
                               rm(AP2_trans_frame)
 
                               AP2_sigcl_frame <- try(sigcl_anpela(data = AP2_norm_frame, method = workflow[i,4], index = index_TIclass,
-                                                                  Segment = Segment, Segment2 = Segment2), silent = T)
+                                                                  Segment = Segment, Segment2 = Segment2,
+                                                                  min_cells = min_cells, max_bins = max_bins, step = step, technique = technique), silent = T)
                               if (class(AP2_sigcl_frame) == "try-error") {
                                 res <- data.frame(Ca = NA, Cb = NA, Cc = NA, Cd = NA)
                                 rownames(res) <- rownames(workflow)[i]
@@ -594,7 +637,7 @@ oneStep_process_assess <- function(
                                 }
                                 save(res, file = paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))
                               }
-
+                              #}
                               ########### start workflow assessment ###########
 
                               if (studytype == "CSI") {
@@ -874,7 +917,7 @@ oneStep_process_assess <- function(
                                 rm(R)
 
                                 # Criterion C Robustness-Robustness
-                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.9), silent = T)
+                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.8), silent = T)
                                 if (class(Rob0) != "list") {
                                   Cc <- NA
                                 } else {

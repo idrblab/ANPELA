@@ -8,7 +8,7 @@ time_metric <- function(TIres, D, nruns = 10) {
       nruns <- min(nruns,TIres$N)
     } else {
       input_matrix <- cbind(D$expr, D$timepoint,  as.matrix(TIres$pseudotime)[, lineage, drop = FALSE])
-      nruns <- min(nruns, min(D$N))
+      nruns <- min(nruns, min(D$N[D$N != 0]))
     }
     
     colnames(input_matrix)[(length(input_matrix)-1):(length(input_matrix))] <- c("D.timepoint", "pseudot")

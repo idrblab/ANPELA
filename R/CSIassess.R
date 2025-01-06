@@ -41,6 +41,7 @@
 
 
 
+
 CSIassess <- function(name, data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
@@ -155,7 +156,7 @@ CSIassess <- function(name, data, respath,
   if (save_processed_res == "one_RData") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(data$AP2_pro1_frame_classTI), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK")
+    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="assess_log.txt")
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
 
@@ -378,7 +379,7 @@ CSIassess <- function(name, data, respath,
   } else if (save_processed_res == "one_folder") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="log.txt")
+    cl <- parallel::makeCluster(cores, type = "SOCK",outfile="assess_log.txt")
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
 

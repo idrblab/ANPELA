@@ -46,14 +46,18 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-`ANPELA` includes various built-in processing methods for Cytometry Single-cell Proteomics data (CySCP) data. In total, ANPELA provides **5** compensation methods, **14** transformation methods, **4** normalization methods, and **3** signal clean methods, which were listed below.
+`ANPELA` includes various built-in processing methods for Cytometry Single-cell Proteomics data (CySCP) data. In total, ANPELA provides **6** compensation methods, **15** transformation methods, **6** normalization methods, and **4** signal clean methods, which were listed below.
 
-- **Compensation:** the process step of removing unwanted spillover resulting from signal crosstalk and spectral overlap across detection channels. `ANPELA` provides 5 compensation methods, including `AutoSpill`, `CATALYST`, `CytoSpill`, `FlowCore` and `MetaCyto`. No compensation (`None`) is also allowed in `ANPELA`.
-- **Transformation:** the process step of adjusting the data with a heavily skewed distribution to a normal distribution. `ANPELA` provides 14 transformation methods, including `Arcsinh Transformation`, `Asinh with Non-negative Value`, `Asinh with Randomized Negative Value`, `Biexponential Transformation`, `Box-Cox Transformation`, `FlowVS Transformation`, `Hyperlog Transformation`, `Linear Transformation`, `LnTransform`, `Log Transformation`, `Logicle Transformation`,` QuadraticTransform`, `ScaleTransform` and `TruncateTransform`. No transformation (`None`) is also allowed in `ANPELA`.
-- **Normalization:** the process step of eliminating signal decay and technical variability across all files and batches over long-term data acquisition. `ANPELA` provides 4 normalization methods, including `Bead-based Normalization`, `GaussNorm`, `WarpSet` and `Zscore`. No normalization (`None`) is also allowed in `ANPELA`.
-- **Signal Clean:**  the process step of identifying and removing abrupt signal shifts and changes that derive from (i) abrupt changes in the flow rate, (ii) clogs within the capillary tubes, (iii) temporary disruptions in cytometer fluidics, and (iv) unstable data acquisition. `ANPELA` provides 3 signal clean methods, including `FlowAI`, `FlowClean` and `FlowCut`. No signal clean (`None`) is also allowed in `ANPELA`.
+- **Compensation:** the process step of removing unwanted spillover resulting from signal crosstalk and spectral overlap across detection channels. `ANPELA` provides 6 compensation methods, including `AutoSpill`, `CATALYST`, `CytoSpill`, `FlowCore`, `MetaCyto` and `spillR`. No compensation (`None`) is also allowed in `ANPELA`.
+- **Transformation:** the process step of adjusting the data with a heavily skewed distribution to a normal distribution. `ANPELA` provides 15 transformation methods, including `Arcsinh Transformation`, `Asinh with Non-negative Value`, `Asinh with Randomized Negative Value`, `Biexponential Transformation`, `Box-Cox Transformation`, `Centered Log Ratio Transformation`, `FlowVS Transformation`, `Hyperlog Transformation`, `Linear Transformation`, `Ln Transformation`, `Log Transformation`, `Logicle Transformation`, `Quadratic Transformation`, `Split Scale Transformation` and `Truncate Transformation`. No transformation (`None`) is also allowed in `ANPELA`.
+- **Normalization:** the process step of eliminating signal decay and technical variability across all files and batches over long-term data acquisition. `ANPELA` provides 6 normalization methods, including `Bead-based Normalization`, `GaussNorm`, `Mean Normalization`, `Min-max Normalization`, `WarpSet` and `ZScore`. No normalization (`None`) is also allowed in `ANPELA`.
+- **Signal Clean:**  the process step of identifying and removing abrupt signal shifts and changes that derive from (i) abrupt changes in the flow rate, (ii) clogs within the capillary tubes, (iii) temporary disruptions in cytometer fluidics, and (iv) unstable data acquisition. `ANPELA` provides 4 signal clean methods, including `FlowAI`, `FlowClean`, `FlowCut` and `PeacoQC`. No signal clean (`None`) is also allowed in `ANPELA`.
 
-For details of each method, please refer to the **Methods Introduction**.
+For details of each method provided by `ANPELA`, please refer to the vignette "Methods_Introduction" built in the package.
+
+```{r vignette_methods, eval = FALSE}
+vignette("Methods_Introduction")
+```
 
 `ANPELA` can execute over 1,000 workflows. To identify the best workflow, we developed two sets of criteria specifically for **Cell Subpopulation Identification (CSI)** and **Pseudo-time Trajectory Inference (PTI)**, which represent the most prevalent and pivotal analyses in proteomics.
 
@@ -86,11 +90,11 @@ You can use the example data provided in `ANPELA` to try it out.
 
 **MC_PTI example data**: A gated single-cell proteomic temporal dataset encoding the activation dynamics of 14 CD8+ cell intracellular markers perturbed by tetradecanoylphorbol acetate (PMA)/ionomycin at 8 sequential timepoints (0, 1, 5, 15, 30, 60, 120 and 240 min). [Download_882 KB](https://idrblab.cn/anpela2024/example_data/MC_PTI.zip)
 
-`ANPELA` requires specified data formats (you can refer to the example data), which include (**1**) the FCS raw data files (mandatory); (**2**) the CSV metadata file for sample annotation (mandatory); (**3**) the CSV pathway hierarchy file for PTI studies (optional); and (**4**) the prior knowledge data file (optional). The metadata file should include the columns of “filename” and “condition” for CSI studies, and the columns of “filename” and “timepoint” for PTI studies.
+`ANPELA` requires specified data formats (you can refer to the example data), which include (**1**) the FCS raw data files (mandatory); (**2**) the CSV metadata file for sample annotation (mandatory); (**3**) the CSV pathway hierarchy file for PTI studies (optional); and (**4**) the prior knowledge data file (optional). The metadata file should contain two columns: for CSI-related SCP research, the columns should be labeled as ‘filename’ and ‘condition’; for PTI-related SCP research, the columns should be labeled as ‘filename’ and ‘timepoint’.
 
--	“filename” indicates to the file name of each analyzed FCS file, which should be exactly the same as the base name without extension of each input FCS file;
--	“condition” refers to the corresponding biological phenotypes of each FCS file;
--	“timepoint” refers to the physical collection time of each FCS file to indicate the collection sequence.
+-	“filename” represents the file name of the raw data, which should correspond exactly to the file name of the raw data files but without the ‘.fcs’ extension;
+-	“condition” refers to the binary experimental conditions in CSI-related SCP experiments, such as control or experimental, each condition should have at least two FCS files;
+-	“timepoint” indicates the sampling time in PTI-related SCP experiments, requiring at least two time points, for example, 1 day, 3 days, 5 days, 7 days.
 
 Reading the FCS files, the metadata file and the pathway hierarchy file is a crucial step before data processing. Let's take the MC_PTI example data from a research about signal transduction as an example. Download MC_PTI sample data and position the files to the working directory.
 

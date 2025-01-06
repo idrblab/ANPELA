@@ -1,17 +1,20 @@
 comp_anpela <- function(data, method, index,
                         spillpath, spillname, FSC,  SSC,
                         control.dir, control.def.file,
-                        single_pos_fcs, single_pos_mass, CATALYSTM) {
+                        single_pos_fcs, single_pos_mass, CATALYSTM,
+                        sce_bead, marker_to_barc) {
   res <- switch (method,
-                 FlowCore = flowCore_comp(frame_list = data, col_names = index, spillpath = spillpath,
-                                          spillname = spillname, FSC = FSC, SSC = SSC),
-                 AutoSpill = autospill_comp(frame_list = data, col_names = index, control.dir = control.dir, control.def.file = control.def.file),
-                 CytoSpill = CytoSpill_comp(frame_list = data, cols = index),
-                 CATALYST = CATALYST_comp(frame_list = data, cols = index,
-                                          single_pos_fcs = single_pos_fcs,
-                                          single_pos_mass = single_pos_mass,
-                                          method = CATALYSTM),
-                 MetaCyto = MetaCyto_comp(frame_list = data, col_names = index),
+                 "FlowCore" = flowCore_comp(frame_list = data, col_names = index, spillpath = spillpath,
+                                            spillname = spillname, FSC = FSC, SSC = SSC),
+                 "AutoSpill" = autospill_comp(frame_list = data, col_names = index, control.dir = control.dir, control.def.file = control.def.file),
+                 "CytoSpill" = CytoSpill_comp(frame_list = data, cols = index),
+                 "CATALYST" = CATALYST_comp(frame_list = data, cols = index,
+                                            single_pos_fcs = single_pos_fcs,
+                                            single_pos_mass = single_pos_mass,
+                                            method = CATALYSTM),
+                 "MetaCyto" = MetaCyto_comp(frame_list = data, col_names = index),
+                 "spillR" = spillR_comp(frame_list = data, col_names = index,
+                                        sce_bead = sce_bead, marker_to_barc = marker_to_barc),
                  None = data
   )
   res <- lapply(res, function(x) {
@@ -46,8 +49,10 @@ trans_anpela <- function(data, method, index,
                  "Logicle Transformation" = logicle_trans(frame_list = data, col_names = index),
                  "Quadratic Transformation" = quadratic_trans(frame_list = data, col_names = index,
                                                               a = Quadratica, b = Quadraticb, c = Quadraticc),
-                 "Scale Transformation" = scale_trans(frame_list = data, col_names = index),
+                 "Split Scale Transformation" = splitScale_trans(frame_list = data, col_names = index),
                  "Truncate Transformation" = truncate_trans(frame_list = data, col_names = index, a = Truncatea),
+                 #"Adaptive Box-Cox Transformation" = AdaptiveBoxCox_trans(frame_list = data, col_names = index),
+                 "Centered Log Ratio Transformation" = CLR_trans(frame_list = data, col_names = index),
                  "None" = data
   )
   res <- lapply(res, function(x) {
@@ -66,6 +71,8 @@ norm_anpela <- function(data, method, index, beads_mass) {
                  "GaussNorm" = gaussNorm_norm(frame_list = data, col_names = index),
                  "WarpSet" = warpSet_norm(frame_list = data, col_names = index),
                  "ZScore" = ZScore_norm(frame_list = data, col_names = index),
+                 "Mean Normalization" = Mean_norm(frame_list = data, col_names = index),
+                 "Min-max Normalization" = MinMax_norm(frame_list = data, col_names = index),
                  "None" = data
   )
   res <- lapply(res, function(x) {
@@ -79,11 +86,14 @@ norm_anpela <- function(data, method, index, beads_mass) {
 
 sigcl_anpela <- function(data, method, index,
                          Segment,
-                         Segment2) {
+                         Segment2,
+                         min_cells, max_bins, step, technique) {
   res <- switch (method,
                  "FlowAI" = flowAI_signalC(frame_list = data, col_names = index),
                  "FlowCut" = flowCut_signalC(frame_list = data, Segment = Segment, col_names = index),
                  "FlowClean" = flowClean_signalC(frame_list = data, col_names = index, Segment = Segment2),
+                 "PeacoQC" = PeacoQC_signalC(frame_list = data, col_names = index,
+                                             min_cells = min_cells, max_bins = max_bins, step = step, technique = technique),
                  "None" = data
   )
   res <- lapply(res, function(x) {
@@ -103,7 +113,7 @@ flowCore_comp <- function(frame_list, col_names, spillpath = NULL, spillname = N
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
   col_names1 <- make.names(col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
@@ -127,17 +137,17 @@ flowCore_comp <- function(frame_list, col_names, spillpath = NULL, spillname = N
   } else if (all(sapply(frame_list1, function(x) !is.null(x@description[["spillover"]])))) {
     spill <- lapply(frame_list1, function(x) return(x@description[["spillover"]]))
   }
-  
+
   x_comp <- lapply(1:length(frame_list1), function (i) {
     dimnames(spill[[i]])[[1]] <- make.names(dimnames(spill[[i]])[[1]])
     dimnames(spill[[i]])[[2]] <- make.names(dimnames(spill[[i]])[[2]])
     return(flowCore::compensate(x = frame_list1[[i]], spillover = spill[[i]]))
   })
-  
+
   for (j in 1:length(frame_list1)) {
     frame_list1[[j]]@exprs[, col_names1] <- x_comp[[j]]@exprs[, col_names1]
   }
-  
+
   frame_list1 <- lapply(frame_list1, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -148,7 +158,7 @@ flowCore_comp <- function(frame_list, col_names, spillpath = NULL, spillname = N
 # Compensation: CytoSpill ------------------------------------------------------------
 CytoSpill_comp <- function(frame_list, cols) {
   GetSpillMat <- function (data = NULL, cols, n, file = NULL, threshold = 0.1) {
-    
+
     cutoffs <- CytoSpill:::.DeriveCutoffs(data, cols, n)
     model <- .EstimateSpill(data, cutoffs, cols, upperbound = threshold)
     estimates <- model[[1]]
@@ -164,7 +174,7 @@ CytoSpill_comp <- function(frame_list, cols) {
     }
     return(spillmat)
   }
-  
+
   .EstimateSpill <- function (data, cutoffs, cols, upperbound = 0.1) {
     results <- list()
     data <- data[, cols]
@@ -195,7 +205,7 @@ CytoSpill_comp <- function(frame_list, cols) {
     }
     return(list(results, xcols))
   }
-  
+
   .SpillColsData <- function (data, l = CATALYST::isotope_list) {
     chs <- unlist(regmatches(colnames(data), gregexpr("\\(.*\\)", colnames(data))))
     ms <- as.numeric(sapply(stringr::str_extract_all(colnames(data),"[0-9]+"), function(x) {x[length(x)]}))
@@ -207,10 +217,10 @@ CytoSpill_comp <- function(frame_list, cols) {
       p1 <- p2 <- m1 <- m2 <- ox <- iso <- NULL
       if ((ms[i] + 1) %in% ms)
         p1 <- which(ms == (ms[i] + 1))
-      
+
       if ((ms[i] + 2) %in% ms)
         p2 <- which(ms == (ms[i] + 2))
-      
+
       if ((ms[i] - 1) %in% ms)
         m1 <- which(ms == (ms[i] - 1))
       if ((ms[i] - 2) %in% ms)
@@ -229,7 +239,7 @@ CytoSpill_comp <- function(frame_list, cols) {
     }
     return(spill_cols)
   }
-  
+
   res <- list()
   for (i in 1:length(frame_list)) {
     fcs_exprs <- frame_list[[i]]@exprs
@@ -256,16 +266,16 @@ CATALYST_comp <- function(frame_list, cols, single_pos_fcs, single_pos_mass, met
   for (i in 1:length(frame_list1)) {
     colnames(frame_list1[[i]]@exprs) <- frame_list[[i]]@parameters@data$name
   }
-  
+
   # 获得补偿矩阵
   spill <- CATALYST::assignPrelim(x = single_pos_fcs, y = single_pos_mass) %>%
     CATALYST::estCutoffs() %>%
     CATALYST::applyCutoffs() %>%
     CATALYST::computeSpillmat()
-  
+
   dimnames(spill)[[1]] <- make.names(dimnames(spill)[[1]])
   dimnames(spill)[[2]] <- make.names(dimnames(spill)[[2]])
-  
+
   res <- list()
   for (i in 1:length(frame_list1)) {
     fcs_exprs <- frame_list1[[i]]
@@ -285,14 +295,14 @@ autospill_comp <- function(frame_list, col_names, control.dir, control.def.file)
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   # set parameters
   param <- autospill::get.autospill.param("minimal")
   # adjusted parameters
@@ -307,7 +317,7 @@ autospill_comp <- function(frame_list, col_names, control.dir, control.def.file)
   invisible(capture.output(
     refine.spillover.result <- autospill::refine.spillover(marker.spillover.unco.untr, NULL, flow.gate, flow.control, param)
   ))
-  
+
   spill <- refine.spillover.result[["spillover"]]
   dimnames(spill)[[1]] <- make.names(dimnames(spill)[[1]])
   dimnames(spill)[[2]] <- make.names(dimnames(spill)[[2]])
@@ -327,14 +337,14 @@ MetaCyto_comp <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   if (!is.null(flowCore::keyword(frame_list1[[1]], "SPILL")[[1]])) {
     check <- lapply(frame_list1, function(x) {
       result = isSymmetric(flowCore::keyword(x, "SPILL")[[1]])
@@ -346,18 +356,54 @@ MetaCyto_comp <- function(frame_list, col_names) {
       })
     }
   }
-  
+
   for (j in 1:length(x_comp)) {
     frame_list1[[j]]@exprs[, col_names1] <- x_comp[[j]]@exprs[, col_names1]
   }
-  
+
   frame_list1 <- lapply(frame_list1, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
   })
   return(frame_list1)
 }
+# Compensation: spillR ------------------------------------------------------------
+spillR_comp <- function(frame_list, col_names, sce_bead, marker_to_barc) {
+  col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
+  col_names1 <- sub("\\(", "", col_names1)
+  col_names1 <- sub("\\)", "", col_names1)
 
+  frame_list1 <- lapply(frame_list, function(x) {
+    colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
+    colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
+    colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
+    return(x)
+  })
+
+  # sce_bead <- CATALYST::prepData(ss_exp)
+  # sce_bead <- CATALYST::assignPrelim(sce_bead, bc_key, verbose = FALSE)
+  # sce_bead <- CATALYST::applyCutoffs(estCutoffs(sce_bead))
+  # sce_bead <- CATALYST::computeSpillmat(sce_bead)
+  #
+  # marker_to_barc <- SummarizedExperiment::rowData(sce_bead)[, c("channel_name", "is_bc")] |>
+  #   dplyr::as_tibble() |>
+  #   dplyr::filter(is_bc == TRUE) |>
+  #   dplyr::mutate(barcode = bc_key) |>
+  #   dplyr::select(marker = channel_name, barcode)
+
+  for (i in 1:length(frame_list1)) {
+    fcs_exprs <- frame_list1[[i]]
+    fcs_exprs@exprs <- fcs_exprs@exprs[, col_names1]
+    sce <- CATALYST::prepData(fcs_exprs)
+    data_compensated <- spillR::compCytof(sce, sce_bead, marker_to_barc, impute_value = NA)
+    frame_list1[[i]]@exprs[, col_names1] <- t(data_compensated@assays@data@listData[["compcounts"]])
+    colnames(frame_list1[[i]]@exprs) <- colnames(frame_list[[i]]@exprs)
+    rownames(frame_list1[[i]]@exprs) <- rownames(frame_list[[j]]@exprs)
+    #讨论是否要trans #记得额外测试
+  }
+  return(frame_list1)
+
+}
 
 # Transformation ------------------------------------------------------------
 
@@ -366,7 +412,7 @@ arcsinh_trans <- function(frame_list, col_names, a = 0, b = 1, c = 0) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
@@ -376,7 +422,7 @@ arcsinh_trans <- function(frame_list, col_names, a = 0, b = 1, c = 0) {
   asinhTrans <- flowCore::arcsinhTransform(a = a, b = b, c = c)
   translist <- flowCore::transformList(col_names1, asinhTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -389,12 +435,12 @@ ANN_trans <- function(frame_list, col_names, a = 0, b = 1, c = 0, threshold = 1)
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <-lapply(frame_list, function(x, col_names1, threshold){
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
-    
+
     data <- x@exprs[, col_names1] - threshold
     data[data < 0] <- 0
     x@exprs[, col_names1] <- data
@@ -403,7 +449,7 @@ ANN_trans <- function(frame_list, col_names, a = 0, b = 1, c = 0, threshold = 1)
   asinhTrans <- flowCore::arcsinhTransform(a = a, b = b, c = c)
   translist <- flowCore::transformList(col_names1, asinhTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -416,23 +462,23 @@ ARN_trans <- function(frame_list, col_names, a = 0, b = 1, c = 0, threshold = 1)
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <-lapply(frame_list, function(x, col_names1, threshold){
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
-    
+
     data <- x@exprs[, col_names1] - threshold
     set.seed(123)
     data[data < 0] <- rnorm(length(data[data < 0]))
     x@exprs[, col_names1] <- data
     return(x)
   }, col_names1 = col_names1, threshold = threshold)
-  
+
   asinhTrans <- flowCore::arcsinhTransform(a = a, b = b, c = c)
   translist <- flowCore::transformList(col_names1, asinhTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -446,19 +492,19 @@ biexp_trans <- function(frame_list, col_names, a = 0.5, b = 1, c = 0.5, d = 1, f
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   biexpTrans <- flowCore::biexponentialTransform(a = a, b = b, c = c, d = d, f = f, w = w,
                                                  tol = tol, maxit = maxit)
   translist <- flowCore::transformList(col_names1, biexpTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -471,23 +517,23 @@ BoxCox_trans <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   dataTransform_pre <- lapply(frame_list1, flowTrans::flowTrans,
                               fun = "mclMultivBoxCox", dims = col_names1,
                               n2f = F, parameters.only = F)
   dataTransform <- frame_list1
   for (j in 1:length(dataTransform)) {
     dataTransform[[j]]@exprs <- dataTransform_pre[[j]][["result"]]@exprs
-    rownames(dataTransform[[j]]@exprs) <- rownames(frame_list1[[j]]@exprs)
+    rownames(dataTransform[[j]]@exprs) <- rownames(frame_list[[j]]@exprs)
   }
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -500,14 +546,14 @@ flowVS_trans <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   optimStat <- function(fs1D, cfLow=-1, cfHigh=10, MAX_BT=10^9) {
     if(cfLow>=cfHigh) {
       print("Warning: cfLow>=cfHigh, using default values")
@@ -518,14 +564,14 @@ flowVS_trans <- function(frame_list, col_names) {
     ncf =  length(cf)
     cfopt = rep(0,ncf-1)
     btopt = rep(0,ncf-1)
-    
+
     for(i in 1:(ncf-1)) {
       tol = (exp(cf[i+1]) - exp(cf[i]))/10
       opt = suppressWarnings(optimize(f = flowVS:::flowVS1D, interval = c(exp(cf[i]),exp(cf[i+1])), fs1D, tol=tol, plot=FALSE, MAX_BT=MAX_BT))
       btopt[i] = opt$objective
       cfopt[i] = opt$minimum
     }
-    
+
     minIdx = which.min(btopt)
     #now perform a local search around cfopt[minIdx] and plot
     del = cfopt[minIdx]/10
@@ -537,11 +583,11 @@ flowVS_trans <- function(frame_list, col_names) {
     for(i in c(1:5,7:11)) {
       btLocal[i] = flowVS:::flowVS1D(cfLocal[i], fs1D)
     }
-    
+
     minIdx = which.min(btLocal)
     return (cfLocal[minIdx])
   }
-  
+
   estParamFlowVS <- function (fs, channels) {
     checkmate::checkClass(fs, "flowSet")
     checkmate::checkClass(channels, "character")
@@ -557,15 +603,16 @@ flowVS_trans <- function(frame_list, col_names) {
     }
     return(cofactors)
   }
-  
+
   data <- as(frame_list1, "flowSet")
   cofactors <- estParamFlowVS(fs = data, channels = col_names1)
   data_res <- flowVS::transFlowVS(data, channels = col_names1, cofactors)
   res <- lapply(1:length(data_res), function(i, frame_list, data_res) {
+    rownames(data_res[[i]]@exprs) <- rownames(frame_list[[i]]@exprs)
     frame_list[[i]]@exprs <- data_res[[i]]@exprs
     return(frame_list[[i]])
   }, frame_list = frame_list, data_res = data_res)
-  
+
   res <- lapply(res, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -578,21 +625,21 @@ hyperlog_trans <- function(frame_list, col_names, a = 1, b = 1) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   hyperlogTrans <- hyperlog(col_names1, a = a, b = b)
   dataTransform <- lapply(frame_list1, function(x, hyperlogTrans) {
     data <- x@exprs
     x@exprs[, col_names1] <- matrix(as.vector(eval(hyperlogTrans)(data)), nrow = nrow(x@exprs), dimnames = list(NULL, col_names))
     return(x)
   }, hyperlogTrans = hyperlogTrans)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -605,18 +652,18 @@ linear_trans <- function(frame_list, col_names, a = 2, b = 0) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   linearTrans <- flowCore::linearTransform(a = a, b = b)
   translist <- flowCore::transformList(col_names1, linearTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -629,18 +676,18 @@ ln_trans <- function(frame_list, col_names, r = 1, d = 1) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   lnTrans <- flowCore::lnTransform(r = r, d = d)
   translist <- flowCore::transformList(col_names1, lnTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -653,18 +700,18 @@ log_trans <- function(frame_list, col_names, logbase = 10, r = 1, d = 1) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   logTrans <- flowCore::logTransform(logbase = logbase, r = r, d = d)
   translist <- flowCore::transformList(col_names1, logTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -677,18 +724,18 @@ logicle_trans <- function(frame_list, col_names, w = 0.5, t = 262144, m = 4.5, a
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   logicleTrans <- flowCore::logicleTransform(w = w, t = t, m = m, a = a) # 262144 for a 18 bit data range
   translist <- flowCore::transformList(col_names1, logicleTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -701,18 +748,18 @@ quadratic_trans <- function(frame_list, col_names, a = 1, b = 1, c = 0) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   quadraticTrans <- flowCore::quadraticTransform(a = a, b = b, c = c)
   translist <- flowCore::transformList(col_names1, quadraticTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -720,26 +767,25 @@ quadratic_trans <- function(frame_list, col_names, a = 1, b = 1, c = 0) {
   return(dataTransform)
 }
 
-# Transformation: Scale Transformation ------------------------------------------------------------
-scale_trans <- function(frame_list, col_names) {
+# Transformation: Split Scale Transformation ------------------------------------------------------------
+splitScale_trans <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
-  a <- unlist(lapply(frame_list1, function(x, col_names1){min(x@exprs[,col_names1])}, col_names1 = col_names1))
-  b <- unlist(lapply(frame_list1, function(x, col_names1){max(x@exprs[,col_names1])}, col_names1 = col_names1))
-  
+
+  maxValue <- unlist(lapply(frame_list1, function(x, col_names1){max(x@exprs[,col_names1])}, col_names1 = col_names1))
+
   dataTransform <- lapply(1:length(frame_list1), function(i) {
-    scaleTrans <- flowCore::scaleTransform(a = a[i], b = b[i])
-    translist <- flowCore::transformList(col_names1, scaleTrans)
-    return(flowCore::transform(frame_list1[[i]], translist))
+    ssTransform  <- flowCore::splitScaleTransform("mySplitTransform",maxValue = maxValue[i])
+    translist <- flowCore::transform(frame_list1[[i]], transformList(col_names1, ssTransform))
+    return(translist)
   })
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
@@ -753,18 +799,18 @@ truncate_trans <- function(frame_list, col_names, a = 1) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   truncateTrans <- flowCore::truncateTransform(a = a)
   translist <- flowCore::transformList(col_names1, truncateTrans)
   dataTransform <- lapply(frame_list1, flowCore::transform, translist = translist)
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -772,6 +818,77 @@ truncate_trans <- function(frame_list, col_names, a = 1) {
   return(dataTransform)
 }
 
+# Transformation: Adaptive Box-Cox Transformation----------------------------------------------------
+AdaptiveBoxCox_trans <- function(frame_list, col_names){
+  col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
+  col_names1 <- sub("\\(", "", col_names1)
+  col_names1 <- sub("\\)", "", col_names1)
+
+  frame_list1 <- lapply(frame_list, function(x) {
+    colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
+    colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
+    colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
+    return(x)
+  })
+
+  frame_list2 <- lapply(seq_along(frame_list1), function(i) {
+    x <- frame_list1[[i]]
+    x@exprs <- t(x@exprs)
+    x@exprs <- cbind(Name = rownames(x@exprs), x@exprs)
+    x@exprs <- rbind(Group = c("Group", rep(names(frame_list1)[i], ncol(x@exprs) - 1)), x@exprs)
+    return(x)
+  })
+
+  dataTransform <- lapply(frame_list2, function(x) {
+    exprs <- x@exprs[c("Group",col_names1),]
+    temp <- ABCstats::ABCtransform(data.frame(exprs))
+    x@exprs[c("Group",col_names1),] <- as.matrix(temp[,!colnames(temp) %in% "lambda"])
+    return(x)
+  })
+
+  dataTransform <- lapply(seq_along(dataTransform), function(l) {
+    x <- dataTransform[[l]]
+    x@exprs <- t(x@exprs)
+    x@exprs <- x@exprs[!rownames(x@exprs) %in% "Name",!colnames(x@exprs) %in% "Group"]
+    x@exprs <- apply(x@exprs, 2, as.numeric)
+    colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
+    rownames(x@exprs) <- rownames(frame_list[[l]]@exprs)
+    return(x)
+  })
+
+  return(dataTransform)
+}#new
+
+# Transformation: Centered Log Ratio Transformation------------------------------------------------------------
+CLR_trans <- function (frame_list, col_names){
+  col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
+  col_names1 <- sub("\\(", "", col_names1)
+  col_names1 <- sub("\\)", "", col_names1)
+
+  frame_list1 <- lapply(frame_list, function(x) {
+    colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
+    colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
+    colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
+    return(x)
+  })
+
+  clr <- function(x){
+    return(log1p(x = x/(exp(x = sum(log1p(x = x[x > 0]), na.rm = TRUE)/length(x = x)))))
+  }
+
+  dataTransform <- lapply(frame_list1, function(x) {
+    exprs <- x@exprs[, col_names1]
+    temp <- apply(exprs, 2, clr)
+    x@exprs[, col_names1] <- temp
+    return(x)
+  })
+
+  dataTransform <- lapply(dataTransform, function(x) {
+    colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
+    return(x)
+  })
+  return(dataTransform)
+}#new
 
 # Normalization ------------------------------------------------------------
 
@@ -780,27 +897,27 @@ CATALYST_norm <- function(frame_list, col_names, beads_mass) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   ncell_frame <- sapply(frame_list1, function(x) nrow(x@exprs))
-  
+
   frame_list1 <- CATALYST::concatFCS(frame_list1, by_time = F)
-  
+
   frame_list1 <- CATALYST::normCytof(x = frame_list1, y = beads_mass, remove_beads = F, plot = F)
-  
+
   res <- lapply(1:length(ncell_frame), function(i) {
     a <- sum(ncell_frame[0:(i-1)])
     b <- a + ncell_frame[i]
     frame_list[[i]]@exprs[, col_names] <- frame_list1@exprs[(a+1):b, col_names1]
     return(frame_list[[i]])
   })
-  
+
   res <- lapply(res, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -813,21 +930,21 @@ gaussNorm_norm <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   data <- as(frame_list1, "flowSet")
   data_res <- flowStats::gaussNorm(flowset = data, channel.names = col_names1, max.lms = 1)$flowset
   res <- lapply(1:length(data_res), function(i) {
     frame_list[[i]]@exprs <- data_res[[i]]@exprs
     return(frame_list[[i]])
   })
-  
+
   res <- lapply(res, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -840,21 +957,21 @@ warpSet_norm <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   data <- as(frame_list1, "flowSet")
   data_res <- flowStats::warpSet(data, col_names1)
   res <- lapply(1:length(data_res), function(i) {
     frame_list[[i]]@exprs <- data_res[[i]]@exprs
     return(frame_list[[i]])
   })
-  
+
   res <- lapply(res, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -867,33 +984,30 @@ ZScore_norm <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   data_res <- lapply(frame_list1, function(x) {
-    exprs <- x@exprs
+    exprs <- x@exprs[, col_names1]
     exprs[exprs == 0] <- NA # 对非零值进行scale(x)
-    scaled_non_zero_exprs <- exprs
-    scaled_non_zero_exprs[, col_names1] <- scale(exprs[, col_names1])
-    
-    scaled_non_zero_exprs[is.na(exprs)] <- 0
-    
-    x@exprs <- scaled_non_zero_exprs
-    
+    temp <- scale(exprs)
+    temp[is.na(exprs)] <- 0
+    x@exprs[, col_names1] <- temp
+
     return(x)
   })
-  
-  
+
+
   res <- lapply(1:length(data_res), function(i) {
     frame_list[[i]]@exprs <- data_res[[i]]@exprs
     return(frame_list[[i]])
   })
-  
+
   res <- lapply(res, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -901,6 +1015,71 @@ ZScore_norm <- function(frame_list, col_names) {
   return(res)
 }
 
+# Normalization: Mean Normalization --------------------------------------------------
+Mean_norm <- function(frame_list, col_names) {
+  col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
+  col_names1 <- sub("\\(", "", col_names1)
+  col_names1 <- sub("\\)", "", col_names1)
+
+  frame_list1 <- lapply(frame_list, function(x) {
+    colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
+    colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
+    colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
+    return(x)
+  })
+
+  data_res <- lapply(frame_list1, function(x) {
+    exprs <- x@exprs[, col_names1]
+    temp <-  sweep(exprs,2,apply(exprs,2,mean,na.rm=T),FUN="/")
+    x@exprs[, col_names1] <- temp
+
+    return(x)
+  })
+
+  res <- lapply(1:length(data_res), function(i) {
+    frame_list[[i]]@exprs <- data_res[[i]]@exprs
+    return(frame_list[[i]])
+  })
+
+  res <- lapply(res, function(x) {
+    colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
+    return(x)
+  })
+  return(res)
+}
+
+# Normalization: Min-max Normalization --------------------------------------------------
+MinMax_norm <- function(frame_list, col_names) {
+  col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
+  col_names1 <- sub("\\(", "", col_names1)
+  col_names1 <- sub("\\)", "", col_names1)
+
+  frame_list1 <- lapply(frame_list, function(x) {
+    colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
+    colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
+    colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
+    return(x)
+  })
+  mm_norm <- function(x) {(x - min(x, na.rm=TRUE))/(max(x, na.rm=TRUE)-min(x, na.rm=TRUE))}
+
+  data_res <- lapply(frame_list1, function(x) {
+    exprs <- x@exprs[, col_names1]
+    temp <-  apply(exprs,2,mm_norm)
+    x@exprs[, col_names1] <- temp
+    return(x)
+  })
+
+  res <- lapply(1:length(data_res), function(i) {
+    frame_list[[i]]@exprs <- data_res[[i]]@exprs
+    return(frame_list[[i]])
+  })
+
+  res <- lapply(res, function(x) {
+    colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
+    return(x)
+  })
+  return(res)
+}
 # Signal Clean ------------------------------------------------------------
 
 # Signal Clean: flowAI ------------------------------------------------------------
@@ -908,30 +1087,30 @@ flowAI_signalC <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
-  flow_auto_qc <- function (fcsfiles, remove_from = "all", output = 1, timeCh = NULL, 
-                            timestep = NULL, second_fractionFR = 0.1, deviationFR = "MAD", 
-                            alphaFR = 0.01, decompFR = TRUE, ChExcludeFS = c("FSC", 
-                                                                             "SSC"), outlier_binsFS = FALSE, pen_valueFS = 500, max_cptFS = 3, 
-                            ChExcludeFM = c("FSC", "SSC"), sideFM = "both", neg_valuesFM = 1, 
-                            html_report = "_QC", mini_report = "QCmini", fcs_QC = "_QC", 
+
+  flow_auto_qc <- function (fcsfiles, remove_from = "all", output = 1, timeCh = NULL,
+                            timestep = NULL, second_fractionFR = 0.1, deviationFR = "MAD",
+                            alphaFR = 0.01, decompFR = TRUE, ChExcludeFS = c("FSC",
+                                                                             "SSC"), outlier_binsFS = FALSE, pen_valueFS = 500, max_cptFS = 3,
+                            ChExcludeFM = c("FSC", "SSC"), sideFM = "both", neg_valuesFM = 1,
+                            html_report = "_QC", mini_report = "QCmini", fcs_QC = "_QC",
                             fcs_highQ = FALSE, fcs_lowQ = FALSE, folder_results = "resultsQC") {
     if (is.character(fcsfiles)) {
-      FileType <- toupper(strsplit(basename(fcsfiles[1]), 
+      FileType <- toupper(strsplit(basename(fcsfiles[1]),
                                    split = "\\.")[[1]][-1])
       if (length(FileType) == 0) {
-        warning("It was not possible to retrieve the file extension. The data will be processed as FCS.", 
+        warning("It was not possible to retrieve the file extension. The data will be processed as FCS.",
                 call. = FALSE)
         FileType <- "FCS"
       } else if (FileType == "LMD") {
-        set <- read.flowSet(files = fcsfiles, dataset = 2, 
+        set <- read.flowSet(files = fcsfiles, dataset = 2,
                             truncate_max_range = FALSE)
       } else {
         set <- read.flowSet(files = fcsfiles, truncate_max_range = FALSE)
@@ -955,18 +1134,18 @@ flowAI_signalC <- function(frame_list, col_names) {
       timeCh <- flowAI:::findTimeChannel(set[[1]])
     }
     if (is.null(timeCh)) {
-      warning("Impossible to retrieve the time channel automatically. The quality control can only be performed on signal acquisition and dynamic range.", 
+      warning("Impossible to retrieve the time channel automatically. The quality control can only be performed on signal acquisition and dynamic range.",
               call. = FALSE)
     }
     if (missing(timestep) || is.null(timestep)) {
-      word <- which(grepl("TIMESTEP", names(keyword(set[[1]])), 
+      word <- which(grepl("TIMESTEP", names(keyword(set[[1]])),
                           ignore.case = TRUE))
       timestep <- as.numeric(keyword(set[[1]])[[word[1]]])
       if (!length(timestep)) {
         if (FileType == "LMD") {
           timestep <- 0.0009765625
         } else {
-          warning("The TIMESTEP keyword was not found and hence it was set to 0.01. Graphs labels indicating time might not be correct", 
+          warning("The TIMESTEP keyword was not found and hence it was set to 0.01. Graphs labels indicating time might not be correct",
                   call. = FALSE)
           timestep <- 0.01
         }
@@ -975,7 +1154,7 @@ flowAI_signalC <- function(frame_list, col_names) {
     if (second_fractionFR == "timestep") {
       second_fractionFR <- timestep
     } else if (second_fractionFR < timestep) {
-      stop("The argument second_fractionFR must be greater or equal to timestep.", 
+      stop("The argument second_fractionFR must be greater or equal to timestep.",
            call. = FALSE)
     }
     if (folder_results != FALSE) {
@@ -993,13 +1172,13 @@ flowAI_signalC <- function(frame_list, col_names) {
         reportfile <- paste0(filename, html_report, ".html")
       }
       if (mini_report != FALSE) {
-        minireport <- paste0(folder_results, mini_report, 
+        minireport <- paste0(folder_results, mini_report,
                              ".txt")
         if (!file.exists(minireport)) {
-          write.table(t(c("Name file", "n. of events", 
-                          "% anomalies", "analysis from", "% anomalies flow Rate", 
-                          "% anomalies Signal", "% anomalies Margins")), 
-                      minireport, sep = "\t", row.names = FALSE, 
+          write.table(t(c("Name file", "n. of events",
+                          "% anomalies", "analysis from", "% anomalies flow Rate",
+                          "% anomalies Signal", "% anomalies Margins")),
+                      minireport, sep = "\t", row.names = FALSE,
                       quote = FALSE, col.names = FALSE)
         }
       }
@@ -1018,8 +1197,8 @@ flowAI_signalC <- function(frame_list, col_names) {
       if (!is.null(timeCh)) {
         if (length(unique(exprs(set[[i]])[, timeCh])) == 1) {
           cat("The time channel contains a single value. It cannot be used to recreate the flow rate. \n")
-          warning(paste0("The time channel in ", filename_ext, 
-                         " contains a single value. It cannot be used to recreate the flow rate. \n"), 
+          warning(paste0("The time channel in ", filename_ext,
+                         " contains a single value. It cannot be used to recreate the flow rate. \n"),
                   call. = FALSE)
           TimeChCheck <- "single_value"
         } else {
@@ -1036,15 +1215,15 @@ flowAI_signalC <- function(frame_list, col_names) {
         ordFCS <- set[[i]]
       }
       origin_cellIDs <- 1:nrow(ordFCS)
-      FR_bin_arg <- list(second_fraction = second_fractionFR, 
+      FR_bin_arg <- list(second_fraction = second_fractionFR,
                          timeCh = timeCh, timestep = timestep)
-      FR_QC_arg <- list(alpha = alphaFR, use_decomp = decompFR, 
+      FR_QC_arg <- list(alpha = alphaFR, use_decomp = decompFR,
                         deviation = deviationFR)
-      FS_bin_arg <- list(binSize = FSbinSize, timeCh = timeCh, 
+      FS_bin_arg <- list(binSize = FSbinSize, timeCh = timeCh,
                          timestep = timestep, TimeChCheck = TimeChCheck)
-      FS_QC_arg <- list(ChannelExclude = ChExcludeFS, pen_valueFS, 
+      FS_QC_arg <- list(ChannelExclude = ChExcludeFS, pen_valueFS,
                         max_cptFS, outlier_binsFS)
-      FM_QC_arg <- list(ChannelExclude = ChExcludeFM, side = sideFM, 
+      FM_QC_arg <- list(ChannelExclude = ChExcludeFM, side = sideFM,
                         neg_values = neg_valuesFM)
       if (is.null(TimeChCheck)) {
         FlowRateData <- try(do.call(flowAI:::flow_rate_bin, c(ordFCS, FR_bin_arg)))
@@ -1069,22 +1248,22 @@ flowAI_signalC <- function(frame_list, col_names) {
           good_cell_ids_list <- lapply(filtered_list, function(x) x$goodCellIDs)
           goodCellIDs <- Reduce(intersect, good_cell_ids_list)
         }
-        
+
         # shc
-        # goodCellIDs <- intersect(FlowRateQC$goodCellIDs, 
+        # goodCellIDs <- intersect(FlowRateQC$goodCellIDs,
         #                          intersect(FlowSignalQC$goodCellIDs, FlowMarginQC$goodCellIDs))
-        
+
         analysis <- "Flow Rate, Flow Signal and Flow Margin"
       } else if (remove_from == "FR_FS") {
-        goodCellIDs <- intersect(FlowRateQC$goodCellIDs, 
+        goodCellIDs <- intersect(FlowRateQC$goodCellIDs,
                                  FlowSignalQC$goodCellIDs)
         analysis <- "Flow Rate and Flow Signal"
       } else if (remove_from == "FR_FM") {
-        goodCellIDs <- intersect(FlowRateQC$goodCellIDs, 
+        goodCellIDs <- intersect(FlowRateQC$goodCellIDs,
                                  FlowMarginQC$goodCellIDs)
         analysis <- "Flow Rate and Flow Margin"
       } else if (remove_from == "FS_FM") {
-        goodCellIDs <- intersect(FlowSignalQC$goodCellIDs, 
+        goodCellIDs <- intersect(FlowSignalQC$goodCellIDs,
                                  FlowMarginQC$goodCellIDs)
         analysis <- "Flow Signal and Flow Margin"
       } else if (remove_from == "FR") {
@@ -1098,7 +1277,7 @@ flowAI_signalC <- function(frame_list, col_names) {
         analysis <- "Flow Margin"
       }
       badCellIDs <- setdiff(origin_cellIDs, goodCellIDs)
-      totalBadPerc <- round(length(badCellIDs)/length(origin_cellIDs), 
+      totalBadPerc <- round(length(badCellIDs)/length(origin_cellIDs),
                             4)
       sub_exprs <- exprs(ordFCS)
       params <- parameters(ordFCS)
@@ -1112,12 +1291,12 @@ flowAI_signalC <- function(frame_list, col_names) {
       }
       if (fcs_QC != FALSE || output == 2) {
         QCvector <- FlowSignalData$cellBinID[, "binID"]
-        if (length(QCvector) > 9000) 
-          QCvector <- runif(length(QCvector), min = 1, 
+        if (length(QCvector) > 9000)
+          QCvector <- runif(length(QCvector), min = 1,
                             max = 9000)
-        QCvector[badCellIDs] <- runif(length(badCellIDs), 
+        QCvector[badCellIDs] <- runif(length(badCellIDs),
                                       min = 10000, max = 20000)
-        newFCS <- addQC(QCvector, remove_from, sub_exprs, 
+        newFCS <- addQC(QCvector, remove_from, sub_exprs,
                         params, keyval)
         if (fcs_QC != FALSE) {
           suppressWarnings(write.FCS(newFCS, QC.fcs.file))
@@ -1128,34 +1307,34 @@ flowAI_signalC <- function(frame_list, col_names) {
         suppressWarnings(write.FCS(badfcs, bad.fcs.file))
       }
       if (mini_report != FALSE) {
-        write.table(t(c(filename, as.integer(dim(set[[i]])[1]), 
-                        totalBadPerc * 100, analysis, FlowRateQC$res_fr_QC$badPerc * 
-                          100, FlowSignalQC$Perc_bad_cells$badPerc_tot * 
-                          100, FlowMarginQC$badPerc * 100)), minireport, 
-                    sep = "\t", append = TRUE, row.names = FALSE, 
+        write.table(t(c(filename, as.integer(dim(set[[i]])[1]),
+                        totalBadPerc * 100, analysis, FlowRateQC$res_fr_QC$badPerc *
+                          100, FlowSignalQC$Perc_bad_cells$badPerc_tot *
+                          100, FlowMarginQC$badPerc * 100)), minireport,
+                    sep = "\t", append = TRUE, row.names = FALSE,
                     quote = FALSE, col.names = FALSE)
       }
       if (html_report != FALSE) {
         h_FS_graph <- round(0.4 * (ncol(ordFCS)), 1)
         if (!is.null(ChExcludeFS)) {
-          ChannelExcludedFS <- as.character(grep(paste(ChExcludeFS, 
+          ChannelExcludedFS <- as.character(grep(paste(ChExcludeFS,
                                                        collapse = "|"), ordFCS@parameters$name, value = TRUE))
         }
         if (!is.null(ChExcludeFM)) {
-          ChannelExcludedFM <- as.character(grep(paste(ChExcludeFM, 
+          ChannelExcludedFM <- as.character(grep(paste(ChExcludeFM,
                                                        collapse = "|"), ordFCS@parameters$name, value = TRUE))
         }
-        template_path <- system.file("rmd", "autoQC_report.Rmd", 
+        template_path <- system.file("rmd", "autoQC_report.Rmd",
                                      package = "flowAI")
-        new_template <- paste0(folder_results, filename, 
+        new_template <- paste0(folder_results, filename,
                                "_template.Rmd")
         file.copy(template_path, new_template)
         if (folder_results != FALSE) {
-          rmarkdown::render(new_template, html_document(), 
-                            output_dir = folder_results, output_file = reportfile, 
+          rmarkdown::render(new_template, html_document(),
+                            output_dir = folder_results, output_file = reportfile,
                             quiet = TRUE)
         } else {
-          rmarkdown::render(new_template, html_document(), 
+          rmarkdown::render(new_template, html_document(),
                             output_file = reportfile, quiet = TRUE)
         }
         file.remove(new_template)
@@ -1183,14 +1362,14 @@ flowAI_signalC <- function(frame_list, col_names) {
       return(out)
     }
   }
-  
+
   res <- lapply(frame_list1, flow_auto_qc,
                 ChExcludeFS = setdiff(colnames(frame_list1[[1]]@exprs), col_names1),
                 ChExcludeFM = setdiff(colnames(frame_list1[[1]]@exprs), col_names1),
                 html_report = F, mini_report = F, fcs_QC = F,
                 folder_results = FALSE
   )
-  
+
   res <- lapply(res, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -1203,16 +1382,16 @@ flowCut_signalC <- function(frame_list, Segment = 200, col_names) {
   # col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   # col_names1 <- sub("\\(", "", col_names1)
   # col_names1 <- sub("\\)", "", col_names1)
-  
+
   col_names1 <- sub("\\(.*", "", col_names)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   flowCut <- function (f, Segment = 500, Channels = NULL, Directory = NULL,
                        FileID = NULL, Plot = "Flagged Only", MaxContin = 0.1, MeanOfMeans = 0.13,
                        MaxOfMeans = 0.15, MaxValleyHgt = 0.1, MaxPercCut = 0.3,
@@ -1965,11 +2144,11 @@ flowCut_signalC <- function(frame_list, Segment = 200, col_names) {
     return(list(frame = f, ind = to.be.removed, data = resTable,
                 worstChan = worstChan))
   }
-  
+
   res <- lapply(frame_list1, function(data, Segment = Segment, col_names1 = col_names1){
     flowCut(f = data, Segment = Segment, Channels = col_names1, Plot = "None")$frame
   }, Segment = Segment, col_names1 = col_names1)
-  
+
   res <- lapply(res, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
@@ -1982,23 +2161,56 @@ flowClean_signalC <- function(frame_list, col_names, Segment = 200) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   res <- lapply(frame_list1, function(data, col_names1, Segment){
     flowClean::clean(data, vectMarkers = col_names1,
                      filePrefixWithDir = "aaaaaaaaaaaaaaaaaa", ext = "fcs", nCellCutoff = Segment)
   }, col_names1 = col_names1, Segment = Segment)
-  
+
   res <- lapply(res, function(x) {
     x@exprs <- x@exprs[, -ncol(x@exprs)]
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     x@parameters@data <- x@parameters@data[-nrow(x@parameters@data),]
+    return(x)
+  })
+  return(res)
+}
+
+# Signal Clean: PeacoQC ------------------------------------------------------------
+PeacoQC_signalC <- function(frame_list, col_names, min_cells, max_bins, step, technique) {
+  col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
+  col_names1 <- sub("\\(", "", col_names1)
+  col_names1 <- sub("\\)", "", col_names1)
+
+  frame_list1 <- lapply(frame_list, function(x) {
+    colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
+    colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
+    colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
+    return(x)
+  })
+
+  res <- lapply(frame_list1, function(data, col_names1, technique){
+    if (technique == "FC"){
+      data <- PeacoQC::RemoveMargins(ff = data, channels = col_names1, output="frame")
+    }
+    data <- PeacoQC::PeacoQC(ff = data, channels = col_names1, plot =F,
+                             save_fcs =F, report = F, output_directory = NULL,
+                             min_cells = min_cells, max_bins = max_bins, step = step)[["FinalFF"]]
+
+    return(data)
+  }, col_names1 = col_names1, technique = technique)
+
+  res <- lapply(res, function(x) {
+    x@exprs <- x@exprs[, -ncol(x@exprs)]
+    colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
+    x@parameters@data <- x@parameters@data[!x@parameters@data$name == "Original_ID",]
     return(x)
   })
   return(res)

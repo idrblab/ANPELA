@@ -1,9 +1,10 @@
 ### Calculate Biological Consistency
 Bio_con <- function(D, Pathway_Hierarchy_file, nruns = 3, dr_method = TIres$dr_method, TIres = TIres){
   # Pathway_Hierarchy_file : the file with the pathway info. Put with path, extension
-  Pathway_Hierarchy <- suppressMessages(as.data.frame(readr::read_delim(file = Pathway_Hierarchy_file, ";", escape_double = FALSE, trim_ws = TRUE)))
-  colnames(Pathway_Hierarchy) <- stringr::str_replace_all(colnames(Pathway_Hierarchy), "\\(.*", "")
-  Pathway_Hierarchy <- as.data.frame(apply(Pathway_Hierarchy, 2, function(x) stringr::str_replace_all(x, "\\(.*", "")))
+  Pathway_Hierarchy <- suppressMessages(as.data.frame(read.csv(file = Pathway_Hierarchy_file2, header = T, stringsAsFactors = F)))
+  #Pathway_Hierarchy <- suppressMessages(as.data.frame(readr::read_delim(file = Pathway_Hierarchy_file, ";", escape_double = FALSE, trim_ws = TRUE)))
+  #colnames(Pathway_Hierarchy) <- stringr::str_replace_all(colnames(Pathway_Hierarchy), "\\(.*", "")
+  #Pathway_Hierarchy <- as.data.frame(apply(Pathway_Hierarchy, 2, function(x) stringr::str_replace_all(x, "\\(.*", "")))
   # 11.17 处理特殊字符
   # Pathway_Hierarchy <- stringr::str_replace_all(Pathway_Hierarchy, "[[:punct:]]", "_")
   npar <- ncol(D$expr)

@@ -118,44 +118,21 @@ This section provides a comprehensive guide to the installation and
 configuration of `ANPELA` *R* package. It outlines the necessary tools
 required to ensure a seamless and accurate installation of the protocol.
 
-- **Tool 1.** ***R*** **language and RStudio**
+- **Tool 1.** ***R*** **language, RStudio and RTool**
 
-Install the R language and RStudio using their installation files, which
-are compatible with user’s operating system, already downloaded in the
-Equipment section.
+Install the R language, RStudio and RTool using their installation
+files, which are compatible with user’s operating system.
 
-- **Tool 2. devtools** ***R*** **Package**
-
-Install and load devtools R package.
-
-``` r
-install.packages("devtools")
-library(devtools)
-```
-
-- **Tool 3. The Imported** ***R*** **Packages**
+- **Tool 2. The required** ***R*** **Packages**
 
 Install a variety of *R* packages imported in this protocol.
-
-Installed from ***Bioconductor*** (can also from other repositories):
-flowCore, limma, SCORPIUS, slingshot, destiny, cytofkit, flowStats,
-flowAI, flowCut, flowClean and systemPipeR.
-
-``` r
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-Bioconductor_packages <- c("flowCore", "limma", "SCORPIUS", "slingshot", "destiny", 
-                           "cytofkit", "flowStats", "flowAI", "flowCut", "flowClean",
-                           "systemPipeR")
-
-BiocManager::install(Bioconductor_packages, ask = FALSE)
-```
 
 Installed from ***CRAN*** (can also from other repositories): dplyr,
 doParallel, rstan, Rtsne, pastecs, cowplot, ggpubr, gridExtra,
 MLmetrics, fossil, clusterCrit, VennDiagram, stringr, bbmle, mc2d,
 parallel, doSNOW, foreach, igraph, mclust, pheatmap, magrittr and withr.
+
+Installation commands:
 
 ``` r
 CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot", 
@@ -165,17 +142,39 @@ CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot"
 install.packages(CRAN_packages, dependencies = TRUE)
 ```
 
+Installed from ***Bioconductor*** (can also from other repositories):
+flowCore, limma, SCORPIUS, slingshot, destiny, cytofkit, flowStats,
+flowAI, flowCut, flowClean, spillR, PeacoQC and systemPipeR.
+
+Installation commands:
+
+``` r
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+Bioconductor_packages <- c("flowCore", "limma", "SCORPIUS", "slingshot", "destiny", 
+                           "cytofkit", "flowStats", "flowAI", "flowCut", "flowClean",
+                           "spillR", "PeacoQC", "systemPipeR")
+
+BiocManager::install(Bioconductor_packages, ask = FALSE)
+```
+
 Installed from ***GitHub*** (can also from other repositories):
 Rtsne.multicore and FLOWMAPR.
 
+Installation commands:
+
 ``` r
-devtools::install_github("jlmelville/Rtsne.multicore") 
-devtools::install_github("flowmapr/flowmapr")
+if (!requireNamespace("devtools", quietly = TRUE))
+    install.packages("devtools")
+devtools::install_github("RGLab/Rtsne.multicore")
+devtools::install_github("zunderlab/FLOWMAP")
 ```
 
-- **Tool 4. ANPELA** ***R*** **Package**
+- **Tool 3. ANPELA** ***R*** **Package**
 
-Install the `ANPELA` package.
+Install the `ANPELA` package by running the following command in
+RStudio:
 
 ``` r
 devtools::install_github("idrblab/ANPELA")
@@ -185,7 +184,7 @@ During the installation of `ANPELA`, the appearance of the error message
 “ERROR: dependency ‘package_name’ is not available for package
 ‘`ANPELA`’” indicates that the required imported package,
 ‘package_name’, has not been successfully installed. Users should refer
-to the detailed reinstallation instructions described in **Tool 3** to
+to the detailed reinstallation instructions described in **Tool 2** to
 resolve this issue and ensure the proper installation of the missing
 package before proceeding with the `ANPELA` installation.
 

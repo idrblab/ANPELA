@@ -73,7 +73,7 @@ PTIassess <- function(name, data, respath,
   if (save_processed_res == "one_RData") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(data$AP2_pro1_frame_classTI), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="log.txt")
+    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="assess_log.txt")
 
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
@@ -148,7 +148,7 @@ PTIassess <- function(name, data, respath,
                                 print(paste0("R_pvalue:",R_pvalue,"_",i))
 
                                 # Criterion C Robustness-Robustness
-                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.9), silent = T)
+                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.8), silent = T)
                                 if (class(Rob0) != "list") {
                                   Rob <- NA
                                 } else {
@@ -187,7 +187,7 @@ PTIassess <- function(name, data, respath,
   }else if (save_processed_res == "one_folder") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK")
+    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="assess_log.txt")
 
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
@@ -263,7 +263,7 @@ PTIassess <- function(name, data, respath,
                                 print(paste0("R_pvalue:",R_pvalue,"_",i))
 
                                 # Criterion C Robustness-Robustness
-                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.9), silent = T)
+                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.8), silent = T)
                                 if (class(Rob0) != "list") {
                                   Rob <- NA
                                 } else {

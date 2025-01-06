@@ -3,7 +3,7 @@
 # nruns: define how many different datasets will be contrasted
 # cell.subset : how many cells should be used (we used 20% )
 
-Robustness <- function(TIres, D, nruns = 4, cell.subset = 0.2, clustering.var = NULL, ...){
+Robustness <- function(TIres, D, nruns = 4, cell.subset = 0.9, clustering.var = NULL, ...){
   
   
   Robustness_result <- c()

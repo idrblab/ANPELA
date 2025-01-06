@@ -82,7 +82,7 @@ run_slingshot <- function(D, drMethod = c("tSNE", "PCA", "diffMaps","FLOWMAP"), 
   
   # 2nd step => trajectory inference
   # Clustering
-  #cl1 <- kmeans(data_drMethod, centers = 10)$cluster
+  #cl1 <- kmeans(data_drMethod, centers = 9)$cluster
   
   #library(mclust, quietly = TRUE)# version 6.1.1
   cl1 <- mclust::Mclust(data_drMethod)$classification
