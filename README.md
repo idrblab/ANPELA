@@ -69,48 +69,41 @@ You can cite the `ANPELA` publication as follows:
 
 ### Hardware
 
-- **Minimum**:<br> OS: Windows® 32/64-bit or macOS®<br> Processor: 2.0
-  GHz<br> Memory: 8 GB RAM<br> Storage: 2 GB available hard-disk
+- **Minimum**:<br> OS: Windows® 32/64-bit, macOS®, Linux<br> Processor:
+  2.0 GHz<br> Memory: 8 GB RAM<br> Storage: 2 GB available hard-disk
   space<br><br>
-- **Recommended**: <br> OS: Windows® 32/64-bit or macOS®<br> Processor:
-  4.0 GHz<br> Memory: 32 GB RAM<br> Storage: 8 GB available hard-disk
-  space<br><br>
-- An internet connection required for downloading *R* packages,
-  including the `ANPELA` protocol from GitHub
-  (<https://github.com/idrblab/ANPELA>) and other prerequisite *R*
-  packages.
+- **Recommended**: <br> OS: Windows® 32/64-bit, macOS®, Linux<br>
+  Processor: 4.0 GHz<br> Memory: 32 GB RAM<br> Storage: 8 GB available
+  hard-disk space<br><br>
+- An internet connection is necessary to download the ANPELA desktop
+  software or R packages (including the ANPELA R package and other
+  prerequisite R packages).
 
 ### Software
 
-The installation file of *R* language, named ‘*R*-x.y.z.tar.gz’ (where
-x, y, and z represent the version numbers of the software release) ,
-retrieved from CRAN R-project website (<https://cran.r-project.org>),
-which is compatible with user’s operating system (the latest version of
-this protocol was developed and tested using ‘*R* 4.4.1’);
+- *R v4.0 or later*. The installation file of *R* language, named
+  ‘*R*-x.y.z.tar.gz’ (where x, y, and z represent the version numbers of
+  the software release), retrieved from CRAN R-project website
+  (<https://cran.r-project.org>), which is compatible with user’s
+  operating system (the latest version of this protocol was developed
+  and tested using ‘*R* 4.4.1’).
 
-The RStudio installation file ‘RStudio-x.y.z.zip’ (where x, y, and z
-represent the version numbers of the software release) from RStudio
-website (<https://www.rstudio.com/>), which is compatible with user’s
-operating system;
+- *RStudio*. The RStudio installation file ‘RStudio-x.y.z.zip’ (where x,
+  y, and z represent the version numbers of the software release) from
+  RStudio website (<https://www.rstudio.com/>), which is compatible with
+  user’s operating system.
 
-A variety of *R* packages imported in this protocol, with some packages
-recommended for download from Bioconductor (<http://bioconductor.org/>),
-others advised for installation from CRAN
-(<https://cran.r-project.org>), and the remaining accessible from GitHub
-(<https://github.com/>).
+- *RTool*. The RTool installation file ‘rtoolx-y-z.zip’ (where x, y, and
+  z denote the specific version numbers of the software release) can be
+  obtained from the official RTool website
+  (<https://cran.r-project.org/bin/windows/Rtools> /);
 
-- Installed from ***Bioconductor*** (can also from other repositories):
-  flowCore, limma, SCORPIUS, slingshot, destiny, cytofkit, flowStats,
-  flowAI, flowCut, flowClean and systemPipeR.
-
-- Installed from ***CRAN*** (can also from other repositories): dplyr,
-  doParallel, rstan, Rtsne, pastecs, cowplot, ggpubr, gridExtra,
-  MLmetrics, fossil, clusterCrit, VennDiagram, stringr, bbmle, mc2d,
-  parallel, doSNOW, foreach, igraph, mclust, pheatmap, magrittr and
-  withr.
-
-- Installed from ***GitHub*** (can also from other repositories):
-  Rtsne.multicore and FLOWMAPR.
+- *Prerequisite R packages*. This protocol necessitates a range of *R*
+  packages (as described in [Installation Guide](#installation-guide)),
+  with certain packages obtained from CRAN
+  (<https://cran.r-project.org>), others installed from Bioconductor
+  (<https://bioconductor.org/>), and the remaining accessible from
+  GitHub (<https://github.com/>).
 
 ## Installation Guide
 
