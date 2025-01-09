@@ -91,8 +91,7 @@ FC_PTI(
 \item{index_protein}{Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
 \if{html}{\out{<br>}}It is a string separated by commas, typically in the format of “channel description (channel name)”, for example: “CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".}
 
-\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, including "scorpius_distSpear", "scorpius_distPear", "scorpius_distManh","slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps" and "prinCurves_diffMaps".
-\if{html}{\out{<br>}}For details of each method, please refer to the Methods Introduction.}
+\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
 
 \item{pathwayhierarchy}{Character, the absolute filepath of the pathway hierarchy file.}
 

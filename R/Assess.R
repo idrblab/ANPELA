@@ -13,7 +13,7 @@
 #' @param Phenograph_k Character, the number of nearest neighbours used in PhenoGraph clustering method.
 #'   <br>Only needed when the argument of "clusteringM" is selected as "PhenoGraph".
 #' @param DEP Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.
-#' @param TIM Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".
+#' @param TIM Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".
 #' @param pathwayhierarchy Character, the absolute filepath of the pathway hierarchy file.
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
@@ -35,7 +35,7 @@ Assess <- function(
     Phenograph_k = 30,
     DEP = NULL,
 
-    TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE",
+    TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE",
             "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
     pathwayhierarchy = NULL,
     cores = floor(parallel::detectCores()/2),

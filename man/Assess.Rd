@@ -14,8 +14,8 @@ Assess(
   Phenograph_k = 30,
   DEP = NULL,
   TIM = c("scorpius_distSpear", "scorpius_distPear", "scorpius_distEucl",
-    "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE", "prinCurves_tSNE",
-    "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
+    "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA",
+    "slingshot_diffMaps", "prinCurves_diffMaps"),
   pathwayhierarchy = NULL,
   cores = floor(parallel::detectCores()/2),
   save_processed_res = "one_folder",
@@ -43,7 +43,7 @@ Assess(
 
 \item{DEP}{Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.}
 
-\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
+\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
 
 \item{pathwayhierarchy}{Character, the absolute filepath of the pathway hierarchy file.}
 

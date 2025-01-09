@@ -4,7 +4,7 @@
 #' @param name Character, the filename of the RData file in the "assess_res" folder which will store the assessment results.
 #' @param data Character, the R object resulting from the function "Process", "FCprocess" or "MCprocess", or obtained by loading from the resulting RData file of these funcitons when the `save_processed_res` parameter in these functions is set to "one_RData".
 #' @param respath Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the `save_processed_res` parameter in these functions is set to "one_folder".
-#' @param TIM Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".
+#' @param TIM Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".
 #' @param Cc_metric Character, the assessing metric under Criterion Cc for the "PTI" study type, including "Spearman correlation" and "Kendall Rank Correlation".
 #'   <br>**Spearman correlation**: a metric that measures the monotonic relationship between two ranked variables by measuring how well the relationship between the variables can be described by a monotonic function, with values closer to ±1 indicating a stronger monotonic association.*
 #'   <br>**Kendall Rank Correlation**: a metric that evaluates the similarity between two rankings by calculating the proportion of concordant and discordant pairs, with higher values indicating a stronger agreement in the relative ordering between the variables.
@@ -23,8 +23,9 @@
 
 
 
+
 PTIassess <- function(name, data, respath,
-                      TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE",
+                      TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE",
                               "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
                       Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
                       pathwayhierarchy = NULL,
@@ -80,11 +81,9 @@ PTIassess <- function(name, data, respath,
 
     #length(data$AP2_pro1_frame_classTI)
     table <- foreach::foreach(i = 1:length(data$AP2_pro1_frame_classTI), .options.snow = opts,
-                              .packages = c("flowCore", "foreach", "dplyr", "FLOWMAPR", "igraph", "mclust"), .combine = rbind) %dopar% {
+                              .packages = c("flowCore", "foreach", "dplyr", "igraph", "mclust"), .combine = rbind) %dopar% {
                                 try(source("./PTI/load_data2.R"))
                                 try(source("./PTI/TI_method.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP-function.R"))
 
                                 try(source("./PTI/Bio_con_4.R"))
                                 try(source("./PTI/time_metric_3.R"))
@@ -194,11 +193,9 @@ PTIassess <- function(name, data, respath,
 
 
     table <- foreach::foreach(i = 1:length(datapath), .options.snow = opts,
-                              .packages = c("flowCore", "foreach", "dplyr", "FLOWMAPR", "igraph", "mclust"), .combine = rbind) %dopar% {
+                              .packages = c("flowCore", "foreach", "dplyr", "igraph", "mclust"), .combine = rbind) %dopar% {
                                 try(source("./PTI/load_data2.R"))
                                 try(source("./PTI/TI_method.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP-function.R"))
 
                                 try(source("./PTI/Bio_con_4.R"))
                                 try(source("./PTI/time_metric_3.R"))

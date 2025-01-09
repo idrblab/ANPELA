@@ -18,4 +18,3 @@ Getmarker <- function(datapath) {
   # 查看 marker
   cat(paste0("\"", paste0(as.character(colnames(a@exprs)), collapse = ", \n"), "\""))
 }
-

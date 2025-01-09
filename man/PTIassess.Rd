@@ -9,8 +9,8 @@ PTIassess(
   data,
   respath,
   TIM = c("scorpius_distSpear", "scorpius_distPear", "scorpius_distEucl",
-    "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE", "prinCurves_tSNE",
-    "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
+    "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA",
+    "slingshot_diffMaps", "prinCurves_diffMaps"),
   Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
   pathwayhierarchy = NULL,
   save_processed_res = "one_folder",
@@ -26,7 +26,7 @@ PTIassess(
 
 \item{respath}{Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the \code{save_processed_res} parameter in these functions is set to "one_folder".}
 
-\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
+\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
 
 \item{Cc_metric}{Character, the assessing metric under Criterion Cc for the "PTI" study type, including "Spearman correlation" and "Kendall Rank Correlation".
 \if{html}{\out{<br>}}\strong{Spearman correlation}: a metric that measures the monotonic relationship between two ranked variables by measuring how well the relationship between the variables can be described by a monotonic function, with values closer to ±1 indicating a stronger monotonic association.*

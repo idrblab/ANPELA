@@ -17,7 +17,7 @@ oneStep_process_assess <- function(
   spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H",
   control.dir = NULL, control.def.file = NULL,
   single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = c("flow", "nnls"),
-  bc_key = NULL, ss_exp = NULL,
+  sce_bead = NULL, marker_to_barc = NULL,
   logbase = 10,
   b1 = NULL,
   b2 = NULL,
@@ -40,7 +40,7 @@ oneStep_process_assess <- function(
   ntop = NULL,
   DEP = NULL,
 
-  TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_FLOWMAP", "slingshot_tSNE",
+  TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE",
           "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
   pathwayhierarchy = NULL,
 
@@ -192,20 +192,23 @@ oneStep_process_assess <- function(
     }
   }
 
-  #ss_exp
+  #sce_bead
   if ("spillR" %in% compensationM & is.null(workflow)|any(grepl("spillR", workflow))) {
-    if (is.null(ss_exp)) {
-      message("The parameter of 'ss_exp' is missing. 'spillR' compensation method can't be performed.")
+    if (is.null(sce_bead)) {
+      message("The parameter of 'sce_bead' is missing. 'spillR' compensation method can't be performed.")
       compensationM <- setdiff(compensationM, "spillR")
-    } else if (is.character(single_pos_fcs) &&  !file.exists(single_pos_fcs)) {
-      stop("The parameter of 'ss_exp' is incorrect. Please input the absolute filepath of the .fcs file containing stained samples and control antibody-capture beads/pooled single-stained beads.")
+    } else if (!"SingleCellExperiment" %in% class(sce_bead)) {
+      stop("The parameter of 'sce_bead' is incorrect. Please input the SingleCellExperiment for the bead experiment.")
     }
   }
 
-  #bc_key
+  #marker_to_barc
   if ("spillR" %in% compensationM & is.null(workflow)|any(grepl("spillR", workflow))) {
-    if (!is.numeric(bc_key)) {
-      stop("The parameter of 'single_pos_mass' is incorrect. Please input a vector of numeric masses corresponding to barcode channels.")
+    if (is.null(marker_to_barc)) {
+      message("The parameter of 'marker_to_barc' is missing. 'spillR' compensation method can't be performed.")
+      compensationM <- setdiff(compensationM, "spillR")
+    } else if (!is.data.frame(marker_to_barc)) {
+      stop("The parameter of 'marker_to_barc' is incorrect. Please input a dataframe that maps the marker to the barcode in the beads experiment.")
     }
   }
 
@@ -546,7 +549,7 @@ oneStep_process_assess <- function(
   time = proc.time()
 
   table <- foreach::foreach(i = 1:nrow(workflow), .options.snow = opts,
-                            .packages = c("dplyr", "flowCore", "foreach", "magrittr","mclust"), .combine = rbind) %dopar% {
+                            .packages = c("dplyr", "flowCore", "foreach", "magrittr","mclust", "Rphenograph"), .combine = rbind) %dopar% {
 
                               #print(i)
                               ########### start data processing ###########
@@ -565,7 +568,7 @@ oneStep_process_assess <- function(
                                                                 control.dir = control.dir, control.def.file = control.def.file,
                                                                 single_pos_fcs = single_pos_fcs, single_pos_mass = single_pos_mass,
                                                                 CATALYSTM = CATALYSTM,
-                                                                bc_key = bc_key, ss_exp = ss_exp), silent = T)
+                                                                sce_bead = sce_bead, marker_to_barc = marker_to_barc), silent = T)
                               if (class(AP2_comp_frame) == "try-error") {
                                 res <- data.frame(Ca = NA, Cb = NA, Cc = NA, Cd = NA)
                                 rownames(res) <- rownames(workflow)[i]
@@ -853,8 +856,6 @@ oneStep_process_assess <- function(
 
                                 try(source("./PTI/load_data2.R"), silent = T)
                                 try(source("./PTI/TI_method.R"), silent = T)
-                                try(source("./PTI/ANPELA_FLOWMAP.R"), silent = T)
-                                try(source("./PTI/ANPELA_FLOWMAP-function.R"), silent = T)
 
                                 try(source("./PTI/Bio_con_4.R"), silent = T)
                                 try(source("./PTI/time_metric_3.R"), silent = T)
