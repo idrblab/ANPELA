@@ -52,7 +52,6 @@ Imports:
     SCORPIUS,
     slingshot,
     destiny,
-    cytofkit,
     flowStats,
     flowAI,
     flowCut,
