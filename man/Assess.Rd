@@ -5,7 +5,7 @@
 \title{Assess}
 \usage{
 Assess(
-  name,
+  name = "result",
   data = NULL,
   respath = NULL,
   studytype = c("CSI", "PTI"),
@@ -19,7 +19,7 @@ Assess(
   pathwayhierarchy = NULL,
   cores = floor(parallel::detectCores()/2),
   save_processed_res = "one_folder",
-  savepath = "./"
+  savepath = paste0("./", name)
 )
 }
 \arguments{
@@ -41,7 +41,8 @@ Assess(
 \item{Phenograph_k}{Character, the number of nearest neighbours used in PhenoGraph clustering method.
 \if{html}{\out{<br>}}Only needed when the argument of "clusteringM" is selected as "PhenoGraph".}
 
-\item{DEP}{Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.}
+\item{DEP}{Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+\if{html}{\out{<br>}}It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".}
 
 \item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
 

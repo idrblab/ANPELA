@@ -58,8 +58,8 @@
 #'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM". If this value is lowered, larger bins will be made.
 #' @param step Integer, the step in events_per_bin to which the parameter is reduced to.
 #'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM".
-#' @param index_protein Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
-#'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".
+#' @param excludedColumn Character, the non-protein columns names of which accessed through the function "Getmarker".
+#'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id)" in CSI analysis, and "Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)" in PTI analysis.
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
@@ -72,7 +72,7 @@
 #' \donttest{
 #' }
 
-FCprocess <- function(name,
+FCprocess <- function(name = "result",
                       datapath,
                       metadata,
                       studytype = c("CSI", "PTI"),
@@ -95,10 +95,10 @@ FCprocess <- function(name,
                       Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
                       lineara = 2, linearb = 0,
                       Truncatea = 1,
-                      min_cells = 150, max_bins = 500, step = 500,
-                      index_protein = NULL,
+                      min_cells = 3, max_bins = 10, step = 10,
+                      excludedColumn = NULL,
                       save_processed_res = "one_folder",
-                      savepath = "./",
+                      savepath = paste0("./",name),
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # dataFiles
@@ -368,21 +368,23 @@ FCprocess <- function(name,
 
 
   # index_TIclass
-  if (is.null(index_protein)) {
+  if (is.null(excludedColumn)) {
     cat("*************************************************************************", "\n")
-    cat("The standardized marker names are listed below. \n")
+    cat("The standardized column names are listed below. \n")
     cat("*************************************************************************", "\n")
     cat(paste0(common_protein, collapse = "\n"), "\n")
     cat("*************************************************************************", "\n")
-    cat("Please enter the marker names which are separated by the comma on a single line.
-        \nFor example, CD43(FITC.A), CD34(APC.A), CD90(BV421.A), CD45RA(BV510.A)")
-    index_protein <- readline("Now, you can select the marker indexes for data processing and performance evaluation:")
-    if (index_protein == "") {
-      stop("Note: Please select your interested markers and then press the Enter key :(")
+    cat("Please enter the excluded column names which are separated by the comma on a single line.
+          \nFor example, Time(Time), FSC-W(FSC.W), SSC-A(SSC.A)")
+
+    excludedColumn <- readline("Now, you can select the excluded columns for data processing and performance evaluation:")
+    if (excludedColumn == "") {
+      stop("Note: Please select your excluded columns and then press the Enter key :(")
     }
   }
-  index_TIclass <- unlist(strsplit(index_protein, "\\s*,\\s*"))
-  index_TIclass <- intersect(common_protein, index_TIclass)
+  Excluded_index_TIclass <- unlist(strsplit(excludedColumn, "\\s*,\\s*"))
+  index_TIclass <- setdiff(common_protein,Excluded_index_TIclass)
+
   cat("The program is running. Please wait patiently.")
 
   # Segment, Segment2
@@ -409,10 +411,13 @@ FCprocess <- function(name,
     }
   }
 
+  if(!dir.exists(savepath)){
+    dir.create(savepath, recursive = TRUE)
+  }
 
   # parallel start
   opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = nrow(workflow), style = 3), n))
-  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = "process_log.txt")
+  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = paste0(savepath,"/FCprocess_log.txt"))
   doSNOW::registerDoSNOW(cl)
   time = proc.time()
 

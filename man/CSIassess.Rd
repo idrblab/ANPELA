@@ -5,7 +5,7 @@
 \title{CSI (Cell Subpopulation Identification) Assess}
 \usage{
 CSIassess(
-  name,
+  name = "result",
   data,
   respath,
   clusteringM = c("FlowSOM", "PhenoGraph", "Mclust"),
@@ -17,7 +17,7 @@ CSIassess(
   ntop = NULL,
   DEP = NULL,
   save_processed_res = "one_folder",
-  savepath = "./",
+  savepath = paste0("./", name),
   cores = floor(parallel::detectCores()/2),
   ...
 )
@@ -58,7 +58,8 @@ CSIassess(
 \item{ntop}{Integer, the number of the most differentially expressed markers that are truncated for calculating the CWrel value.
 \if{html}{\out{<br>}}Only needed when the argument of "Cc_metric" is selected as "relative weighted consistency (CWrel)". This value must be less than the number of your selected markers.}
 
-\item{DEP}{Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.}
+\item{DEP}{Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+\if{html}{\out{<br>}}It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".}
 
 \item{save_processed_res}{Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
 

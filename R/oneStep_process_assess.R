@@ -26,11 +26,11 @@ oneStep_process_assess <- function(
   lineara = 2, linearb = 0,
   Truncatea = 1,
   beads_mass = c(140, 151, 153, 165, 175),
-  min_cells = 150, max_bins = 500, step = 500,
-  index_protein = NULL,
+  min_cells = 3, max_bins = 10, step = 10,
+  excludedColumn = NULL,
 
   # the parameters of workflow assessment
-  name,
+  name = "result",
   clusteringM = c("FlowSOM", "PhenoGraph"),
   ncluster = 8,
   Phenograph_k = 30,
@@ -47,7 +47,7 @@ oneStep_process_assess <- function(
   # other parameters
   cores = floor(parallel::detectCores()/2),
   save_processed_res ="one_folder",
-  savepath = "./"
+  savepath = paste0("./",name)
 ){
 
   ################################# the parameters of data processing #################################
@@ -471,27 +471,28 @@ oneStep_process_assess <- function(
   }
 
   # index_TIclass
-  if (is.null(index_protein)) {
+  if (is.null(excludedColumn)) {
     cat("*************************************************************************", "\n")
-    cat("The standardized marker names are listed below. \n")
+    cat("The standardized column names are listed below. \n")
     cat("*************************************************************************", "\n")
     cat(paste0(common_protein, collapse = "\n"), "\n")
     cat("*************************************************************************", "\n")
-    if (technique == "MC") {
-      cat("Please enter the marker names which are separated by the comma on a single line.
-          \nFor example, CD103(La139Di), CCR6(Pr141Di), CD19(Nd142Di), C-KIT(Nd143Di), CD11b(Nd144Di)")
-    } else if (technique == "FC") {
-      cat("Please enter the marker names which are separated by the comma on a single line.
-          \nFor example, CD43(FITC.A), CD34(APC.A), CD90(BV421.A), CD45RA(BV510.A)")
+    if(technique == "MC"){
+      cat("Please enter the excluded column names which are separated by the comma on a single line.
+          \nFor example, Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)")
+    } else if (technique == "FC"){
+      cat("Please enter the excluded column names which are separated by the comma on a single line.
+          \nFor example, Time(Time), FSC-W(FSC.W), SSC-A(SSC.A)")
     }
-
-    index_protein <- readline("Now, you can select the marker indexes for data processing and performance evaluation:")
-    if (index_protein == "") {
-      stop("Note: Please select your interested markers and then press the Enter key :(")
+    excludedColumn <- readline("Now, you can select the excluded columns for data processing and performance evaluation:")
+    if (excludedColumn == "") {
+      stop("Note: Please select your excluded columns and then press the Enter key :(")
     }
   }
-  index_TIclass <- unlist(strsplit(index_protein, "\\s*,\\s*"))
-  index_TIclass <- intersect(common_protein, index_TIclass)
+  Excluded_index_TIclass <- unlist(strsplit(excludedColumn, "\\s*,\\s*"))
+  index_TIclass <- setdiff(common_protein,Excluded_index_TIclass)
+
+
   cat("The program is running. Please wait patiently.")
 
   # Segment, Segment2
@@ -529,6 +530,11 @@ oneStep_process_assess <- function(
       cat("Please enter the marker names which are separated by comma on a single line.
         \nFor example, CD103(La139Di), CD11b(Nd144Di), CD8a(Nd146Di), CD7(Sm147Di)")
       DEP <- readline("Now, you can select the known biomarker(s) differentially expressed between two conditions (if NULL, please press the Enter key directly):")
+    } else if (file.exists(DEP)) {
+      DEP_data <- read.csv(DEP, header = F, stringsAsFactors = FALSE)
+      DEP <-paste(as.character(unlist(DEP_data)), collapse = ",")
+    } else if (!DEP == "" & !file.exists(DEP)){
+      stop("The filepath of parameter 'DEP' is incorrect. Please input the absolute filepath of the csv file.")
     }
   }
 
@@ -541,10 +547,13 @@ oneStep_process_assess <- function(
     }
   }
 
+  if(!dir.exists(savepath)){
+    dir.create(savepath, recursive = TRUE)
+  }
 
   # parallel start
   opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = nrow(workflow), style = 3), n))
-  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = "onestep_log.txt")
+  cl <- parallel::makeCluster(cores, type = "SOCK", outfile = paste0(savepath,"/onestep_log.txt"))
   doSNOW::registerDoSNOW(cl)
   time = proc.time()
 

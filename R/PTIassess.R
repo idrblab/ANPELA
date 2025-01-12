@@ -24,13 +24,13 @@
 
 
 
-PTIassess <- function(name, data, respath,
+PTIassess <- function(name = "result", data, respath,
                       TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE",
                               "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
                       Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
                       pathwayhierarchy = NULL,
                       save_processed_res = "one_folder",
-                      savepath = "./",
+                      savepath = paste0("./",name),
                       cores = floor(parallel::detectCores()/2),
                       ...) {
   # data
@@ -69,12 +69,17 @@ PTIassess <- function(name, data, respath,
   } else {
     Cc_metric <- match.arg(Cc_metric)
   }
+
+  if(!dir.exists(savepath)){
+    dir.create(savepath, recursive = TRUE)
+  }
+
   cat("The program is running. Please wait patiently.")
 
   if (save_processed_res == "one_RData") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(data$AP2_pro1_frame_classTI), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="assess_log.txt")
+    cl <- parallel::makeCluster(cores, type = "SOCK", outfile = paste0(savepath,"/PTIassess_log.txt"))
 
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
@@ -186,7 +191,7 @@ PTIassess <- function(name, data, respath,
   }else if (save_processed_res == "one_folder") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="assess_log.txt")
+    cl <- parallel::makeCluster(cores, type = "SOCK", outfile = paste0(savepath,"/PTIassess_log.txt"))
 
     doSNOW::registerDoSNOW(cl)
     time = proc.time()

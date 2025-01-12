@@ -5,7 +5,7 @@
 \title{PTI (Pseudotime Trajectory Inference) Assess}
 \usage{
 PTIassess(
-  name,
+  name = "result",
   data,
   respath,
   TIM = c("scorpius_distSpear", "scorpius_distPear", "scorpius_distEucl",
@@ -14,7 +14,7 @@ PTIassess(
   Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
   pathwayhierarchy = NULL,
   save_processed_res = "one_folder",
-  savepath = "./",
+  savepath = paste0("./", name),
   cores = floor(parallel::detectCores()/2),
   ...
 )

@@ -12,7 +12,8 @@
 #'   <br>Only needed when the argument of "clusteringM" is selected as "FlowSOM".
 #' @param Phenograph_k Character, the number of nearest neighbours used in PhenoGraph clustering method.
 #'   <br>Only needed when the argument of "clusteringM" is selected as "PhenoGraph".
-#' @param DEP Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+#' @param DEP Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+#'   <br>It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".
 #' @param TIM Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".
 #' @param pathwayhierarchy Character, the absolute filepath of the pathway hierarchy file.
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
@@ -28,7 +29,7 @@
 #' }
 
 Assess <- function(
-    name, data = NULL, respath =NULL,
+    name = "result", data = NULL, respath =NULL,
     studytype = c("CSI", "PTI"),
     clusteringM = "FlowSOM",
     ncluster = 8,
@@ -40,7 +41,7 @@ Assess <- function(
     pathwayhierarchy = NULL,
     cores = floor(parallel::detectCores()/2),
     save_processed_res = "one_folder",
-    savepath = "./"
+    savepath = paste0("./",name)
 ){
   if (studytype == "CSI"){
     assess_res <- CSIassess(name = name, data = data, respath = respath, clusteringM = clusteringM,

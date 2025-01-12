@@ -2,7 +2,7 @@
 #' @title Flow Cytometry Cell Subpopulation Identification
 #' @description FC_CSI() enables high-throughput processing of SCP data acquired from FC using up to ~960 available workflows and subsequently assesses the performance of all processing workflows based on comprehensive criteria from the perspective of CSI studies, functioning similarly to a combination of FCprocess() and CSIassess(), while utilizing less memory during execution.
 #'
-#' @param name Character, the filename of all the files in the "assess_res" folder which will store the assessment results.
+#' @param name Character, the filename of the RData file when the "save_processed_res" parameter is set to "one_RData", and the filename of all the files in the "assess_res" folder which will store the assessment results.
 #' @param datapath Character, the absolute path of the folder storing the FCS raw data files and metadata file.
 #' @param mergeM Character, the method of merging multiple FCS files. When multiple FCS files are selected, cells can be combined using one of the four different methods including "Fixed", "Ceil", "All" and "Min".
 #'   <br>**Fixed**: a fixed num (specified by fixedNum) of cells are sampled (with replacement when the total number of cell is less than fixedNum) from each FCS file and combined for analysis.
@@ -36,9 +36,10 @@
 #'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM". If this value is lowered, larger bins will be made.
 #' @param step Integer, the step in events_per_bin to which the parameter is reduced to.
 #'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM".
-#' @param index_protein Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
-#'   <br>It is a string separated by commas, typically in the format of “channel description (channel name)”, for example: “CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".
-#' @param DEP Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+#' @param excludedColumn Character, the non-protein columns names of which accessed through the function "Getmarker".
+#'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id)" in CSI analysis, and "Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)" in PTI analysis.
+#' @param DEP Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+#'   <br>It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".
 #' @param clusteringM Character, the method of clustering the processed data prior to plotting, including "FlowSOM" and "PhenoGraph".
 #' @param ncluster Integer, the number of clusters for meta clustering in "FlowSOM".
 #'   <br>Only needed when the argument of "clusteringM" is selected as "FlowSOM" while calling the function "FCprocess" or "MCprocess" for obtaining "data".
@@ -65,7 +66,7 @@
 #' \donttest{
 #' }
 
-FC_CSI <- function(name, datapath,
+FC_CSI <- function(name = "result", datapath,
                    mergeM = "Fixed", fixedNum = 200,
                    compensationM = c("AutoSpill", "FlowCore", "MetaCyto", "None"),
                    transformationM = c("Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value",
@@ -76,8 +77,8 @@ FC_CSI <- function(name, datapath,
                    signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None"),
                    workflow = NULL,
                    spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H", control.dir = NULL, control.def.file = NULL,
-                   min_cells = 150, max_bins = 500, step = 500,
-                   index_protein = NULL,
+                   min_cells = 3, max_bins = 10, step = 10,
+                   excludedColumn = NULL,
 
                    DEP = NULL,
                    clusteringM = "FlowSOM",
@@ -86,7 +87,7 @@ FC_CSI <- function(name, datapath,
 
                    cores = parallel::detectCores()/2,
                    save_processed_res = "one_folder",
-                   savepath = "./"
+                   savepath = paste0("./",name)
 ) {
 
   metadata <- paste0(datapath, "/metadata.csv")
@@ -103,7 +104,7 @@ FC_CSI <- function(name, datapath,
                                spillpath = spillpath, FSC = FSC, SSC = SSC,
                                control.dir = control.dir, control.def.file = control.def.file,
                                min_cells = min_cells, max_bins = max_bins, step =step,
-                               index_protein = index_protein,
+                               excludedColumn = excludedColumn,
                                save_processed_res = save_processed_res,
                                savepath = savepath,
                                cores = cores)
@@ -126,7 +127,7 @@ FC_CSI <- function(name, datapath,
       spillpath = spillpath, FSC = FSC, SSC = SSC,
       control.dir = control.dir, control.def.file = control.def.file,
       min_cells = min_cells, max_bins = max_bins, step =step,
-      index_protein = index_protein,
+      excludedColumn = excludedColumn,
 
       clusteringM = clusteringM, Phenograph_k = Phenograph_k,
       ncluster = ncluster, DEP = DEP,

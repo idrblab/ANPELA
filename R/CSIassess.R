@@ -26,7 +26,8 @@
 #'   <br>**consistency score (CS)**: a metric that assesses the stability of clustering results by measuring how consistently data points are assigned to the same clusters across different runs or variations of the clustering process, with a higher CS indicating more stable and reliable clustering.
 #' @param ntop Integer, the number of the most differentially expressed markers that are truncated for calculating the CWrel value.
 #'   <br>Only needed when the argument of "Cc_metric" is selected as "relative weighted consistency (CWrel)". This value must be less than the number of your selected markers.
-#' @param DEP Character, the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+#' @param DEP Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
+#'   <br>It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
@@ -40,9 +41,7 @@
 #' }
 
 
-
-
-CSIassess <- function(name, data, respath,
+CSIassess <- function(name = "result", data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
                       ncluster = 8,
@@ -52,7 +51,7 @@ CSIassess <- function(name, data, respath,
                       ntop = NULL,
                       DEP = NULL,
                       save_processed_res = "one_folder",
-                      savepath = "./",
+                      savepath = paste0("./",name),
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # data & info_saved & process_res
@@ -150,19 +149,31 @@ CSIassess <- function(name, data, respath,
     cat("Please enter the marker names which are separated by comma on a single line.
         \nFor example, CD103(La139Di), CD11b(Nd144Di), CD8a(Nd146Di), CD7(Sm147Di)")
     DEP <- readline("Now, you can select the known biomarker(s) differentially expressed between two conditions (if NULL, please press the Enter key directly):")
+  } else if (file.exists(DEP)) {
+    DEP_data <- read.csv(DEP, header = F, stringsAsFactors = FALSE)
+    DEP <-paste(as.character(unlist(DEP_data)), collapse = ",")
+  } else if (!DEP == "" & !file.exists(DEP)){
+    stop("The filepath of parameter 'DEP' is incorrect. Please input the absolute filepath of the csv file.")
   }
+
+  if(!dir.exists(savepath)){
+    dir.create(savepath, recursive = TRUE)
+  }
+
   cat("The program is running. Please wait patiently.")
+
+
 
   if (save_processed_res == "one_RData") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(data$AP2_pro1_frame_classTI), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK", outfile="assess_log.txt")
+    cl <- parallel::makeCluster(cores, type = "SOCK", outfile = paste0(savepath,"/CSIassess_log.txt"))
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
 
 
     table <- foreach::foreach(i = 1:length(data$AP2_pro1_frame_classTI), .options.snow = opts,
-                              .packages = c("cytofkit", "dplyr","mclust"), .combine = rbind) %dopar% {
+                              .packages = c("Rphenograph", "dplyr","mclust"), .combine = rbind) %dopar% {
 
                                 try(source("./CSI/1readfcs.R"))
                                 try(source("./CSI/2cluster.R"))
@@ -379,13 +390,13 @@ CSIassess <- function(name, data, respath,
   } else if (save_processed_res == "one_folder") {
     # parallel start
     opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))
-    cl <- parallel::makeCluster(cores, type = "SOCK",outfile="assess_log.txt")
+    cl <- parallel::makeCluster(cores, type = "SOCK", outfile = paste0(savepath,"/CSIassess_log.txt"))
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
 
 
     table <- foreach::foreach(i = 1:length(datapath), .options.snow = opts,
-                              .packages = c("cytofkit", "dplyr","mclust"), .combine = rbind) %dopar% {
+                              .packages = c("Rphenograph", "dplyr","mclust"), .combine = rbind) %dopar% {
 
                                 try(source("./CSI/1readfcs.R"))
                                 try(source("./CSI/2cluster.R"))

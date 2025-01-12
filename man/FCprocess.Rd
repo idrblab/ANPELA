@@ -5,7 +5,7 @@
 \title{Flow Cytometry Process}
 \usage{
 FCprocess(
-  name,
+  name = "result",
   datapath,
   metadata,
   studytype = c("CSI", "PTI"),
@@ -37,12 +37,12 @@ FCprocess(
   lineara = 2,
   linearb = 0,
   Truncatea = 1,
-  min_cells = 150,
-  max_bins = 500,
-  step = 500,
-  index_protein = NULL,
+  min_cells = 3,
+  max_bins = 10,
+  step = 10,
+  excludedColumn = NULL,
   save_processed_res = "one_folder",
-  savepath = "./",
+  savepath = paste0("./", name),
   cores = floor(parallel::detectCores()/2),
   ...
 )
@@ -134,8 +134,8 @@ FCprocess(
 \item{step}{Integer, the step in events_per_bin to which the parameter is reduced to.
 \if{html}{\out{<br>}}Only needed when "PeacoQC" is included in the argument of "signalcleanM".}
 
-\item{index_protein}{Character, the marker indexes for data processing and performance assessment accessed through the function "Getmarker", with manual removal of non-protein columns.
-\if{html}{\out{<br>}}It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "CD126(Dy161Di), CD39(Dy162Di), CD20(Dy163Di), CD161(Dy164Di)".}
+\item{excludedColumn}{Character, the non-protein columns names of which accessed through the function "Getmarker".
+\if{html}{\out{<br>}}It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id)" in CSI analysis, and "Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)" in PTI analysis.}
 
 \item{save_processed_res}{Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
 
