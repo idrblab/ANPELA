@@ -123,8 +123,8 @@ Install a variety of *R* packages imported in this protocol.
 Installed from ***CRAN*** (can also from other repositories): dplyr,
 doParallel, rstan, Rtsne, pastecs, cowplot, ggpubr, gridExtra,
 MLmetrics, fossil, clusterCrit, VennDiagram, stringr, bbmle, mc2d,
-parallel, doSNOW, foreach, igraph, mclust, pheatmap, magrittr, withr and
-tree.
+parallel, doSNOW, foreach, igraph, mclust, pheatmap, magrittr, withr,
+tree, sampling and ellipse.
 
 Installation commands:
 
@@ -132,13 +132,14 @@ Installation commands:
 CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot",
                    "ggpubr", "gridExtra", "MLmetrics", "fossil", "clusterCrit", "VennDiagram",
                    "stringr", "bbmle", "mc2d", "parallel", "doSNOW", "foreach",
-                   "igraph", "mclust", "pheatmap", "magrittr", "withr", "tree")
+                   "igraph", "mclust", "pheatmap", "magrittr", "withr", "tree"
+                   "sampling", "ellipse")
 install.packages(CRAN_packages, dependencies = TRUE)
 ```
 
 Installed from ***Bioconductor*** (can also from other repositories):
 flowCore, limma, SCORPIUS, slingshot, destiny, flowStats, flowAI,
-flowCut, flowClean, spillR, PeacoQC, systemPipeR and flowTrans.
+flowCut, flowClean, spillR, PeacoQC, systemPipeR, flowTrans and flowVS.
 
 Installation commands:
 
@@ -148,13 +149,13 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 Bioconductor_packages <- c("flowCore", "limma", "SCORPIUS", "slingshot", "destiny", 
                            "flowStats", "flowAI", "flowCut", "flowClean", "spillR",
-                           "PeacoQC", "systemPipeR", "flowTrans")
+                           "PeacoQC", "systemPipeR", "flowTrans", "flowVS")
 
 BiocManager::install(Bioconductor_packages, ask = FALSE)
 ```
 
 Installed from ***GitHub*** (can also from other repositories):
-Rtsne.multicore, Rphenograph and CytoSpill.
+Rtsne.multicore, Rphenograph, CytoSpill and autospill.
 
 Installation commands:
 
@@ -164,6 +165,7 @@ if (!requireNamespace("devtools", quietly = TRUE))
 devtools::install_github("RGLab/Rtsne.multicore")
 devtools::install_github("JinmiaoChenLab/Rphenograph")
 devtools::install_github("qmiao19/CytoSpill")
+devtools::install_github("carlosproca/autospill")
 ```
 
 - **Tool 3. ANPELA** ***R*** **Package**

@@ -48,6 +48,8 @@ Imports:
     magrittr,
     withr,
     tree,
+    sampling,
+    ellipse,
     flowCore,
     limma,
     SCORPIUS,
@@ -60,8 +62,10 @@ Imports:
     spillR,
     PeacoQC,
     systemPipeR,
-    flowTrans
+    flowTrans,
+    flowVS
 Remotes:
     RGLab/Rtsne.multicore,
     JinmiaoChenLab/Rphenograph,
-    qmiao19/CytoSpill
+    qmiao19/CytoSpill,
+    carlosproca/autospill
