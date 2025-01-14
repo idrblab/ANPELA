@@ -14,7 +14,7 @@
 #' \donttest{
 #' }
 
-Ranking <- function(data, name = "result", savepath = paste0("./",name)) {
+Ranking <- function(data, name = "result", savepath = "./") {
   if (any(!is.na(data$table[, 4]))) {
     table <- data$table
     table2 <- data$table2

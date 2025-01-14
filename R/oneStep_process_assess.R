@@ -47,7 +47,7 @@ oneStep_process_assess <- function(
   # other parameters
   cores = floor(parallel::detectCores()/2),
   save_processed_res ="one_folder",
-  savepath = paste0("./",name)
+  savepath = "./"
 ){
 
   ################################# the parameters of data processing #################################

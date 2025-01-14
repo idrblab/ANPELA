@@ -28,7 +28,7 @@ PTIassess <- function(name = "result", data, respath,
                       Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
                       pathwayhierarchy = NULL,
                       save_processed_res = "one_folder",
-                      savepath = paste0("./",name),
+                      savepath = "./",
                       cores = floor(parallel::detectCores()/2),
                       ...) {
   # data

@@ -41,7 +41,7 @@ Assess <- function(
     pathwayhierarchy = NULL,
     cores = floor(parallel::detectCores()/2),
     save_processed_res = "one_folder",
-    savepath = paste0("./",name)
+    savepath = "./"
 ){
   if (studytype == "CSI"){
     assess_res <- CSIassess(name = name, data = data, respath = respath, clusteringM = clusteringM,

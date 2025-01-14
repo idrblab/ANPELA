@@ -47,6 +47,7 @@ Imports:
     pheatmap,
     magrittr,
     withr,
+    tree,
     flowCore,
     limma,
     SCORPIUS,
@@ -58,7 +59,9 @@ Imports:
     flowClean,
     spillR,
     PeacoQC,
-    systemPipeR
+    systemPipeR,
+    flowTrans
 Remotes:
     RGLab/Rtsne.multicore,
-    JinmiaoChenLab/Rphenograph
+    JinmiaoChenLab/Rphenograph,
+    qmiao19/CytoSpill

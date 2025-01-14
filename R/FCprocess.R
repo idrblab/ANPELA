@@ -59,7 +59,7 @@
 #' @param step Integer, the step in events_per_bin to which the parameter is reduced to.
 #'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM".
 #' @param excludedColumn Character, the non-protein columns names of which accessed through the function "Getmarker".
-#'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id)" in CSI analysis, and "Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)" in PTI analysis.
+#'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id), Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)".
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
@@ -98,7 +98,7 @@ FCprocess <- function(name = "result",
                       min_cells = 3, max_bins = 10, step = 10,
                       excludedColumn = NULL,
                       save_processed_res = "one_folder",
-                      savepath = paste0("./",name),
+                      savepath = "./",
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # dataFiles

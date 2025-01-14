@@ -123,21 +123,22 @@ Install a variety of *R* packages imported in this protocol.
 Installed from ***CRAN*** (can also from other repositories): dplyr,
 doParallel, rstan, Rtsne, pastecs, cowplot, ggpubr, gridExtra,
 MLmetrics, fossil, clusterCrit, VennDiagram, stringr, bbmle, mc2d,
-parallel, doSNOW, foreach, igraph, mclust, pheatmap, magrittr and withr.
+parallel, doSNOW, foreach, igraph, mclust, pheatmap, magrittr, withr and
+tree.
 
 Installation commands:
 
 ``` r
-CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot", 
-                   "ggpubr", "gridExtra", "MLmetrics", "fossil", "clusterCrit", 
-                   "VennDiagram", "stringr", "bbmle", "mc2d", "parallel", "doSNOW", 
-                   "foreach", "igraph", "mclust", "pheatmap", "magrittr", "withr")
+CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot",
+                   "ggpubr", "gridExtra", "MLmetrics", "fossil", "clusterCrit", "VennDiagram",
+                   "stringr", "bbmle", "mc2d", "parallel", "doSNOW", "foreach",
+                   "igraph", "mclust", "pheatmap", "magrittr", "withr", "tree")
 install.packages(CRAN_packages, dependencies = TRUE)
 ```
 
 Installed from ***Bioconductor*** (can also from other repositories):
 flowCore, limma, SCORPIUS, slingshot, destiny, flowStats, flowAI,
-flowCut, flowClean, spillR, PeacoQC and systemPipeR.
+flowCut, flowClean, spillR, PeacoQC, systemPipeR and flowTrans.
 
 Installation commands:
 
@@ -147,13 +148,13 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 Bioconductor_packages <- c("flowCore", "limma", "SCORPIUS", "slingshot", "destiny", 
                            "flowStats", "flowAI", "flowCut", "flowClean", "spillR",
-                           "PeacoQC", "systemPipeR")
+                           "PeacoQC", "systemPipeR", "flowTrans")
 
 BiocManager::install(Bioconductor_packages, ask = FALSE)
 ```
 
 Installed from ***GitHub*** (can also from other repositories):
-Rtsne.multicore and Rphenograph.
+Rtsne.multicore, Rphenograph and CytoSpill.
 
 Installation commands:
 
@@ -162,6 +163,7 @@ if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 devtools::install_github("RGLab/Rtsne.multicore")
 devtools::install_github("JinmiaoChenLab/Rphenograph")
+devtools::install_github("qmiao19/CytoSpill")
 ```
 
 - **Tool 3. ANPELA** ***R*** **Package**

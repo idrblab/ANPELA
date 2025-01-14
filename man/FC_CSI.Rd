@@ -35,7 +35,7 @@ FC_CSI(
   Phenograph_k = 30,
   cores = parallel::detectCores()/2,
   save_processed_res = "one_folder",
-  savepath = paste0("./", name)
+  savepath = "./"
 )
 }
 \arguments{
@@ -91,7 +91,7 @@ FC_CSI(
 \if{html}{\out{<br>}}Only needed when "PeacoQC" is included in the argument of "signalcleanM".}
 
 \item{excludedColumn}{Character, the non-protein columns names of which accessed through the function "Getmarker".
-\if{html}{\out{<br>}}It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id)" in CSI analysis, and "Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)" in PTI analysis.}
+\if{html}{\out{<br>}}It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id), Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)".}
 
 \item{DEP}{Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
 \if{html}{\out{<br>}}It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".}

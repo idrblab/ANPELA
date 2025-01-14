@@ -37,7 +37,7 @@
 #' @param step Integer, the step in events_per_bin to which the parameter is reduced to.
 #'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM".
 #' @param excludedColumn Character, the non-protein columns names of which accessed through the function "Getmarker".
-#'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id)" in CSI analysis, and "Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)" in PTI analysis.
+#'   <br>It is a string separated by commas, typically in the format of "channel description (channel name)", for example: "gate_source(gate_source), cell_id(cell_id), sample_id(sample_id), Time(Time), Cell_length(Cell_length), DNA-1(DNA.1.Ir191.Dd)".
 #' @param TIM Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".
 #' @param pathwayhierarchy Character, the absolute filepath of the pathway hierarchy file.
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
@@ -81,7 +81,7 @@ MC_PTI <- function(name = "result", datapath,
 
                    cores = parallel::detectCores()/2,
                    save_processed_res = "one_folder",
-                   savepath = paste0("./",name)
+                   savepath = "./"
 ) {
   metadata <- paste0(datapath, "/metadata.csv")
   if (save_processed_res == "one_RData") {

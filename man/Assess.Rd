@@ -19,7 +19,7 @@ Assess(
   pathwayhierarchy = NULL,
   cores = floor(parallel::detectCores()/2),
   save_processed_res = "one_folder",
-  savepath = paste0("./", name)
+  savepath = "./"
 )
 }
 \arguments{

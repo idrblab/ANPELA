@@ -42,6 +42,7 @@
 
 
 
+
 CSIassess <- function(name = "result", data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
@@ -52,7 +53,7 @@ CSIassess <- function(name = "result", data, respath,
                       ntop = NULL,
                       DEP = NULL,
                       save_processed_res = "one_folder",
-                      savepath = paste0("./",name),
+                      savepath = "./",
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # data & info_saved & process_res

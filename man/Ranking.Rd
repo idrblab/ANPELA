@@ -4,7 +4,7 @@
 \alias{Ranking}
 \title{Ranking}
 \usage{
-Ranking(data, name = "result", savepath = paste0("./", name))
+Ranking(data, name = "result", savepath = "./")
 }
 \arguments{
 \item{data}{Character, the R object resulting from the function "Assess" "CSIassess" or "PTIassess", or obtained by loading from the resulting RData file of these funcitons.}
