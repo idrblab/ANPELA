@@ -14,7 +14,6 @@
 #' \donttest{
 #' }
 
-# ranking函数 ---------------------------------------------------------------
 Ranking <- function(data, name = "result", savepath = paste0("./",name)) {
   if (any(!is.na(data$table[, 4]))) {
     table <- data$table
@@ -24,9 +23,9 @@ Ranking <- function(data, name = "result", savepath = paste0("./",name)) {
     table2 <- data$table2[, -4]
   }
 
-  Color_score <- apply(table2, 1, sum) # Color_score 被设定为颜色的和越大得分越高，作为之后排序中的主要因素
-  Value_score <- apply(table, 1, sum) # Value_score 被设定为标准值的和越大得分越高，作为之后排序中的辅助因素
-  OverallRank <- order(Color_score, Value_score, decreasing = TRUE) # 总排名（主要考虑cutoff的颜色总和，其次考虑值的总和）
+  Color_score <- apply(table2, 1, sum)
+  Value_score <- apply(table, 1, sum)
+  OverallRank <- order(Color_score, Value_score, decreasing = TRUE)
   table_res <- table[OverallRank, ]
 
   csvresult <- cbind(Rank.OverallRank = 1:nrow(table), Value = table_res)

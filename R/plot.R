@@ -1,4 +1,3 @@
-# 标准A图1 --------------------------------------------------------------------
 dr <- function(TIres, D, sub = F, seed = 3, cell.subset = 0.2){
   
   # load the data
@@ -14,7 +13,7 @@ dr <- function(TIres, D, sub = F, seed = 3, cell.subset = 0.2){
   ntimepoints <- length(unique(input_matrix$D.timepoint))
   
   # extract data to plot
-  # dat <- input_matrix[, 1:npar] # 纯蛋白表达数据
+  # dat <- input_matrix[, 1:npar]
   Timepoints <- input_matrix[, npar + 1]
   Pseudotime <- input_matrix[, npar + 2]
   trajectory <- input_matrix[, c(npar + 3, npar + 4)]
@@ -81,7 +80,7 @@ dr <- function(TIres, D, sub = F, seed = 3, cell.subset = 0.2){
   
   return(dr.plot)
 }
-# 标准A图2 --------------------------------------------------------------------
+
 abund_pt_single <- function(to_plot, prot, dat) {
   cols <- c(RColorBrewer::brewer.pal(12, "Paired"), 
             RColorBrewer::brewer.pal(5, "Accent"), 
@@ -125,7 +124,6 @@ abund_pt_single <- function(to_plot, prot, dat) {
 }
 
 
-# 四个抽样的TI相关性图新版本
 robustness_new_plot <- function(input_matrix, finalMatrix, method = method) {
   plist <- list()
   time_point <- initial_order <- subset_order <- as.data.frame(matrix(nrow = length(finalMatrix[[1]]$pseudotime), ncol = length(finalMatrix)))
@@ -185,8 +183,6 @@ robustness_new_plot <- function(input_matrix, finalMatrix, method = method) {
 }
 
 
-
-# 标准C图 --------------------------------------------------------------------
 roughness_plot <- function(TIres, D) {
   # load the data
   input_matrix <- cbind(D$expr, D$timepoint, TIres$pseudotime, TIres$trajectory)
@@ -196,7 +192,7 @@ roughness_plot <- function(TIres, D) {
   npar <- which(colnames(input_matrix) == "D.timepoint") - 1 # 14
   
   # extract data to plot
-  dat <- input_matrix[, 1:npar] # 纯蛋白表达数据
+  dat <- input_matrix[, 1:npar]
   Pseudotime <- input_matrix[, npar + 2]
   
   # # Find axis limits => you need common limits of asinh or log for y axis
@@ -273,7 +269,7 @@ roughness_plot <- function(TIres, D) {
   return(p0)
 }
 
-# 标准D图1 --------------------------------------------------------------------
+
 abund_pt_plot <- function(TIres, D) {
   # load the data
   input_matrix <- cbind(D$expr, D$timepoint, TIres$pseudotime, TIres$trajectory)
@@ -284,7 +280,7 @@ abund_pt_plot <- function(TIres, D) {
   ntimepoints <- length(unique(input_matrix$D.timepoint)) # 8
   
   # extract data to plot
-  dat <- input_matrix[, 1:npar] # 纯蛋白表达数据
+  dat <- input_matrix[, 1:npar]
   Timepoints <- input_matrix[, npar + 1]
   Pseudotime <- input_matrix[, npar + 2]
   
@@ -374,8 +370,6 @@ abund_pt_plot <- function(TIres, D) {
 }
 
 
-
-# 标准D图2 --------------------------------------------------------------------
 diagonal_plot_pre <- function(data, pro_seq, i) {
   ggplot(data, aes(x = x, y = y)) +
     geom_point() +

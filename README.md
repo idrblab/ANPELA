@@ -136,8 +136,8 @@ install.packages(CRAN_packages, dependencies = TRUE)
 ```
 
 Installed from ***Bioconductor*** (can also from other repositories):
-flowCore, limma, SCORPIUS, slingshot, destiny, cytofkit, flowStats,
-flowAI, flowCut, flowClean, spillR, PeacoQC and systemPipeR.
+flowCore, limma, SCORPIUS, slingshot, destiny, flowStats, flowAI,
+flowCut, flowClean, spillR, PeacoQC and systemPipeR.
 
 Installation commands:
 
@@ -146,14 +146,14 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 Bioconductor_packages <- c("flowCore", "limma", "SCORPIUS", "slingshot", "destiny", 
-                           "cytofkit", "flowStats", "flowAI", "flowCut", "flowClean",
-                           "spillR", "PeacoQC", "systemPipeR")
+                           "flowStats", "flowAI", "flowCut", "flowClean", "spillR",
+                           "PeacoQC", "systemPipeR")
 
 BiocManager::install(Bioconductor_packages, ask = FALSE)
 ```
 
 Installed from ***GitHub*** (can also from other repositories):
-Rtsne.multicore and FLOWMAPR.
+Rtsne.multicore and Rphenograph.
 
 Installation commands:
 
@@ -161,7 +161,7 @@ Installation commands:
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 devtools::install_github("RGLab/Rtsne.multicore")
-devtools::install_github("zunderlab/FLOWMAP")
+devtools::install_github("JinmiaoChenLab/Rphenograph")
 ```
 
 - **Tool 3. ANPELA** ***R*** **Package**

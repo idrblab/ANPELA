@@ -158,7 +158,7 @@ oneStep_process_assess <- function(
     if (is.null(control.def.file)) {
       message("The parameter of 'control.def.file' is missing. 'AutoSpill' compensation method can't be performed.")
       compensationM <- setdiff(compensationM, "AutoSpill")
-    } else if (!isFALSE(file.info(control.def.file)$isdir) || !grepl(".csv$", control.def.file)) { # control.def.file必须是csv类型的文件路径（带有文件名）
+    } else if (!isFALSE(file.info(control.def.file)$isdir) || !grepl(".csv$", control.def.file)) {
       stop("The format of parameter 'control.def.file' is incorrect. Please input the absolute filepath of your .csv file defining the filenames and corresponding channels of the single-color controls if you want to use 'AutoSpill' compensation method..")
     }
   }
@@ -444,7 +444,7 @@ oneStep_process_assess <- function(
 
   # spillpath
   if ("FlowCore" %in% compensationM & is.null(workflow)|any(grepl("FlowCore", workflow))) {
-    if (is.null(spillpath)) { # 没有提供spillpath参数
+    if (is.null(spillpath)) {
 
       if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILL"]])))) {
       } else if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILLOVER"]])))) {

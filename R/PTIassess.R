@@ -22,8 +22,6 @@
 #' }
 
 
-
-
 PTIassess <- function(name = "result", data, respath,
                       TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE",
                               "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),

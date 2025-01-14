@@ -102,11 +102,11 @@ FCprocess <- function(name = "result",
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # dataFiles
-  if (missing(datapath)) { # 没有提供datapath参数
+  if (missing(datapath)) {
     stop("The parameter of 'datapath' is missing.")
-  } else if (file.info(datapath)$isdir) { # 提供了原始数据文件夹的绝对路径
+  } else if (file.info(datapath)$isdir) {
     dataFiles <- list.files(datapath, pattern = ".fcs$", full.names = TRUE)
-  } else if (!file.info(datapath)$isdir) { # 提供了包含FCS文件的绝对路径，并提取相应的FCS文件路径
+  } else if (!file.info(datapath)$isdir) {
     if (any(grepl(".fcs$", datapath))) {
       dataFiles <- datapath[grepl(".fcs$", datapath)]
     } else {
@@ -119,9 +119,9 @@ FCprocess <- function(name = "result",
 
 
   # metadata
-  if (missing(metadata)) { # 没有提供metadata参数
+  if (missing(metadata)) {
     stop("The parameter of 'metadata' is missing.")
-  } else if (grepl(".csv$", metadata)) { # 提供了csv文件的绝对路径
+  } else if (grepl(".csv$", metadata)) {
     metadata <- read.csv(metadata)
   } else {
     stop("The format of parameter 'metadata' is incorrect. Please input the absolute filepath of the metadata file.")
@@ -195,7 +195,7 @@ FCprocess <- function(name = "result",
     if (is.null(control.def.file)) {
       message("The parameter of 'control.def.file' is missing. 'AutoSpill' compensation method can't be performed.")
       compensationM <- setdiff(compensationM, "AutoSpill")
-    } else if (!isFALSE(file.info(control.def.file)$isdir) || !grepl(".csv$", control.def.file)) { # control.def.file必须是csv类型的文件路径（带有文件名）
+    } else if (!isFALSE(file.info(control.def.file)$isdir) || !grepl(".csv$", control.def.file)) {
       stop("The format of parameter 'control.def.file' is incorrect. Please input the absolute filepath of your .csv file defining the filenames and corresponding channels of the single-color controls if you want to use 'AutoSpill' compensation method..")
     }
   }
@@ -340,7 +340,7 @@ FCprocess <- function(name = "result",
 
   # spillpath
   if ("FlowCore" %in% compensationM & is.null(workflow)|any(grepl("FlowCore", workflow))) {
-    if (is.null(spillpath)) { # 没有提供spillpath参数
+    if (is.null(spillpath)) {
 
       if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILL"]])))) {
       } else if (all(sapply(AP2_pro0_frame, function(x) !is.null(x@description[["SPILLOVER"]])))) {
@@ -446,13 +446,10 @@ FCprocess <- function(name = "result",
                                                  return(NULL)
                                                }
                                                rm(AP2_comp_frame)
-
-                                               # 防止 compensation 后的数据中 0 值太多，影响 normalization
                                                proteins_excluded <- c()
                                                for (x in seq(AP2_trans_frame)) {
                                                  data_checked <- AP2_trans_frame[[x]]@exprs
                                                  data_checked[is.na(data_checked)] <- 0
-                                                 # 记录被检测到比例高于 99% 的蛋白
                                                  proteins_excluded <- union(proteins_excluded, colnames(data_checked[, c(colMeans(apply(data_checked, 2, as.numeric) == 0, na.rm = T) > 0.99)]))
                                                }
 

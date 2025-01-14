@@ -1,11 +1,9 @@
-# 对cluster进行聚类
 sub_cluster <- function(data, FlowSeed) {
   res <- try(suppressMessages(data_cluster(data = data[,1:(length(data)-3)], method = "FlowSOM", FlowSOM_k = 2, FlowSeed = FlowSeed)), 
              silent = T)
   return(res)
 }
 
-# 挑选marker
 feature_selection <- function(data) {
   data3 <- dplyr::tibble(data)
   data4 <- data_ttest(data = data3)
@@ -15,14 +13,12 @@ feature_selection <- function(data) {
   return(names(which(pvalue_res >= 0.05)))
 }
 
-# 合计数据（根据sample和condition分组，计算均值）
 data_ttest <- function (data) {
   res <- dplyr::group_by(data, filename, condition) %>% 
     dplyr::summarise_if(is.numeric, mean, na.rm = TRUE)
   return(res)
 }
 
-# 统计检验
 # pvalue_method <- function (marker, data, 
 #                            method = c("wilcox.test","t.test"), paired = FALSE) {
 #   data <- data.frame(marker_expr = data[, marker], condition = data[,"condition"])
@@ -37,13 +33,11 @@ pvalue_method <- function (marker, data) {
   res <- t.test(marker_expr~condition, data)$p.value
 }
 
-# 抽样函数（用于标准consistency抽样）
 subsampling <- function (data, size) {
   test.fold <- sampling::strata(c("condition"), size = size, method = "srswor", data = data)[,2]
   return(test.fold)
 }
 
-# 计算purity需要用到
 accuracy <- function(result, label) {
   total_num <- length(label)
   cluster_counter <- unique(result) # 1 2
@@ -69,7 +63,6 @@ accuracy <- function(result, label) {
   return(res)
 }
 
-# 计算Consistency Score
 CSvalue <- function (data = data, subdata = test.fold) {
   DEG <- list()
   for (j in 1:length(subdata)) { # 1:3
@@ -93,7 +86,6 @@ CSvalue <- function (data = data, subdata = test.fold) {
   return(list(con.score = con.score, DEG = DEG))
 }
 
-# 计算CWrel
 CWrel <- function(all_genelist = all_genelist, Y, n) {
   num <- 3
   partial_genelist <- vector("list", length(all_genelist))
@@ -151,7 +143,7 @@ F1_score <- function(test = test, KNN_res = KNN_res, label = condition_label) {
       
       Precision <- TP/(TP+FP)
       Recall <- TP/(TP+FN)
-      f1_score <- c(f1_score, 2 * (Precision * Recall) / (Precision + Recall)) # 各个cluster的值
+      f1_score <- c(f1_score, 2 * (Precision * Recall) / (Precision + Recall))
       names(f1_score)[length(f1_score)] <- paste("cluster", i)
     }
     F1[[j]] <- f1_score
@@ -163,9 +155,7 @@ AUC <- function(test = test, KNN_res = KNN_res) {
   auc <- c()
   case_problist <- list()
   for (i in 1:length(test)) {
-    # 防止某一个分组中，只有一个cluster。否则计算AUC时，TPR或FPR其中一个的分母会是NA
     if (length(unique(test[[i]]$condition)) < 2) next
-    # 将KNN结果的control的prob转换为case的prob
     case_prob <- attributes(KNN_res[[i]])$prob
     control_label <- levels(KNN_res[[i]])[1]
     case_prob[which(KNN_res[[i]] == control_label)] <- 1- case_prob[which(KNN_res[[i]] == control_label)]
@@ -182,7 +172,7 @@ RI <- function(data = subdata_cluster_DEG, sub_cluster_label, FlowSeed = 40) {
     if (class(sub_cluster_label[[i]]) == "NULL" | class(sub_cluster_label[[i]]) == "try-error") next
     x <- as.numeric(data[[i]]$condition)
     y <- as.numeric(sub_cluster_label[[i]])
-    ri <- c(ri, as.numeric(fossil::rand.index(x, y))) # x与y调换顺序对结果无影响
+    ri <- c(ri, as.numeric(fossil::rand.index(x, y)))
     names(ri)[length(ri)] <- paste("cluster", i)
   }
   return(ri)

@@ -99,7 +99,6 @@ Robustness <- function(TIres, D, nruns = 4, cell.subset = 0.9, clustering.var = 
     spear_benchmark <- mean(abs(spear_max))
     kend_benchmark <-  mean(abs(kend_max))
     
-    # 考虑抽样后得到的轨迹数量可能与原轨迹数量不同，所以需要考虑比例
     ratio <- min(finalMatrix[[n]]$lineages, TIres[["lineages"]])/max(finalMatrix[[n]]$lineages, TIres[["lineages"]])
     spear_final <- c(spear_final, ratio * spear_benchmark)
     kend_final <- c(kend_final, ratio * kend_benchmark)

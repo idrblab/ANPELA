@@ -15,6 +15,5 @@ Getmarker <- function(datapath) {
   files <- dir(path = datapath, pattern = "fcs$", full.names = TRUE)
   a <- flowCore::read.FCS(filename = files[[1]], transformation = FALSE, alter.names = TRUE)
   colnames(a@exprs) <- paste0(a@parameters@data$desc, "(", a@parameters@data$name, ")")
-  # 查看 marker
   cat(paste0("\"", paste0(as.character(colnames(a@exprs)), collapse = ", \n"), "\""))
 }

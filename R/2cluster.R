@@ -1,10 +1,9 @@
 data_cluster <- function (data = NULL, method = c("FlowSOM", "PhenoGraph","Mclust"), 
                           Phenograph_k = 30, FlowSOM_k = 20, FlowSeed = NULL) {
-  # Phenograph_k 间接反映聚类数目，FlowSOM_k 直接反映聚类数目
-  # 默认 "FlowSOM"，因为速度较快
   method = match.arg(method)
   switch(method, PhenoGraph = {
-    clusters <- as.numeric(cytofkit::Rphenograph(data, k = Phenograph_k)$membership)
+    set.seed(123)
+    clusters <- as.numeric(Rphenograph::Rphenograph(data, k = Phenograph_k)[[2]]$membership)
   }, FlowSOM = {
     set.seed(FlowSeed)
     clusters <- FlowSOM_integrate2cytofkit2(xdata = data, k = FlowSOM_k, FlowSeed = FlowSeed)
@@ -47,7 +46,6 @@ FlowSOM_integrate2cytofkit2 <- function(xdata, k, FlowSeed = NULL, ...){
   return(cluster)
 }
 
-# 为了屏蔽ConsensusClusterPlus包中的clusterTrackingPlot(colorM[, res[[length(res)]]$consensusTree$order])
 metaClustering_consensus2 <- function (data, k = 7, seed = NULL) {
   results <- suppressMessages(ConsensusClusterPlus2(t(data), 
                                                     maxK = k, reps = 100, pItem = 0.9, pFeature = 1, title = tempdir(), 

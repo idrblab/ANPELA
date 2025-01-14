@@ -1,4 +1,3 @@
-# tSNE降维
 dr_tsne <- function(data = data, tsneSeed = 42) {
   data <- as.matrix(data)
   if (is.numeric(tsneSeed)) set.seed(tsneSeed)
@@ -39,7 +38,6 @@ purity_plot <- function(i, subdata_cluster_dimred, sub_cluster_label) {
   data_condition <- data.frame(dplyr::select(data, dplyr::one_of(c("tsne_1", "tsne_2", "condition"))),
                                cluster = cluster_label)
   
-  # 针对每一个cluster，再对cluster中的不同聚类结果，得到椭圆轨迹
   data_ell <- data.frame()
   colorset <- c('#fec600', '#810061')
   for (g in 1:length(unique(data_condition$cluster))) {
@@ -53,7 +51,6 @@ purity_plot <- function(i, subdata_cluster_dimred, sub_cluster_label) {
     data_ell <- rbind(data_ell, elli)
   }
   
-  # 根据condition染色
   p_condition <- ggplot(data = data_condition, aes(tsne_1, tsne_2, color = condition)) +
     geom_point(alpha = 0.5) +
     scale_color_manual(name = "Condition", values = c("#00ced1", "#F87168")) +
@@ -62,7 +59,6 @@ purity_plot <- function(i, subdata_cluster_dimred, sub_cluster_label) {
           panel.grid.minor = element_blank(),
           legend.position = "top")
   
-  # 根据cluster染色
   p_cluster <- ggplot(data = data_condition, aes(tsne_1, tsne_2, color = cluster)) +
     geom_point(alpha = 0.5) +
     scale_color_manual(name = "Cluster", values = c("#fec600", "#810061")) +
@@ -70,14 +66,13 @@ purity_plot <- function(i, subdata_cluster_dimred, sub_cluster_label) {
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           legend.position = "top")
-  # 根据condition染色，再将聚类情况用椭圆轨迹表示
   # p_condition_cluster <- ggplot() +
   #   geom_point(data = data_condition,
   #              aes(tsne_1, tsne_2, color = condition),
   #              alpha = 0.5) +
   #   geom_path(data = data_ell,
   #             aes(tsne_1, tsne_2, color = cluster),
-  #             size = 1.2, linetype = 2, inherit.aes = F, alpha = 0.8) + # 根据 cluster 画置信椭圆（95％）
+  #             size = 1.2, linetype = 2, inherit.aes = F, alpha = 0.8) + 
   #   scale_color_manual(name = "Condition & Cluster",
   #                      breaks = c(levels(data_condition$condition), "1", "2"),
   #                      labels = c(levels(data_condition$condition), "Cluster 1", "Cluster 2"),
@@ -95,7 +90,7 @@ purity_plot <- function(i, subdata_cluster_dimred, sub_cluster_label) {
 
 heatmap_plot <- function (i, subdata_cluster_DEG) {
   data <- subdata_cluster_DEG[[i]]
-  # if (is.null(data) || (length(data) == 4)) return(NULL) # 第二种情况是因为HeatMap需要至少两列数据
+  # if (is.null(data) || (length(data) == 4)) return(NULL)
   data_pure <- dplyr::select(data, -dplyr::one_of(c("filename", "condition", "cluster")))
   data_heatmap <- aggregate(data_pure, by = list(data$filename, data$condition), mean)
   rownames(data_heatmap) <- data_heatmap[, 1]

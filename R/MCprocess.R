@@ -106,11 +106,11 @@ MCprocess <- function(name = "result",
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # dataFiles
-  if (missing(datapath)) { # 没有提供datapath参数
+  if (missing(datapath)) {
     stop("The parameter of 'datapath' is missing.")
-  } else if (file.info(datapath)$isdir) { # 提供了原始数据文件夹的绝对路径
+  } else if (file.info(datapath)$isdir) {
     dataFiles <- list.files(datapath, pattern = ".fcs$", full.names = TRUE)
-  } else if (!file.info(datapath)$isdir) { # 提供了包含FCS文件的绝对路径，并提取相应的FCS文件路径
+  } else if (!file.info(datapath)$isdir) {
     if (any(grepl(".fcs$", datapath))) {
       dataFiles <- datapath[grepl(".fcs$", datapath)]
     } else {
@@ -123,9 +123,9 @@ MCprocess <- function(name = "result",
 
 
   # metadata
-  if (missing(metadata)) { # 没有提供metadata参数
+  if (missing(metadata)) {
     stop("The parameter of 'metadata' is missing.")
-  } else if (grepl(".csv$", metadata)) { # 提供了csv文件的绝对路径
+  } else if (grepl(".csv$", metadata)) {
     metadata <- read.csv(metadata)
   } else {
     stop("The format of parameter 'metadata' is incorrect. Please input the absolute filepath of the metadata file.")
@@ -461,13 +461,10 @@ MCprocess <- function(name = "result",
                                                  return(NULL)
                                                }
                                                rm(AP2_comp_frame)
-
-                                               # 防止 compensation 后的数据中 0 值太多，影响 normalization
                                                proteins_excluded <- c()
                                                for (x in seq(AP2_trans_frame)) {
                                                  data_checked <- AP2_trans_frame[[x]]@exprs
                                                  data_checked[is.na(data_checked)] <- 0
-                                                 # 记录被检测到比例高于 99% 的蛋白
                                                  proteins_excluded <- union(proteins_excluded, colnames(data_checked[, c(colMeans(apply(data_checked, 2, as.numeric) == 0, na.rm = T) > 0.99)]))
                                                }
 

@@ -41,6 +41,7 @@
 #' }
 
 
+
 CSIassess <- function(name = "result", data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
@@ -76,7 +77,7 @@ CSIassess <- function(name = "result", data, respath,
 
 
   # clusteringM
-  if (missing(clusteringM)) { # 用户在没有指定改参数的情况下 将默认值重新修改
+  if (missing(clusteringM)) {
     clusteringM <- "FlowSOM"
   } else {
     clusteringM <- match.arg(clusteringM)

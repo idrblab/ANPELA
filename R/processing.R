@@ -122,9 +122,7 @@ flowCore_comp <- function(frame_list, col_names, spillpath = NULL, spillname = N
   })
   if (!is.null(spillpath) && !is.null(spillname)) {
     frames <- lapply(spillpath, flowCore::read.FCS)
-    # 对其进行重新命名
     names(frames) <- spillname
-    # 将 frames 组成的 list 转变成 flowset
     frames <- as(frames, "flowSet")
     spill_single <- flowCore::spillover(frames, unstained="unstained",
                                         fsc = FSC, ssc = SSC,
@@ -243,7 +241,6 @@ CytoSpill_comp <- function(frame_list, cols) {
   res <- list()
   for (i in 1:length(frame_list)) {
     fcs_exprs <- frame_list[[i]]@exprs
-    # 可以考虑提供溢出矩阵的下载
     set.seed(123)
     spillmat <- suppressWarnings(GetSpillMat(fcs_exprs, cols, n = nrow(fcs_exprs)))
     data_compensated <- t(apply(fcs_exprs[, cols], 1, function(row) nnls::nnls(t(spillmat),row)$x))
@@ -267,7 +264,6 @@ CATALYST_comp <- function(frame_list, cols, single_pos_fcs, single_pos_mass, met
     colnames(frame_list1[[i]]@exprs) <- frame_list[[i]]@parameters@data$name
   }
 
-  # 获得补偿矩阵
   spill <- CATALYST::assignPrelim(x = single_pos_fcs, y = single_pos_mass) %>%
     CATALYST::estCutoffs() %>%
     CATALYST::applyCutoffs() %>%
@@ -399,7 +395,6 @@ spillR_comp <- function(frame_list, col_names, sce_bead, marker_to_barc) {
     frame_list1[[i]]@exprs[, col_names1] <- t(data_compensated@assays@data@listData[["compcounts"]])
     colnames(frame_list1[[i]]@exprs) <- colnames(frame_list[[i]]@exprs)
     rownames(frame_list1[[i]]@exprs) <- rownames(frame_list[[j]]@exprs)
-    #讨论是否要trans #记得额外测试
   }
   return(frame_list1)
 
@@ -994,7 +989,7 @@ ZScore_norm <- function(frame_list, col_names) {
 
   data_res <- lapply(frame_list1, function(x) {
     exprs <- x@exprs[, col_names1]
-    exprs[exprs == 0] <- NA # 对非零值进行scale(x)
+    exprs[exprs == 0] <- NA
     temp <- scale(exprs)
     temp[is.na(exprs)] <- 0
     x@exprs[, col_names1] <- temp
