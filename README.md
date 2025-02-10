@@ -10,8 +10,7 @@
 <a href='#devtools'>![installed with
 devtools](https://img.shields.io/badge/installed%20with-devtools-blueviolet.svg)</a>
 [![GitHub
-codesize](https://img.shields.io/github/languages/code-size/idrblab/NOREVA)](https://github.com/idrblab/NOREVA/releases)
-[![DOI](https://img.shields.io/badge/DOI-Advanced_Science-blue)](https://onlinelibrary.wiley.com/doi/10.1002/advs.202207061)
+codesize](https://img.shields.io/github/languages/code-size/idrblab/ANPELA)](https://github.com/idrblab/ANPELA/releases)
 [![WebServer](https://img.shields.io/badge/Web_Server-ANPELA-blue)](http://idrblab.cn/anpela2024/)
 <!-- badges: end -->
 
@@ -130,9 +129,9 @@ Installation commands:
 
 ``` r
 CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot",
-                   "ggpubr", "gridExtra", "MLmetrics", "fossil", "clusterCrit", "VennDiagram",
-                   "stringr", "bbmle", "mc2d", "parallel", "doSNOW", "foreach",
-                   "igraph", "mclust", "pheatmap", "magrittr", "withr", "tree"
+                   "ggpubr", "gridExtra", "MLmetrics", "fossil", "clusterCrit",
+                   "VennDiagram","stringr", "bbmle", "mc2d", "doSNOW", "foreach",
+                   "igraph","mclust", "pheatmap", "magrittr", "withr", "tree",
                    "sampling", "ellipse")
 install.packages(CRAN_packages, dependencies = TRUE)
 ```
