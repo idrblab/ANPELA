@@ -21,7 +21,7 @@ knitr::include_graphics("vignettes/figures/home.png")
 [![R >3.5](https://img.shields.io/badge/R-%3E3.5-success.svg)](https://www.r-project.org/) 
 <a href='#devtools'>![installed with devtools](https://img.shields.io/badge/installed%20with-devtools-blueviolet.svg)</a> 
 [![GitHub codesize](https://img.shields.io/github/languages/code-size/idrblab/ANPELA)](https://github.com/idrblab/ANPELA/releases)
-[![WebServer](https://img.shields.io/badge/Web_Server-ANPELA-blue)](http://idrblab.cn/anpela2024/)
+[![WebServer](https://img.shields.io/badge/Web_Server-ANPELA-blue)](http://idrblab.cn/anpela2025/)
 <!-- badges: end -->
 
 # How to Use `ANPELA`?
@@ -40,7 +40,7 @@ knitr::include_graphics("vignettes/figures/home.png")
 
 Single-cell proteomics (SCP) has emerged as a powerful technique that significantly advances our understanding of complex biological systems with new level of granularity. Because of the extreme difficulty in processing SCP data, ANPELA was developed for identifying the optimal workflow based on a well-designed assessment strategy.<br><br>
 **ANPELA** is a **user-centric** and **application-oriented** tool which is capable of navigating the data processing for SCP. **ANPELA 3.0** has significantly improved its practicality, focusing primarily on the following points: **1**. <u>multi-scenarios deployment</u> (versatile choices meet diverse user needs); **2**. <u>data security</u> (local execution ensures data confidentiality); **3**. <u>open source</u> (modular codes facilitate readers’ free editing); and **4**. <u>user-friendly interface</u> (the visual interface enhances user application).<br><br>
-The local software and webserver of ANPELA are available at <a href="http://idrblab.org/anpela2024"> http://idrblab.org/anpela2024</a>.
+The local software and webserver of ANPELA are available at <a href="http://idrblab.org/anpela2025"> http://idrblab.org/anpela2025</a>.
 
 ## Citations
 

@@ -11,7 +11,7 @@
 devtools](https://img.shields.io/badge/installed%20with-devtools-blueviolet.svg)</a>
 [![GitHub
 codesize](https://img.shields.io/github/languages/code-size/idrblab/ANPELA)](https://github.com/idrblab/ANPELA/releases)
-[![WebServer](https://img.shields.io/badge/Web_Server-ANPELA-blue)](http://idrblab.cn/anpela2024/)
+[![WebServer](https://img.shields.io/badge/Web_Server-ANPELA-blue)](http://idrblab.cn/anpela2025/)
 <!-- badges: end -->
 
 # How to Use `ANPELA`?
@@ -42,8 +42,8 @@ execution ensures data confidentiality); **3**. <u>open source</u>
 (modular codes facilitate readers’ free editing); and **4**.
 <u>user-friendly interface</u> (the visual interface enhances user
 application).<br><br> The local software and webserver of ANPELA are
-available at <a href="http://idrblab.org/anpela2024">
-http://idrblab.org/anpela2024</a>.
+available at <a href="http://idrblab.org/anpela2025">
+http://idrblab.org/anpela2025</a>.
 
 ## Citations
 
