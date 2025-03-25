@@ -1,0 +1,71 @@
+Package: ANPELA
+Title: Navigating the Data Processing for Single-cell Proteomics using ANPELA
+Version: 1.0.0
+Authors@R: 
+    c(
+    person(given = "Huaicheng", family = "Sun", email = "sunhc@zju.edu.cn", role = c("aut")),
+    person(given = "Yuan", family = "Zhou", role = c("aut")),
+    person(given = "Yuxuan", family = "Liu", role = c("aut")),
+    person(given = "Feng", family = "Zhu", email = "zhufeng@zju.edu.cn", role = c("cre"))
+    )
+Description: Single-cell proteomics (SCP) has emerged as a powerful technique that significantly advances our understanding of complex biological systems with new level of granularity. Because of the extreme difficulty in processing SCP data, ANPELA was developed for identifying the optimal workflow based on a well-designed assessment strategy. ANPELA is a user-centric and application-oriented tool which is capable of navigating the data processing for SCP. ANPELA 3.0 has significantly improved its practicality, focusing primarily on the following points: 1. multi-scenarios deployment (versatile choices meet diverse user needs); 2. data security (local execution ensures data confidentiality); 3. open source (modular codes facilitate readers’ free editing); and 4. user-friendly interface (the visual interface enhances user application). The local software and webserver of ANPELA are available at http://idrblab.org/anpela2024.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: TRUE
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    R.rsp,
+    knitr,
+    rmarkdown
+VignetteBuilder: 
+    R.rsp,
+    knitr
+News: NEWS.md
+biocViews:
+Imports: 
+    dplyr,
+    doParallel,
+    rstan,
+    Rtsne,
+    pastecs,
+    cowplot,
+    ggpubr,
+    gridExtra,
+    MLmetrics,
+    fossil,
+    clusterCrit,
+    VennDiagram,
+    stringr,
+    bbmle,
+    mc2d,
+    parallel,
+    doSNOW,
+    foreach,
+    igraph,
+    mclust,
+    pheatmap,
+    magrittr,
+    withr,
+    tree,
+    sampling,
+    ellipse,
+    flowCore,
+    limma,
+    SCORPIUS,
+    slingshot,
+    destiny,
+    flowStats,
+    flowAI,
+    flowCut,
+    flowClean,
+    spillR,
+    PeacoQC,
+    systemPipeR,
+    flowTrans,
+    flowVS
+Remotes:
+    RGLab/Rtsne.multicore,
+    JinmiaoChenLab/Rphenograph,
+    qmiao19/CytoSpill,
+    carlosproca/autospill
