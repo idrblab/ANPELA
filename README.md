@@ -173,7 +173,7 @@ Install the `ANPELA` package by running the following command in
 RStudio:
 
 ``` r
-devtools::install_github("idrblab/ANPELA")
+devtools::install_github("idrblab/ANPELA", build_vignettes = TRUE)
 ```
 
 During the installation of `ANPELA`, the appearance of the error message
