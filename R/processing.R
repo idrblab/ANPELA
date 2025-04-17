@@ -32,6 +32,7 @@ trans_anpela <- function(data, method, index,
                          b1,
                          b2,
                          b3,
+                         lambda,
                          Quadratica, Quadraticb, Quadraticc,
                          lineara, linearb,
                          Truncatea) {
@@ -40,7 +41,7 @@ trans_anpela <- function(data, method, index,
                  "Asinh with Non-negative Value" = ANN_trans(frame_list = data, col_names = index, b = b2),
                  "Asinh with Randomized Negative Value" = ARN_trans(frame_list = data, col_names = index, b = b3),
                  "Biexponential Transformation" = biexp_trans(frame_list = data, col_names = index),
-                 "Box-Cox Transformation" = BoxCox_trans(frame_list = data, col_names = index),
+                 "Box-Cox Transformation" = BoxCox_trans(frame_list = data, col_names = index, lambda = lambda),
                  "FlowVS Transformation" = flowVS_trans(frame_list = data, col_names = index),
                  "Hyperlog Transformation" = hyperlog_trans(frame_list = data, col_names = index),
                  "Linear Transformation" = linear_trans(frame_list = data, col_names = index, a = lineara, b = linearb),
@@ -122,9 +123,7 @@ flowCore_comp <- function(frame_list, col_names, spillpath = NULL, spillname = N
   })
   if (!is.null(spillpath) && !is.null(spillname)) {
     frames <- lapply(spillpath, flowCore::read.FCS)
-    # 对其进行重新命名
     names(frames) <- spillname
-    # 将 frames 组成的 list 转变成 flowset
     frames <- as(frames, "flowSet")
     spill_single <- flowCore::spillover(frames, unstained="unstained",
                                         fsc = FSC, ssc = SSC,
@@ -243,7 +242,6 @@ CytoSpill_comp <- function(frame_list, cols) {
   res <- list()
   for (i in 1:length(frame_list)) {
     fcs_exprs <- frame_list[[i]]@exprs
-    # 可以考虑提供溢出矩阵的下载
     set.seed(123)
     spillmat <- suppressWarnings(GetSpillMat(fcs_exprs, cols, n = nrow(fcs_exprs)))
     data_compensated <- t(apply(fcs_exprs[, cols], 1, function(row) nnls::nnls(t(spillmat),row)$x))
@@ -267,7 +265,6 @@ CATALYST_comp <- function(frame_list, cols, single_pos_fcs, single_pos_mass, met
     colnames(frame_list1[[i]]@exprs) <- frame_list[[i]]@parameters@data$name
   }
 
-  # 获得补偿矩阵
   spill <- CATALYST::assignPrelim(x = single_pos_fcs, y = single_pos_mass) %>%
     CATALYST::estCutoffs() %>%
     CATALYST::applyCutoffs() %>%
@@ -399,7 +396,6 @@ spillR_comp <- function(frame_list, col_names, sce_bead, marker_to_barc) {
     frame_list1[[i]]@exprs[, col_names1] <- t(data_compensated@assays@data@listData[["compcounts"]])
     colnames(frame_list1[[i]]@exprs) <- colnames(frame_list[[i]]@exprs)
     rownames(frame_list1[[i]]@exprs) <- rownames(frame_list[[j]]@exprs)
-    #讨论是否要trans #记得额外测试
   }
   return(frame_list1)
 
@@ -513,7 +509,7 @@ biexp_trans <- function(frame_list, col_names, a = 0.5, b = 1, c = 0.5, d = 1, f
 }
 
 # Transformation: Box-Cox transformation ------------------------------------------------------------
-BoxCox_trans <- function(frame_list, col_names) {
+BoxCox_trans <- function(frame_list, col_names, lambda = 0.3) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
@@ -525,14 +521,10 @@ BoxCox_trans <- function(frame_list, col_names) {
     return(x)
   })
 
-  dataTransform_pre <- lapply(frame_list1, flowTrans::flowTrans,
-                              fun = "mclMultivBoxCox", dims = col_names1,
-                              n2f = F, parameters.only = F)
-  dataTransform <- frame_list1
-  for (j in 1:length(dataTransform)) {
-    dataTransform[[j]]@exprs <- dataTransform_pre[[j]][["result"]]@exprs
-    rownames(dataTransform[[j]]@exprs) <- rownames(frame_list[[j]]@exprs)
-  }
+  dataTransform <- lapply(frame_list1, function(x){
+    x@exprs[,col_names1] <- flowClust::box(x@exprs[,col_names1], lambda = lambda)
+    return(x)
+  })
 
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
@@ -994,7 +986,7 @@ ZScore_norm <- function(frame_list, col_names) {
 
   data_res <- lapply(frame_list1, function(x) {
     exprs <- x@exprs[, col_names1]
-    exprs[exprs == 0] <- NA # 对非零值进行scale(x)
+    exprs[exprs == 0] <- NA
     temp <- scale(exprs)
     temp[is.na(exprs)] <- 0
     x@exprs[, col_names1] <- temp
@@ -2208,7 +2200,7 @@ PeacoQC_signalC <- function(frame_list, col_names, min_cells, max_bins, step, te
   }, col_names1 = col_names1, technique = technique)
 
   res <- lapply(res, function(x) {
-    x@exprs <- x@exprs[, !colnames(x@exprs) =="Original_ID"]
+    x@exprs <- x@exprs[, -ncol(x@exprs)]
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     x@parameters@data <- x@parameters@data[!x@parameters@data$name == "Original_ID",]
     return(x)

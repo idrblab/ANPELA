@@ -92,9 +92,9 @@ You can cite the `ANPELA` publication as follows:
   RStudio website (<https://www.rstudio.com/>), which is compatible with
   user’s operating system.
 
-- *RTool*. The RTool installation file ‘rtoolx-y-z.zip’ (where x, y, and
-  z denote the specific version numbers of the software release) can be
-  obtained from the official RTool website
+- *RTools*. The RTools installation file ‘rtoolsx-y-z.zip’ (where x, y,
+  and z denote the specific version numbers of the software release) can
+  be obtained from the official RTools website
   (<https://cran.r-project.org/bin/windows/Rtools> /);
 
 - *Prerequisite R packages*. This protocol necessitates a range of *R*
@@ -110,9 +110,9 @@ This section provides a comprehensive guide to the installation and
 configuration of `ANPELA` *R* package. It outlines the necessary tools
 required to ensure a seamless and accurate installation of the protocol.
 
-- **Tool 1.** ***R*** **language, RStudio and RTool**
+- **Tool 1.** ***R*** **language, RStudio and RTools**
 
-Install the R language, RStudio and RTool using their installation
+Install the R language, RStudio and RTools using their installation
 files, which are compatible with user’s operating system.
 
 - **Tool 2. The required** ***R*** **Packages**

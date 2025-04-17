@@ -80,7 +80,7 @@ Storage: 8 GB available hard-disk space<br><br>
 
 - *RStudio*. The RStudio installation file ‘RStudio-x.y.z.zip’ (where x, y, and z represent the version numbers of the software release) from RStudio website (https://www.rstudio.com/), which is compatible with user’s operating system.
 
-- *RTool*. The RTool installation file ‘rtoolx-y-z.zip’ (where x, y, and z denote the specific version numbers of the software release) can be obtained from the official RTool website (https://cran.r-project.org/bin/windows/Rtools /);
+- *RTools*. The RTools installation file ‘rtoolsx-y-z.zip’ (where x, y, and z denote the specific version numbers of the software release) can be obtained from the official RTools website (https://cran.r-project.org/bin/windows/Rtools /);
 
 - *Prerequisite R packages*. This protocol necessitates a range of *R* packages (as described in [Installation Guide](#installation-guide)), with certain packages obtained from CRAN (https://cran.r-project.org), others installed from Bioconductor (https://bioconductor.org/), and the remaining accessible from GitHub (https://github.com/).
 
@@ -89,9 +89,9 @@ Storage: 8 GB available hard-disk space<br><br>
 
 This section provides a comprehensive guide to the installation and configuration of `ANPELA` *R* package. It outlines the necessary tools required to ensure a seamless and accurate installation of the protocol.
 
-- **Tool 1.** ***R*** **language, RStudio and RTool**
+- **Tool 1.** ***R*** **language, RStudio and RTools**
 
-Install the R language, RStudio and RTool using their installation files, which are compatible with user’s operating system. 
+Install the R language, RStudio and RTools using their installation files, which are compatible with user’s operating system. 
 
 - **Tool 2. The required** ***R*** **Packages**
 
