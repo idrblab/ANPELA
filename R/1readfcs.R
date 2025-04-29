@@ -61,7 +61,7 @@ readfcs_multi <- function(fcsFiles = files, mergeMethod = c("ceil", "all", "fixe
     warning("One or more FCS files have less events than specified fixedNum; using lowest as fixedNum")
     fixedNum <- min(rapply(exprsL, nrow))
   }
-  switch(mergeMethod, ceil = { # ceil：大于fixedNum的fcs抽fixedNum个细胞，小于fixedNum的fcs抽全部细胞
+  switch(mergeMethod, ceil = {
     mergeFunc <- function(x) {
       if (nrow(x) < fixedNum) {
         x
@@ -72,15 +72,15 @@ readfcs_multi <- function(fcsFiles = files, mergeMethod = c("ceil", "all", "fixe
     merged <- do.call(rbind, lapply(exprsL, mergeFunc))
   }, all = {
     merged <- do.call(rbind, exprsL)
-  }, fixed = { # fixed：若fixedNum小于所有fcs文件的细胞数，则按照fixedNum抽样；若存在fcs的细胞数小于fixedNum，则将fixedNum调整为最小fcs的细胞数进行抽样
+  }, fixed = {
     mergeFunc <- function(x) {
       x[sample(nrow(x), size = fixedNum, replace = ifelse(nrow(x) < fixedNum, TRUE, FALSE)), , drop = FALSE]
     }
     merged <- do.call(rbind, lapply(exprsL, mergeFunc))
-  }, min = { # min：按照最小fcs的细胞数进行抽样
+  }, min = {
     minSize <- min(sapply(exprsL, nrow))
     mergeFunc <- function(x) {
-      x[sample(nrow(x), size = minSize, replace = FALSE), , drop = FALSE] # merge according the minal fcs cell number
+      x[sample(nrow(x), size = minSize, replace = FALSE), , drop = FALSE]
     }
     merged <- do.call(rbind, lapply(exprsL, mergeFunc))
   })

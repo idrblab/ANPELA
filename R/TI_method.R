@@ -61,26 +61,63 @@ dr_Rtsne.multicore <- function(X, dims = 2, initial_dims = 50,
 }
 
 # run_slingshot ----------------------------------------------------------
-run_slingshot <- function(D, drMethod = c("tSNE", "PCA", "diffMaps"), ...){
+run_slingshot <- function(D, drMethod = c("tSNE", "PCA", "diffMaps","FLOWMAP"), 
+                          dataset_name = NULL,clustering.var = NULL,subsamples = 100, cluster.numbers = 100){
   # 1st step => dim reduction
   data_drMethod <- switch (drMethod,
                            tSNE = dr_Rtsne.multicore(D$expr, dims = 2)$Y,
                            PCA = prcomp(D$expr, scale. = FALSE, rank. =2)$x,
                            diffMaps = {
                              DifMap_output <- destiny::DiffusionMap(D$expr)
-                             data.frame(cbind(DifMap_output$DC1, DifMap_output$DC2))}
+                             data.frame(cbind(DifMap_output$DC1, DifMap_output$DC2))},
+                           FLOWMAP ={
+                             #FPdir <- list.files("D:/OneDrive/IDRB/ANPELA/Case_Output_All/ABC_newProcess/")
+                             #fail_workflow <- list.files("D:/OneDrive/IDRB/ANPELA/Case_Output_All//ABC_newProcess")[599:645]
+                             # if (any(grepl(dataset_name, fail_workflow)==T)|all(grepl(dataset_name, FPdir)==F)) {
+                             #   data.frame()
+                             # } else {
+                               FLOWMAP_output_list <<- try(BBmisc::suppressAll(do.call(ANPELA_FLOWMAP, 
+                                                                                   list(files = D$expr, clustering.var = clustering.var,
+                                                                                        subsamples = subsamples, cluster.numbers = cluster.numbers))), 
+                                                           silent = T)
+                               if (class(FLOWMAP_output_list) == "try-error"){
+                                 data.frame()
+                               } else {
+                                 FLOWMAP_output <<- FLOWMAP_output_list$FLOWMAP_output
+                                 data.frame(cbind(FLOWMAP_output[,"x"], FLOWMAP_output[,"y"]))
+                               # }
+                             # FPdir <- list.files("D:/OneDrive/IDRB/ANPELA/Case_Output_All/ABC_newProcess/")
+                             # FPpath <- paste0("D:/OneDrive/IDRB/ANPELA/Case_Output_All/ABC_newProcess/",
+                             #                  FPdir[grepl(dataset_name, FPdir)])
+                             # dataFiles <- list.files(FPpath, pattern = ".csv$", full.names = TRUE)
+                             # FLOWMAP_output <- read.csv(dataFiles)
+                             # FLOWMAP_output[,c("x","y")]
+                            }
+                          }#flowmap
   )
   
   # 2nd step => trajectory inference
   # Clustering
   #cl1 <- kmeans(data_drMethod, centers = 9)$cluster
-  
-  #library(mclust, quietly = TRUE)# version 6.1.1
+  set.seed(1)
+  library(mclust, quietly = TRUE)
   cl1 <- mclust::Mclust(data_drMethod)$classification
   #cl1 <- FlowSOM_integrate2cytofkit2(data_drMethod, 14)
   
+  #判断起点
+  if (drMethod == "FLOWMAP"){
+    cl1_time <- cbind(data.frame(cl1),data.frame(FLOWMAP_output$Time))
+  } else {
+    cl1_time <- cbind(data.frame(cl1),data.frame(D[["timepoint"]]))
+  }
+  # 筛选出 Time 等于 0 的行
+  colnames(cl1_time) <- c("cl1","timepoint")
+  time_zero_data <- cl1_time[cl1_time$timepoint == sort(unique(cl1_time$timepoint))[1], ]
+  # 找出数量最多的聚类类别
+  most_common_cluster <- names(which.max(table(time_zero_data$cl1)))
+  
   # Mapping
-  lin1 <- slingshot::getLineages(data_drMethod, cl1)
+  lin1 <- slingshot::getLineages(data_drMethod, cl1, start.clus =most_common_cluster)
   # Construct smooth curves 
   crv1 <- slingshot::getCurves(lin1)#,approx_points = 1000
   # this is your pseudotime
@@ -99,6 +136,13 @@ run_slingshot <- function(D, drMethod = c("tSNE", "PCA", "diffMaps"), ...){
   to_return[["lineages"]] <- length(crv1@metadata[["lineages"]])
   to_return[["cr_method"]] <- "run_slingshot"
   to_return[["dr_method"]] <- drMethod
+  to_return[["crv1"]] <- crv1
+  if (drMethod == "FLOWMAP") {
+    to_return[["timepoint"]] <- as.matrix(FLOWMAP_output$Time)
+    to_return[["condition"]] <- as.matrix(FLOWMAP_output$Condition)
+    to_return[["expr"]] <- FLOWMAP_output[2:(which(colnames(FLOWMAP_output) == "Time") - 1)]
+    to_return[["subsamples_time"]] <- FLOWMAP_output_list$subsamples_time
+  }
   return(to_return)
 }
 
@@ -157,10 +201,12 @@ run_prinCurves <- function(D, drMethod = c("tSNE", "diffMaps")){
 }
 
 TI <- function(D, method = c("scorpius_distSpear", "scorpius_distEucl", "scorpius_distPear", "scorpius_distManh",
-                             "slingshot_tSNE", "prinCurves_tSNE", 
-                             "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),...){
+                             "slingshot_tSNE", "prinCurves_tSNE", "slingshot_FLOWMAP", #flowmap
+                             "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
+               dataset_name = NULL, clustering.var = NULL, ...){ 
   set.seed(456)
   switch (method,
+          slingshot_FLOWMAP = suppressMessages(run_slingshot(D, drMethod = "FLOWMAP",dataset_name = dataset_name, clustering.var =clustering.var)), # 0.00
           slingshot_tSNE = suppressMessages(run_slingshot(D, drMethod = "tSNE")), # 19.70=>14.81
           slingshot_PCA = suppressMessages(run_slingshot(D, drMethod = "PCA")), # 56.68=>52.74
           slingshot_diffMaps = suppressMessages(run_slingshot(D, drMethod = "diffMaps")), # 53.69

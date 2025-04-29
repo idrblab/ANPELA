@@ -1,6 +1,7 @@
 
 #' @title CSI (Cell Subpopulation Identification) Assess
 #' @description CSIassess() assesses processing performance of all workflows which are used while running the function ""FCprocess" or "MCprocess" based on comprehensive criteria (each with distinct underlying theories) from the perspective of CSI studies.
+#'
 #' @param name Character, the filename of the RData file in the "assess_res" folder which will store the assessment results.
 #' @param data Character, the R object resulting from the function "Process", "FCprocess" or "MCprocess", or obtained by loading from the resulting RData file of these funcitons when the `save_processed_res` parameter in these functions is set to "one_RData".
 #' @param respath Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the `save_processed_res` parameter in these functions is set to "one_folder".
@@ -30,8 +31,11 @@
 #'   <br>It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".
 #' @param cores Integer, the number of CPU cores to be employed for performing parallel computing.
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
+#' @param marker_path Character, the absolute file path of the CSV or XLSX file containing the markers for cell type annotation, and detailed format requirements can be found on the website https://github.com/idrblab/ANPELA.
+#' @param known_celltype_path Character, the absolute file path of the CSV file containing the gold-standard cell type annotation results, with the first column being cell IDs and the second column being cell types, and these cell types should correspond pre-cisely to those in the ‘marker_path’ file.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store the assessment results.
+#'
 #' @return The **assess_res** folder stores the assessment output file named `name`**_assess.RData**, which contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
 #'   <br>In addition, the file **log.txt** is also generated simultaneously, recording the processing details.
 #' @export
@@ -39,7 +43,6 @@
 #' @examples
 #' \donttest{
 #' }
-
 
 
 
@@ -52,8 +55,9 @@ CSIassess <- function(name = "result", data, respath,
                       Cc_metric = "relative weighted consistency (CWrel)",
                       ntop = NULL,
                       DEP = NULL,
+                      marker_path = NULL, known_celltype_path = NULL,
                       save_processed_res = "one_folder",
-                      savepath = "./",
+                      savepath = "./ANPELA_res",
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # data & info_saved & process_res
@@ -279,7 +283,7 @@ CSIassess <- function(name = "result", data, respath,
                                 if (Ca_metric == "AUC") {
                                   # Criterion A Accuracy-AUC
                                   resAUC <- try(AUC(test = test_KNN$test, KNN_res = test_KNN$KNN_res), silent = T)
-                                  Cauc <- try(round(sum(resAUC$auc, na.rm = TRUE)/length(test_KNN[["subdata_cluster"]]), 3), silent = T)
+                                  Cauc <- try(round(sum(resAUC$auc, na.rm = TRUE)/length(test_KNN[["subdata_cluster"]]), 5), silent = T)
                                   if (class(Cauc) != "numeric") {
                                     Cauc <- NA
                                   }
@@ -288,7 +292,7 @@ CSIassess <- function(name = "result", data, respath,
                                 } else if (Ca_metric == "F1 score") {
                                   # Criterion A Accuracy-F1 score
                                   resF1 <- try(F1_score(test = test_KNN$test, KNN_res = test_KNN$KNN_res, label = AP2_processed_data_class$condition), silent = T)
-                                  CF1_score <- try(round(max(sapply(resF1, mean, na.rm = TRUE)), 3), silent = T)
+                                  CF1_score <- try(round(max(sapply(resF1, mean, na.rm = TRUE)), 5), silent = T)
                                   if (class(CF1_score) != "numeric") {
                                     CF1_score <- NA
                                   }
@@ -304,33 +308,33 @@ CSIassess <- function(name = "result", data, respath,
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   } else {
-                                    Cb <- round((Cb + 1)/2, 3)
+                                    Cb <- round((Cb + 1)/2, 5)
                                   }
                                 } else if (Cb_metric == "Xie-Beni index (XB)") {
                                   # Criterion B Xie-Beni index (XB)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Xie_Beni")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Xie_Beni")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "Calinski-Harabasz index (CH)") {
                                   # Criterion B Calinski-Harabasz index (CH)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Calinski_Harabasz")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Calinski_Harabasz")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "Davies-Bouldin index (DB)") {
                                   # Criterion B Davies-Bouldin index (DB)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Davies_Bouldin")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Davies_Bouldin")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "purity") {
                                   # Criterion B Precision-purity
                                   respurity <- try(Purity(data = test_KNN$subdata_cluster_DEG, sub_cluster_label = sub_cluster_label, FlowSeed = 40), silent = T)
-                                  Cpurity <- try(round(mean(respurity, na.rm = TRUE), 3), silent = T)
+                                  Cpurity <- try(round(mean(respurity, na.rm = TRUE), 5), silent = T)
                                   if (class(Cpurity) != "numeric") {
                                     Cpurity <- NA
                                   }
@@ -339,7 +343,7 @@ CSIassess <- function(name = "result", data, respath,
                                 } else if (Cb_metric == "Rand index (RI)") {
                                   # Criterion B Precision-RI
                                   resCRI <- try(RI(data = test_KNN$subdata_cluster_DEG, sub_cluster_label = sub_cluster_label, FlowSeed = 40), silent = T)
-                                  CRI <- try(round(mean(resCRI, na.rm = TRUE), 3), silent = T)
+                                  CRI <- try(round(mean(resCRI, na.rm = TRUE), 5), silent = T)
                                   if (class(CRI) != "numeric") {
                                     CRI <- NA
                                   }
@@ -357,7 +361,7 @@ CSIassess <- function(name = "result", data, respath,
                                 } else if (Cc_metric == "relative weighted consistency (CWrel)") {
                                   resCS <- try(CWfun(CS_preres = CS_preres, top = ntop), silent = T)
                                 }
-                                CS <- try(round(mean(resCS$consistency, na.rm = TRUE), 3), silent = T)
+                                CS <- try(round(mean(resCS$consistency, na.rm = TRUE), 5), silent = T)
                                 if (class(CS) != "numeric") {
                                   CS <- NA
                                 }
@@ -366,11 +370,18 @@ CSIassess <- function(name = "result", data, respath,
 
 
                                 # Criterion D Biological Meaning
-                                if (DEP == "" || is.null(DEP)) {
+                                if ((is.null(marker_path)||is.null(known_celltype_path))& DEP == "" || is.null(DEP)) {
                                   Cd <- NA
-                                } else {
+                                } else if (!is.null(marker_path) && !is.null(known_celltype_path)) {
+                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster,
+                                                                  marker_path = marker_path, known_celltype_path = known_celltype_path), 5), silent = T)
+                                  if (class(CRecall) != "numeric") {
+                                    CRecall <- NA
+                                  }
+                                  Cd <- CRecall
+                                } else if (!is.null(DEP)) {
                                   known_marker <- unlist(strsplit(DEP, "\\s*,\\s*"))
-                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 3), silent = T)
+                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 5), silent = T)
                                   if (class(CRecall) != "numeric") {
                                     CRecall <- NA
                                   }
@@ -504,7 +515,7 @@ CSIassess <- function(name = "result", data, respath,
                                 if (Ca_metric == "AUC") {
                                   # Criterion A Accuracy-AUC
                                   resAUC <- try(AUC(test = test_KNN$test, KNN_res = test_KNN$KNN_res), silent = T)
-                                  Cauc <- try(round(sum(resAUC$auc, na.rm = TRUE)/length(test_KNN[["subdata_cluster"]]), 3), silent = T)
+                                  Cauc <- try(round(sum(resAUC$auc, na.rm = TRUE)/length(test_KNN[["subdata_cluster"]]), 5), silent = T)
                                   if (class(Cauc) != "numeric") {
                                     Cauc <- NA
                                   }
@@ -513,7 +524,7 @@ CSIassess <- function(name = "result", data, respath,
                                 } else if (Ca_metric == "F1 score") {
                                   # Criterion A Accuracy-F1 score
                                   resF1 <- try(F1_score(test = test_KNN$test, KNN_res = test_KNN$KNN_res, label = AP2_processed_data_class$condition), silent = T)
-                                  CF1_score <- try(round(max(sapply(resF1, mean, na.rm = TRUE)), 3), silent = T)
+                                  CF1_score <- try(round(max(sapply(resF1, mean, na.rm = TRUE)), 5), silent = T)
                                   if (class(CF1_score) != "numeric") {
                                     CF1_score <- NA
                                   }
@@ -529,33 +540,33 @@ CSIassess <- function(name = "result", data, respath,
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   } else {
-                                    Cb <- round((Cb + 1)/2, 3)
+                                    Cb <- round((Cb + 1)/2, 5)
                                   }
                                 } else if (Cb_metric == "Xie-Beni index (XB)") {
                                   # Criterion B Xie-Beni index (XB)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Xie_Beni")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Xie_Beni")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "Calinski-Harabasz index (CH)") {
                                   # Criterion B Calinski-Harabasz index (CH)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Calinski_Harabasz")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Calinski_Harabasz")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "Davies-Bouldin index (DB)") {
                                   # Criterion B Davies-Bouldin index (DB)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Davies_Bouldin")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Davies_Bouldin")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "purity") {
                                   # Criterion B Precision-purity
                                   respurity <- try(Purity(data = test_KNN$subdata_cluster_DEG, sub_cluster_label = sub_cluster_label, FlowSeed = 40), silent = T)
-                                  Cpurity <- try(round(mean(respurity, na.rm = TRUE), 3), silent = T)
+                                  Cpurity <- try(round(mean(respurity, na.rm = TRUE), 5), silent = T)
                                   if (class(Cpurity) != "numeric") {
                                     Cpurity <- NA
                                   }
@@ -564,7 +575,7 @@ CSIassess <- function(name = "result", data, respath,
                                 } else if (Cb_metric == "Rand index (RI)") {
                                   # Criterion B Precision-RI
                                   resCRI <- try(RI(data = test_KNN$subdata_cluster_DEG, sub_cluster_label = sub_cluster_label, FlowSeed = 40), silent = T)
-                                  CRI <- try(round(mean(resCRI, na.rm = TRUE), 3), silent = T)
+                                  CRI <- try(round(mean(resCRI, na.rm = TRUE), 5), silent = T)
                                   if (class(CRI) != "numeric") {
                                     CRI <- NA
                                   }
@@ -582,7 +593,7 @@ CSIassess <- function(name = "result", data, respath,
                                 } else if (Cc_metric == "relative weighted consistency (CWrel)") {
                                   resCS <- try(CWfun(CS_preres = CS_preres, top = ntop), silent = T)
                                 }
-                                CS <- try(round(mean(resCS$consistency, na.rm = TRUE), 3), silent = T)
+                                CS <- try(round(mean(resCS$consistency, na.rm = TRUE), 5), silent = T)
                                 if (class(CS) != "numeric") {
                                   CS <- NA
                                 }
@@ -591,11 +602,18 @@ CSIassess <- function(name = "result", data, respath,
 
 
                                 # Criterion D Biological Meaning
-                                if (DEP == "" || is.null(DEP)) {
+                                if ((is.null(marker_path)||is.null(known_celltype_path))& DEP == "" || is.null(DEP)) {
                                   Cd <- NA
-                                } else {
+                                } else if (!is.null(marker_path) && !is.null(known_celltype_path)) {
+                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster,
+                                                                  marker_path = marker_path, known_celltype_path = known_celltype_path), 5), silent = T)
+                                  if (class(CRecall) != "numeric") {
+                                    CRecall <- NA
+                                  }
+                                  Cd <- CRecall
+                                } else if (!is.null(DEP)) {
                                   known_marker <- unlist(strsplit(DEP, "\\s*,\\s*"))
-                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 3), silent = T)
+                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 5), silent = T)
                                   if (class(CRecall) != "numeric") {
                                     CRecall <- NA
                                   }
@@ -619,21 +637,22 @@ CSIassess <- function(name = "result", data, respath,
 
   colnames(table) <- c("Accuracy", "Tightness", "Robustness", "Correspondence")
   table2 <- table
-  table2["Accuracy"][table2["Accuracy"] >= 0.9] <- 10
-  table2["Accuracy"][table2["Accuracy"] < 0.9 & table2["Accuracy"] > 0.7] <- 8
-  table2["Accuracy"][table2["Accuracy"] <= 0.7] <- 1
+  table2["Accuracy"][table2["Accuracy"] > 0.7] <- 10
+  table2["Accuracy"][table2["Accuracy"] <= 0.7] <- 4
 
-  table2["Tightness"][table2["Tightness"] >= 0.7] <- 10
-  table2["Tightness"][table2["Tightness"] < 0.7 & table2["Tightness"] > 0.5] <- 8
-  table2["Tightness"][table2["Tightness"] <= 0.5] <- 1
+  table2["Tightness"][table2["Tightness"] > 0.5] <- 10
+  table2["Tightness"][table2["Tightness"] <= 0.5] <- 4
 
-  table2["Robustness"][table2["Robustness"] >= 0.3] <- 10
-  table2["Robustness"][table2["Robustness"] < 0.3 & table2["Robustness"] > 0.15] <- 8
-  table2["Robustness"][table2["Robustness"] <= 0.15] <- 1
+  table2["Robustness"][table2["Robustness"] > 0.35] <- 10
+  table2["Robustness"][table2["Robustness"] <= 0.35] <- 4
 
-  table2["Correspondence"][table2["Correspondence"] >= 0.8] <- 10
-  table2["Correspondence"][table2["Correspondence"] < 0.8 & table2["Correspondence"] > 0.5] <- 8
-  table2["Correspondence"][table2["Correspondence"] <= 0.5] <- 1
+  if (!is.null(marker_path) && !is.null(known_celltype_path)) {
+    table2["Correspondence"][table2["Correspondence"] > 0.7] <- 10
+    table2["Correspondence"][table2["Correspondence"] <= 0.5] <- 4
+  } else {
+    table2["Correspondence"][table2["Correspondence"] > 0.5] <- 10
+    table2["Correspondence"][table2["Correspondence"] <= 0.5] <- 4
+  }
 
   assess_res <- list(table = table, table2 = table2)
   if (!dir.exists(paste0(savepath, "/assess_res"))) {

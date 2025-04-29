@@ -1,55 +1,89 @@
 ### Calculate Biological Consistency
-Bio_con <- function(D, Pathway_Hierarchy_file, nruns = 3, dr_method = TIres$dr_method, TIres = TIres){
-  # Pathway_Hierarchy_file : the file with the pathway info. Put with path, extension
-  Pathway_Hierarchy <- suppressMessages(as.data.frame(read.csv(file = Pathway_Hierarchy_file2, header = T, stringsAsFactors = F)))
-  #Pathway_Hierarchy <- suppressMessages(as.data.frame(readr::read_delim(file = Pathway_Hierarchy_file, ";", escape_double = FALSE, trim_ws = TRUE)))
-  #colnames(Pathway_Hierarchy) <- stringr::str_replace_all(colnames(Pathway_Hierarchy), "\\(.*", "")
-  #Pathway_Hierarchy <- as.data.frame(apply(Pathway_Hierarchy, 2, function(x) stringr::str_replace_all(x, "\\(.*", "")))
-  # 11.17 处理特殊字符
-  # Pathway_Hierarchy <- stringr::str_replace_all(Pathway_Hierarchy, "[[:punct:]]", "_")
-  npar <- ncol(D$expr)
-  
-  # decode the TI method used (cr: curve reconstruction, dr: dimensionality reduction, act: activation, transf: transformation)
-  FUN <- TIres$cr_method
-  #setup parallel backend to use many processors
-  # cores <- detectCores()
-  # cl <- makeCluster(cores[1]-1) #do not overload the computer
-  # registerDoParallel(cl)
-  
-  finalMatrix <- foreach::foreach(j = 1:nruns, .export = FUN, .verbose = F) %do% {
-    set.seed(j)
-    tempMatrix <- do.call(FUN, list(D, dr_method))
-    tempMatrix
-  }
-  
-  #stop cluster
-  # stopCluster(cl)
-  
-  temp_score <- rep(0,nruns) 
-  
-  for (k in 1:nruns){
-    # sort the plot values in ascending pseudotime order
-    ix <- order(finalMatrix[[k]]$pseudotime)
-    dat <- D$expr[ix,]
-    Pseudotime <- finalMatrix[[k]]$pseudotime[ix]
-    if (finalMatrix[[k]]$lineages > 1){
-      print(paste0("The algorithm ", TIres$cr_method, " with ", TIres$dr_method, " returned a branching trajectory. Cannot calculate the metric under Criterion Cd!"))
-      return(paste0("The algorithm ", TIres$cr_method, " with ", TIres$dr_method, " returned a branching trajectory. Cannot calculate the metric under Criterion Cd!"))
+Bio_con <- function(D, Pathway_Hierarchy_file = NULL, nruns = 3, dr_method = NULL, TIres = NULL){
+  if (is.null(Pathway_Hierarchy_file)) {
+    Lineage_info <- data.frame(TIres[["pseudotime"]])
+    
+    if ("FLOWMAP" %in% TIres$dr_method) {
+      Lineage_info$condition <- as.character(TIres[["condition"]])
+    } else {
+      Lineage_info$condition<- D[["condition"]]
     }
     
-    # rescale pseudotime to [0,1] for the figures between algorithms to be comparable
-    Pseudotime_zscore <- (Pseudotime - min(Pseudotime, na.rm = T))/(max(Pseudotime, na.rm = T) - min(Pseudotime, na.rm = T))
+
+
+    #计算不同lineage下的condition分布
+    Lineage_condition <- as.table(matrix(nrow = ncol(Lineage_info)-1, ncol = length(unique(Lineage_info$condition))))
+    dimnames(Lineage_condition) <- list(Lineage = colnames(Lineage_info)[1:(ncol(Lineage_info)-1)], 
+                                        condition = unique(Lineage_info$condition))
+    # colnames(Lineage_condition) <- unique(Lineage_info$condition)
+    # rownames(Lineage_condition) <- colnames(Lineage_info)[1:(ncol(Lineage_info)-1)]
+    for (i in 1:(ncol(Lineage_info)-1)){
+      condition_table<- table(Lineage_info[!is.na(Lineage_info[,i]),ncol(Lineage_info)])
+      for(j in 1:(ncol(Lineage_condition))){
+        if(grepl(colnames(Lineage_condition)[j],dimnames(condition_table))){
+          Lineage_condition[i,j] <- condition_table[colnames(Lineage_condition)[j]]
+        } else {
+          Lineage_condition[i,j] <- 0
+        }
+      }
+      
+    }
+    p.value.l <- chisq.test(Lineage_condition,rescale.p =T)[["p.value"]]
+   
+    #  #计算不同condition下的lineage分布
+    # Condition_Lineage <- as.table(matrix(nrow = length(unique(Lineage_info$condition)), ncol = ncol(Lineage_info)-1))
+    # dimnames(Condition_Lineage) <- list(condition = unique(Lineage_info$condition), 
+    #                                     Lineage = colnames(Lineage_info)[1:(ncol(Lineage_info)-1)])
+    # 
+    # 
+    # # colnames(Condition_Lineage) <- colnames(Lineage_info)[1:(ncol(Lineage_info)-1)]
+    # # rownames(Condition_Lineage) <- unique(Lineage_info$condition)
+    # for (i in 1:length(unique(Lineage_info$condition))){
+    #   for (j in 1:(ncol(Lineage_info)-1)){
+    #     Condition_Lineage[unique(Lineage_info$condition)[i],j] <- sum(!is.na(Lineage_info[Lineage_info$condition == unique(Lineage_info$condition)[i],j]))
+    #   }
+    # }
+    # p.value.c <- chisq.test(Condition_Lineage)[["p.value"]]
+    if (p.value.l <= 1e-80){
+      return(1)
+    } else {
+      return(0)
+    }
+  } else {
+    # Pathway_Hierarchy_file : the file with the pathway info. Put with path, extension
+    Pathway_Hierarchy <- suppressMessages(as.data.frame(read.csv(file = Pathway_Hierarchy_file, header = T, stringsAsFactors = F)))
+    npar <- ncol(D$expr)
+    FUN <- TIres$cr_method
     
-    # check also the reverse direction
-    Pseudotime_zscore_rev <- reverse_pseudotime(Pseudotime_zscore)
+    finalMatrix <- foreach::foreach(j = 1:nruns, .export = FUN, .verbose = F) %do% {
+      set.seed(j)
+      tempMatrix <- do.call(FUN, list(D, dr_method))
+      tempMatrix
+    }
     
-    # 11.17
-    # colnames(dat) <- stringr::str_replace_all(colnames(dat), "[[:punct:]]", "_")
+    temp_score <- rep(0,nruns)
     
-    temp <- check_pairs(dat, Pseudotime_zscore, known_pairs = Pathway_Hierarchy)
-    temp_rev <- check_pairs(dat, Pseudotime_zscore_rev, known_pairs = Pathway_Hierarchy)
-    
-    temp_score[k] <- max(temp, temp_rev)
+    for (k in 1:nruns){
+      # sort the plot values in ascending pseudotime order
+      ix <- order(finalMatrix[[k]]$pseudotime)
+      dat <- D$expr[ix,]
+      Pseudotime <- finalMatrix[[k]]$pseudotime[ix]
+      if (finalMatrix[[k]]$lineages > 1){
+        print(paste0("The algorithm ", TIres$cr_method, " with ", TIres$dr_method, " returned a branching trajectory. Cannot calculate the metric under Criterion Cd!"))
+        return(paste0("The algorithm ", TIres$cr_method, " with ", TIres$dr_method, " returned a branching trajectory. Cannot calculate the metric under Criterion Cd!"))
+      }
+      
+      # rescale pseudotime to [0,1] for the figures between algorithms to be comparable
+      Pseudotime_zscore <- (Pseudotime - min(Pseudotime, na.rm = T))/(max(Pseudotime, na.rm = T) - min(Pseudotime, na.rm = T))
+      
+      # check also the reverse direction
+      Pseudotime_zscore_rev <- reverse_pseudotime(Pseudotime_zscore)
+      
+      temp <- check_pairs(dat = dat, t = Pseudotime_zscore, known_pairs = Pathway_Hierarchy)
+      temp_rev <- check_pairs(dat = dat, t = Pseudotime_zscore_rev, known_pairs = Pathway_Hierarchy)
+      
+      temp_score[k] <- max(temp, temp_rev)
+    }
+    return(max(temp_score)/sum(!is.na(Pathway_Hierarchy)))
   }
-  return(max(temp_score)/sum(!is.na(Pathway_Hierarchy)))
 }

@@ -28,26 +28,30 @@ comp_anpela <- function(data, method, index,
 
 
 trans_anpela <- function(data, method, index,
-                         logbase,
-                         b1,
-                         b2,
-                         b3,
-                         lambda,
+                         arcsinha, arcsinhb, arcsinhc,
+                         anna,annb, annc, annthreshold,
+                         arna, arnb, arnc, arnthreshold, 
+                         bepa, bepb, bepc, bepd, bepf, bepw, tol, maxit,
+                         hpla, hplb, 
+                         lineara, linearb, 
+                         lntr, lntd, 
+                         logbase,logr,logd, 
+                         lgtw, lgtt, lgtm, lgta,
                          Quadratica, Quadraticb, Quadraticc,
-                         lineara, linearb,
-                         Truncatea) {
+                         Truncatea) { 
   res <- switch (method,
-                 "Arcsinh Transformation" = arcsinh_trans(frame_list = data, col_names = index, b = b1),
-                 "Asinh with Non-negative Value" = ANN_trans(frame_list = data, col_names = index, b = b2),
-                 "Asinh with Randomized Negative Value" = ARN_trans(frame_list = data, col_names = index, b = b3),
-                 "Biexponential Transformation" = biexp_trans(frame_list = data, col_names = index),
-                 "Box-Cox Transformation" = BoxCox_trans(frame_list = data, col_names = index, lambda = lambda),
+                 "Arcsinh Transformation" = arcsinh_trans(frame_list = data, col_names = index,a = arcsinha, b = arcsinhb ,c = arcsinhc),
+                 "Asinh with Non-negative Value" = ANN_trans(frame_list = data, col_names = index,a = anna, b = annb, c = annc, threshold = annthreshold),
+                 "Asinh with Randomized Negative Value" = ARN_trans(frame_list = data, col_names = index, a=arna, b = arnb, c = arnc, threshold = arnthreshold),
+                 "Biexponential Transformation" = biexp_trans(frame_list = data, col_names = index,  a = bepa, b = bepb, c = bepc, d = bepd, f = bepf, w = bepw,
+                                                              tol = tol, maxit = maxit),
+                 "Box-Cox Transformation" = BoxCox_trans(frame_list = data, col_names = index),
                  "FlowVS Transformation" = flowVS_trans(frame_list = data, col_names = index),
-                 "Hyperlog Transformation" = hyperlog_trans(frame_list = data, col_names = index),
+                 "Hyperlog Transformation" = hyperlog_trans(frame_list = data, col_names = index,  a = hpla, b = hplb),
                  "Linear Transformation" = linear_trans(frame_list = data, col_names = index, a = lineara, b = linearb),
-                 "Ln Transformation" = ln_trans(frame_list = data, col_names = index),
-                 "Log Transformation" = log_trans(frame_list = data, col_names = index, logbase = as.numeric(logbase), r = 1, d = 1),
-                 "Logicle Transformation" = logicle_trans(frame_list = data, col_names = index),
+                 "Ln Transformation" = ln_trans(frame_list = data, col_names = index, r = lntr, d = lntd),
+                 "Log Transformation" = log_trans(frame_list = data, col_names = index, logbase = as.numeric(logbase), r = logr, d = logd),
+                 "Logicle Transformation" = logicle_trans(frame_list = data, col_names = index,  w = lgtw, t = lgtt, m = lgtm, a = lgta),
                  "Quadratic Transformation" = quadratic_trans(frame_list = data, col_names = index,
                                                               a = Quadratica, b = Quadraticb, c = Quadraticc),
                  "Split Scale Transformation" = splitScale_trans(frame_list = data, col_names = index),
@@ -509,30 +513,56 @@ biexp_trans <- function(frame_list, col_names, a = 0.5, b = 1, c = 0.5, d = 1, f
 }
 
 # Transformation: Box-Cox transformation ------------------------------------------------------------
-BoxCox_trans <- function(frame_list, col_names, lambda = 0.3) {
+# BoxCox_trans <- function(frame_list, col_names, lambda = 0.3) {
+#   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
+#   col_names1 <- sub("\\(", "", col_names1)
+#   col_names1 <- sub("\\)", "", col_names1)
+# 
+#   frame_list1 <- lapply(frame_list, function(x) {
+#     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
+#     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
+#     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
+#     return(x)
+#   })
+# 
+#   dataTransform <- lapply(frame_list1, function(x){
+#     x@exprs[,col_names1] <- flowClust::box(x@exprs[,col_names1], lambda = lambda)
+#     return(x)
+#   })
+# 
+#   dataTransform <- lapply(dataTransform, function(x) {
+#     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
+#     return(x)
+#   })
+#   return(dataTransform)
+# }
+BoxCox_trans <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-
+  
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-
-  dataTransform <- lapply(frame_list1, function(x){
-    x@exprs[,col_names1] <- flowClust::box(x@exprs[,col_names1], lambda = lambda)
-    return(x)
-  })
-
+  
+  dataTransform_pre <- lapply(frame_list1, flowTrans::flowTrans,
+                              fun = "mclMultivBoxCox", dims = col_names1,
+                              n2f = F, parameters.only = F)
+  dataTransform <- frame_list1
+  for (j in 1:length(dataTransform)) {
+    dataTransform[[j]]@exprs <- dataTransform_pre[[j]][["result"]]@exprs
+    rownames(dataTransform[[j]]@exprs) <- rownames(frame_list[[j]]@exprs)
+  }
+  
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)
   })
   return(dataTransform)
 }
-
 # Transformation: flowVS transformation ------------------------------------------------------------
 flowVS_trans <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
@@ -580,7 +610,7 @@ flowVS_trans <- function(frame_list, col_names) {
     return (cfLocal[minIdx])
   }
 
-  estParamFlowVS <- function (fs, channels) {
+  estParamFlowVS <- function (fs, channels, cfLow = -1, cfHigh = 10, MAX_BT = 10^9) {
     checkmate::checkClass(fs, "flowSet")
     checkmate::checkClass(channels, "character")
     nmatch = which(channels %in% colnames(fs@frames[[names(fs@frames)[1]]]@exprs))
@@ -590,7 +620,7 @@ flowVS_trans <- function(frame_list, col_names) {
     cofactors = NULL
     for (col in channels) {
       fs1D = fs[, col]
-      cf = optimStat(fs1D)
+      cf = optimStat(fs1D, cfLow = cfLow, cfHigh = cfHigh, MAX_BT = MAX_BT)
       cofactors = c(cofactors, cf)
     }
     return(cofactors)

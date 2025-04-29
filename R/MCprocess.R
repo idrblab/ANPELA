@@ -1,4 +1,3 @@
-
 #' @title Mass Cytometry Process
 #' @description MCprocess() enables high-throughput processing for SCP data acquired from MC by at most ~675 available workflows based on parallel computing (each workflow is distinct by combining different methods of compensation, transformation, normalization and signal clean), which facilitates the subsequent application of performance assessment, ranking and plotting.
 #'
@@ -6,6 +5,7 @@
 #' @param datapath Character, the absolute path of the folder storing the FCS raw data files and metadata file.
 #' @param metadata Character, the absolute filepath of the metadata file, usually located in the datapath folder. The metadata file should include the columns of "filename" and "condition" for CSI studies, and the columns of "filename" and "timepoint" for PTI studies.
 #'   <br>For details on preparing the metadata file, please refer to the **sample data**.
+#' @param technique Character, the technique type used in acquiring the SCP data.
 #' @param studytype Character, the type of your study, including "CSI (Cell Subpopulation Identification)" and "PTI (Pseudotime Trajectory Inference)".
 #' @param mergeM Character, the method of merging multiple FCS files. When multiple FCS files are selected, cells can be combined using one of the four different methods including "Fixed", "Ceil", "All" and "Min".
 #'   <br>**Fixed**: a fixed num (specified by fixedNum) of cells are sampled (with replacement when the total number of cell is less than fixedNum) from each FCS file and combined for analysis.
@@ -33,14 +33,66 @@
 #'   <br>Only needed when "spillR" is included in the argument of "compensationM".
 #' @param marker_to_barc Data frame, the table that maps the marker to the barcode in the beads experiment.
 #'   <br>Only needed when "spillR" is included in the argument of "compensationM".
+#' @param arcsinha Double, the argument offset coefficient ‘a’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Arcsinh Transformation’ is included in the parameter of ‘transformationM’.
+#' @param arcsinhb Double, the input scaling coefficient ‘b’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Arcsinh Transformation’ is included in the parameter of ‘transformationM’.
+#' @param arcsinhc Double, the output offset coefficient ‘c’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Arcsinh Transformation’ is included in the parameter of ‘transformationM’.
+#' @param anna Double, the argument offset coefficient ‘a’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.
+#' @param annb Double, the input scaling coefficient ‘b’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.
+#' @param annc Double, the output offset coefficient ‘c’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.
+#' @param annthreshold Double, the input cutoff value ‘threshold’ below which the input x is replaced by the threshold itself before the asinh calculation.
+#'   <br>Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.
+#' @param arna Double, the argument offset coefficient ‘a’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.
+#' @param arnb Double, the input scaling coefficient ‘b’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.
+#' @param arnc Double, the output offset coefficient ‘c’ in equation y = asinh(a + b*x) + c.
+#'   <br>Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.
+#' @param arnthreshold Double, the input cutoff value ‘threshold’ below which the input x is replaced by a small random value before the asinh calculation.
+#'   <br>Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.
+#' @param bepa Double, the positive exponential scaling coefficient ‘a’ in equation y = a*exp(b*(x-w)) - c*exp(-d*(x-w)) + f.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param bepb Double, the positive exponential rate coefficient ‘b’ in equation y = a*exp(b*(x-w)) - c*exp(-d*(x-w)) + f.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param bepc Double, the negative exponential scaling coefficient ‘c’ in equation y = a*exp(b*(x-w)) - c*exp(-d*(x-w)) + f.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param bepd Double, the negative exponential rate coefficient ‘d’ in equation y = a*exp(b*(x-w)) - c*exp(-d*(x-w)) + f.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param bepf Double, the vertical offset coefficient ‘f’ in equation y = a*exp(b*(x-w)) - c*exp(-d*(x-w)) + f.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param bepw Double, the horizontal shift coefficient ‘w’ defining the center point in equation y = a*exp(b*(x-w)) - c*exp(-d*(x-w)) + f.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param tol Double, the numerical tolerance value ‘tol’ used by the root-finding algorithm during the inversion of the function.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param maxit Integer, the maximum iterations value ‘maxit’ allowed for the root-finding algorithm during the inversion of the function.
+#'   <br>Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.
+#' @param hpla Double, the scaling parameter ‘a’ determining the overall compression level and transition characteristics.
+#'   <br>Only needed when ‘Hyperlog Transformation’ is included in the parameter of ‘transformationM’.
+#' @param hplb Double, the linear coefficient ‘b’ controlling the width of the linear region near zero.
+#'   <br>Only needed when ‘Hyperlog Transformation’ is included in the parameter of ‘transformationM’.
+#' @param lntr Double, the numerator scaling coefficient ‘r’ in equation y = log(x) * (r / d).
+#'   <br>Only needed when ‘Ln Transformation’ is included in the parameter of ‘transformationM’.
+#' @param lntd Double, the denominator scaling coefficient ‘d’ in equation y = log(x) * (r / d).
+#'   <br>Only needed when ‘Ln Transformation’ is included in the parameter of ‘transformationM’.
 #' @param logbase Integer, the base of the Log Transformation.
 #'   <br>Only needed when "Log Transformation" is included in the argument of "transformationM".
-#' @param b1 Double, the cofactor of Arcsinh Transformation.
-#'   <br>Only needed when "Arcsinh Transformation" is included in the argument of "transformationM".
-#' @param b2 Double, the cofactor of Asinh with Non-negative Value.
-#'   <br>Only needed when "Asinh with Non-negative Value" is included in the argument of "transformationM".
-#' @param b3 Double, the cofactor of Asinh with Randomized Negative Value.
-#'   <br>Only needed when "Asinh with Randomized Negative Value" is included in the argument of "transformationM".
+#' @param logr Double, the numerator scaling coefficient ‘r’ in equation y = log(x, logbase) * (r / d).
+#'   <br>Only needed when ‘Log Transformation’ is included in the parameter of ‘transformationM’.
+#' @param logd Double, the denominator scaling coefficient ‘d’ in equation y = log(x, logbase) * (r / d).
+#'   <br> Only needed when ‘Log Transformation’ is included in the parameter of ‘transformationM’.
+#' @param lgtw Double, the linear region width value ‘w’ defining the scale behavior near zero.
+#'   <br> Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.
+#' @param lgtt Double, the top-of-scale value ‘t’ representing the maximum expected input data value.
+#'   <br> Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.
+#' @param lgtm Double, the total display range ‘m’ setting the overall width of the transformed output scale.
+#'   <br> Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.
+#' @param lgta Double, the additional negative range ‘a’ controlling the extent of negative input values included in the display.
+#'   <br> Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.
 #' @param Quadratica Double, the quadratic coefficient "a" in equation y = a&#42;x^2+b&#42;x+c.
 #'   <br>Only needed when "QuadraticTransform" is included in the argument of "transformationM".
 #' @param Quadraticb Double, the linear coefficient "b" in equation y = a&#42;x^2+b&#42;x+c.
@@ -55,6 +107,8 @@
 #'   <br>Only needed when "TruncateTransform" is included in the argument of "transformationM".
 #' @param beads_mass Integer, the masses of the corresponding calibration beads.
 #'   <br>Only needed when "Bead-based Normalization" is included in the argument of "normalizationM".
+#' @param Segment Integer, the value specifying the number of events in each segment to be analyzed.
+#'   <br>Only needed when ‘FlowClean is included in the parameter of ‘signalcleanM’.
 #' @param min_cells Integer, the minimum amount of cells (nonzero values) that should be present in one bin.
 #'   <br>Only needed when "PeacoQC" is included in the argument of "signalcleanM". Lowering this parameter can affect the robustness of the peak detection.
 #' @param max_bins Integer, the maximum number of bins that can be used in the cleaning process.
@@ -67,6 +121,7 @@
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store files of the processed results.
+#'
 #' @return The **process_res** folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter `save_processed_res`: "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder \[*default ="one_folder"*\].
 #'   <br>In addition, the file **info_saved.RData** is also generated simultaneously, recording the information related to "metadata" and "index_protein".
 #' @export
@@ -78,6 +133,7 @@
 MCprocess <- function(name = "result",
                       datapath,
                       metadata,
+                      technique = "MC",
                       studytype = c("CSI", "PTI"),
                       mergeM = c("Fixed", "Ceil", "All", "Min"),
                       fixedNum = 200,
@@ -89,20 +145,25 @@ MCprocess <- function(name = "result",
                       normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None"),
                       signalcleanM = c("FlowAI", "FlowCut", "PeacoQC", "None"),
                       workflow = NULL,
-                      single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = c("flow", "nnls"),
+                      single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM ="nnls",
                       sce_bead = NULL, marker_to_barc = NULL,
-                      logbase = 10,
-                      b1 = 1/5,
-                      b2 = 1/5,
-                      b3 = 1/5,
+                      arcsinha = 0, arcsinhb = 1/5, arcsinhc = 0,
+                      anna = 0, annb = 1/5, annc = 0, annthreshold = 1,
+                      arna = 0, arnb = 1/5, arnc = 0, arnthreshold = 1,
+                      bepa = 0.5, bepb = 1, bepc = 0.5, bepd = 1, bepf = 0, bepw = 0, tol = .Machine$double.eps^0.25, maxit = as.integer(5000),
+                      hpla = 1, hplb = 1,
+                      lntr = 1, lntd = 1,
+                      logbase = 10,logr = 1,logd = 1,
+                      lgtw = 0.5, lgtt = 262144, lgtm = 4.5, lgta = 0,
                       Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
                       lineara = 2, linearb = 0,
                       Truncatea = 1,
-                      beads_mass = c(140, 151, 153, 165, 175),
+                      beads_mass = NULL,
+                      Segment = 200,
                       min_cells = 3, max_bins = 10, step = 10,
                       excludedColumn = NULL,
                       save_processed_res = "one_folder",
-                      savepath = "./",
+                      savepath = "./ANPELA_res",
                       cores = floor(parallel::detectCores()/2), ...) {
 
   # dataFiles
@@ -238,27 +299,27 @@ MCprocess <- function(name = "result",
   }
 
 
-  # b1
-  if (b1 == 0) {
-    stop("The value of b1 cannot be 0.")
+  # arcsinhb
+  if (arcsinhb == 0) {
+    stop("The value of arcsinhb cannot be 0.")
   }
 
 
-  # b2
-  if (b2 == 0) {
-    stop("The value of b2 cannot be 0.")
+  # annb
+  if (annb == 0) {
+    stop("The value of annb cannot be 0.")
   }
 
 
-  # b3
-  if (b3 == 0) {
-    stop("The value of b3 cannot be 0.")
+  # arnb
+  if (arnb == 0) {
+    stop("The value of arnb cannot be 0.")
   }
 
 
   # beads_mass
   if ("Bead-based Normalization" %in% normalizationM & is.null(workflow)|any(grepl("Bead-based Normalization", workflow))) {
-    if (missing(beads_mass)) {
+    if (missing(beads_mass) | is.null(beads_mass)) {
       message("The parameter of 'beads_mass' is missing. 'Bead-based Normalization' normalization method can't be performed.")
       compensationM <- setdiff(normalizationM, "Bead-based Normalization")
     } else if (!is.numeric(beads_mass)) {
@@ -449,13 +510,18 @@ MCprocess <- function(name = "result",
                                                }
 
                                                AP2_trans_frame <- try(trans_anpela(data = AP2_comp_frame, method = workflow[i,2], index = index_TIclass,
-                                                                                   logbase = logbase,
-                                                                                   b1 = b1,
-                                                                                   b2 = b2,
-                                                                                   b3 = b3,
-                                                                                   Quadratica = Quadratica, Quadraticb = Quadraticb, Quadraticc = Quadraticc,
+                                                                                   arcsinha, arcsinhb = arcsinhb, arcsinhc,
+                                                                                   anna = anna, annb = annb, annc = annc, annthreshold = annthreshold,
+                                                                                   arna = anna, arnb = arnb, arnc = arnc, arnthreshold = annthreshold,
+                                                                                   bepa = bepa, bepb = bepb, bepc = bepc, bepd = bepd, bepf = bepf, bepw = bepw, tol = tol, maxit = maxit,
+                                                                                   hpla = hpla, hplb = hplb,
                                                                                    lineara = lineara, linearb = linearb,
-                                                                                   Truncatea = Truncatea), silent = T)
+                                                                                   lntr = lntr, lntd = lntd,
+                                                                                   logbase = logbase,logr = logr,logd = logd,
+                                                                                   lgtw = lgtw, lgtt = lgtt, lgtm = lgtm, lgta = lgta,
+                                                                                   Quadratica = Quadratica, Quadraticb = Quadraticb, Quadraticc = Quadraticc,
+                                                                                   Truncatea = Truncatea
+                                               ), silent = T)
                                                if (class(AP2_trans_frame) == "try-error") {
                                                  # AP2_trans_frame <- AP2_comp_frame
                                                  return(NULL)
@@ -477,7 +543,7 @@ MCprocess <- function(name = "result",
 
                                                AP2_sigcl_frame <- try(sigcl_anpela(data = AP2_norm_frame, method = workflow[i,4], index = index_TIclass,
                                                                                    Segment = Segment,
-                                                                                   min_cells = min_cells, max_bins = max_bins, step = step, technique = "MC"),
+                                                                                   min_cells = min_cells, max_bins = max_bins, step = step, technique = technique),
                                                                       silent = T)
                                                if (class(AP2_sigcl_frame) == "try-error") {
                                                  # AP2_sigcl_frame <- AP2_norm_frame
@@ -499,7 +565,7 @@ MCprocess <- function(name = "result",
                                                  if (!dir.exists(paste0(savepath, "/process_res"))) {
                                                    dir.create(paste0(savepath, "/process_res"), recursive = T)
                                                  }
-                                                 if (!file.exists(paste0(savepath, "/metadata.RData"))) {
+                                                 if (!file.exists(paste0(savepath, "/info_saved.RData"))) {
                                                    info_saved <- list(dataFileNames = dataFileNames, metadata = metadata, index_TIclass = index_TIclass)
                                                    save(info_saved, file = paste0(savepath, "/info_saved.RData"))
                                                  }

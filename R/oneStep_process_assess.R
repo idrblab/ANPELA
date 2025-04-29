@@ -14,18 +14,25 @@ oneStep_process_assess <- function(
   normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None"),
   signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None"),
   workflow = NULL,
-  spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H",
+  spillpath = NULL, spillname = NULL, FSC = "FSC-H", SSC = "SSC-H",
   control.dir = NULL, control.def.file = NULL,
-  single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = c("flow", "nnls"),
+  single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = "nnls",
   sce_bead = NULL, marker_to_barc = NULL,
-  logbase = 10,
-  b1 = NULL,
-  b2 = NULL,
-  b3 = NULL,
+  arcsinha = 0, arcsinhb = NULL, arcsinhc = 0,
+  anna = 0, annb = NULL, annc = 0, annthreshold = 1,
+  arna = 0, arnb = NULL, arnc = 0, arnthreshold = 1,
+  bepa = 0.5, bepb = 1, bepc = 0.5, bepd = 1, bepf = 0, bepw = 0, tol = .Machine$double.eps^0.25, maxit = as.integer(5000),
+  hpla = 1, hplb = 1,
+  lineara = 2, linearb = 0,
+  lntr = 1, lntd = 1,
+  logbase = 10,logr = 1,logd = 1,
+  lgtw = 0.5, lgtt = 262144, lgtm = 4.5, lgta = 0,
   Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
   lineara = 2, linearb = 0,
   Truncatea = 1,
-  beads_mass = c(140, 151, 153, 165, 175),
+  beads_mass = NULL,
+  Segment = 200,
+  Segment2 = 200,
   min_cells = 3, max_bins = 10, step = 10,
   excludedColumn = NULL,
 
@@ -39,15 +46,17 @@ oneStep_process_assess <- function(
   Cc_metric = "relative weighted consistency (CWrel)",
   ntop = NULL,
   DEP = NULL,
+  marker_path = NULL, known_celltype_path = NULL,
 
-  TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE",
+  TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE","slingshot_FLOWMAP",
           "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
   pathwayhierarchy = NULL,
+  clustering.var = NULL,
 
   # other parameters
   cores = floor(parallel::detectCores()/2),
   save_processed_res ="one_folder",
-  savepath = "./"
+  savepath = "./ANPELA_res"
 ){
 
   ################################# the parameters of data processing #################################
@@ -217,45 +226,45 @@ oneStep_process_assess <- function(
     stop("The value of logbase cannot be less than or equal to 0 or equal to 1.")
   }
 
-  # b1
-  if (is.null(b1)) {
+  # arcsinhb
+  if (is.null(arcsinhb)) {
     if (technique == "MC") {
-      b1 <- 1/5
+      arcsinhb <- 1/5
     } else if (technique == "FC") {
-      b1 <- 1/150
+      arcsinhb <- 1/150
     }
-  } else if (b1 == 0) {
-    stop("The value of b1 cannot be 0.")
+  } else if (arcsinhb == 0) {
+    stop("The value of arcsinhb cannot be 0.")
   }
 
 
-  # b2
-  if (is.null(b2)) {
+  # annb
+  if (is.null(annb)) {
     if (technique == "MC") {
-      b2 <- 1/5
+      annb <- 1/5
     } else if (technique == "FC") {
-      b2 <- 1/150
+      annb <- 1/150
     }
-  } else if (b2 == 0) {
-    stop("The value of b2 cannot be 0.")
+  } else if (annb == 0) {
+    stop("The value of annb cannot be 0.")
   }
 
 
-  # b3
-  if (is.null(b3)) {
+  # arnb
+  if (is.null(arnb)) {
     if (technique == "MC") {
-      b3 <- 1/5
+      arnb <- 1/5
     } else if (technique == "FC") {
-      b3 <- 1/150
+      arnb <- 1/150
     }
-  } else if (b3 == 0) {
-    stop("The value of b3 cannot be 0.")
+  } else if (arnb == 0) {
+    stop("The value of arnb cannot be 0.")
   }
 
 
   # beads_mass
   if ("Bead-based Normalization" %in% normalizationM & is.null(workflow)|any(grepl("Bead-based Normalization", workflow))) {
-    if (missing(beads_mass)) {
+    if (missing(beads_mass) | is.null(beads_mass)) {
       message("The parameter of 'beads_mass' is missing. 'Bead-based Normalization' normalization method can't be performed.")
       compensationM <- setdiff(normalizationM, "Bead-based Normalization")
     } else if (!is.numeric(beads_mass)) {
@@ -559,12 +568,29 @@ oneStep_process_assess <- function(
 
   table <- foreach::foreach(i = 1:nrow(workflow), .options.snow = opts,
                             .packages = c("dplyr", "flowCore", "foreach", "magrittr","mclust", "Rphenograph"), .combine = rbind) %dopar% {
-
+                              # # 用一个全局变量防止重复 sink
+                              # if (!exists(".log_started", envir = .GlobalEnv)) {
+                              #   assign(".log_started", TRUE, envir = .GlobalEnv)
+                              #
+                              #   pid <- Sys.getpid()
+                              #   log_file <- paste0("log_worker_", pid, ".txt")
+                              #
+                              #   # 尝试打开 sink
+                              #   try({
+                              #     sink(log_file, split = TRUE)
+                              #     sink(log_file, type = "message", append = TRUE)
+                              #   }, silent = TRUE)
+                              # }
+                              #
+                              # # 日志输出
+                              # pid <- Sys.getpid()
+                              # cat(sprintf("[%s] Worker PID %d started task %d\n", Sys.time(), pid, i))
+                              #
                               #print(i)
                               ########### start data processing ###########
 
                               try(source("./processing.R"), silent = T)
-                              set.seed(123)
+                              # set.seed(123)
                               # if(file.exists(paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))) {
                               #   load(paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))
                               #   load(paste0(savepath, "/info_saved.RData"))
@@ -585,12 +611,16 @@ oneStep_process_assess <- function(
                               }
 
                               AP2_trans_frame <- try(trans_anpela(data = AP2_comp_frame, method = workflow[i,2], index = index_TIclass,
-                                                                  logbase = logbase,
-                                                                  b1 = b1,
-                                                                  b2 = b2,
-                                                                  b3 = b3,
-                                                                  Quadratica = Quadratica, Quadraticb = Quadraticb, Quadraticc = Quadraticc,
+                                                                  arcsinha, arcsinhb = arcsinhb, arcsinhc,
+                                                                  anna = anna, annb = annb, annc = annc, annthreshold = annthreshold,
+                                                                  arna = anna, arnb = arnb, arnc = arnc, arnthreshold = annthreshold,
+                                                                  bepa = bepa, bepb = bepb, bepc = bepc, bepd = bepd, bepf = bepf, bepw = bepw, tol = tol, maxit = maxit,
+                                                                  hpla = hpla, hplb = hplb,
                                                                   lineara = lineara, linearb = linearb,
+                                                                  lntr = lntr, lntd = lntd,
+                                                                  logbase = logbase,logr = logr,logd = logd,
+                                                                  lgtw = lgtw, lgtt = lgtt, lgtm = lgtm, lgta = lgta,
+                                                                  Quadratica = Quadratica, Quadraticb = Quadraticb, Quadraticc = Quadraticc,
                                                                   Truncatea = Truncatea), silent = T)
                               if (class(AP2_trans_frame) == "try-error") {
                                 res <- data.frame(Ca = NA, Cb = NA, Cc = NA, Cd = NA)
@@ -643,7 +673,7 @@ oneStep_process_assess <- function(
                                 if (!dir.exists(paste0(savepath, "/process_res"))) {
                                   dir.create(paste0(savepath, "/process_res"), recursive = T)
                                 }
-                                if (!file.exists(paste0(savepath, "/metadata.RData"))) {
+                                if (!file.exists(paste0(savepath, "/info_saved.RData"))) {
                                   info_saved <- list(dataFileNames = dataFileNames, metadata = metadata, index_TIclass = index_TIclass)
                                   save(info_saved, file = paste0(savepath, "/info_saved.RData"))
                                 }
@@ -755,7 +785,7 @@ oneStep_process_assess <- function(
                                 if (Ca_metric == "AUC") {
                                   # Criterion A Accuracy-AUC
                                   resAUC <- try(AUC(test = test_KNN$test, KNN_res = test_KNN$KNN_res), silent = T)
-                                  Cauc <- try(round(sum(resAUC$auc, na.rm = TRUE)/length(test_KNN[["subdata_cluster"]]), 3), silent = T)
+                                  Cauc <- try(round(sum(resAUC$auc, na.rm = TRUE)/length(test_KNN[["subdata_cluster"]]), 5), silent = T)
                                   if (class(Cauc) != "numeric") {
                                     Cauc <- NA
                                   }
@@ -764,7 +794,7 @@ oneStep_process_assess <- function(
                                 } else if (Ca_metric == "F1 score") {
                                   # Criterion A Accuracy-F1 score
                                   resF1 <- try(F1_score(test = test_KNN$test, KNN_res = test_KNN$KNN_res, label = AP2_processed_data_class$condition), silent = T)
-                                  CF1_score <- try(round(max(sapply(resF1, mean, na.rm = TRUE)), 3), silent = T)
+                                  CF1_score <- try(round(max(sapply(resF1, mean, na.rm = TRUE)), 5), silent = T)
                                   if (class(CF1_score) != "numeric") {
                                     CF1_score <- NA
                                   }
@@ -781,33 +811,33 @@ oneStep_process_assess <- function(
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   } else {
-                                    Cb <- round((Cb + 1)/2, 3)
+                                    Cb <- round((Cb + 1)/2, 5)
                                   }
                                 } else if (Cb_metric == "Xie-Beni index (XB)") {
                                   # Criterion B Xie-Beni index (XB)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Xie_Beni")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Xie_Beni")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "Calinski-Harabasz index (CH)") {
                                   # Criterion B Calinski-Harabasz index (CH)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Calinski_Harabasz")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Calinski_Harabasz")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "Davies-Bouldin index (DB)") {
                                   # Criterion B Davies-Bouldin index (DB)
                                   datab <- AP2_processed_data_class[, 1:(dim(AP2_processed_data_class)[2]-2)]
-                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Davies_Bouldin")[[1]]), 3), silent = T)
+                                  Cb <- try(round((clusterCrit::intCriteria(as.matrix(datab), as.integer(cluster_label), "Davies_Bouldin")[[1]]), 5), silent = T)
                                   if (class(Cb) != "numeric") {
                                     Cb <- NA
                                   }
                                 } else if (Cb_metric == "purity") {
                                   # Criterion B Precision-purity
                                   respurity <- try(Purity(data = test_KNN$subdata_cluster_DEG, sub_cluster_label = sub_cluster_label, FlowSeed = 40), silent = T)
-                                  Cpurity <- try(round(mean(respurity, na.rm = TRUE), 3), silent = T)
+                                  Cpurity <- try(round(mean(respurity, na.rm = TRUE), 5), silent = T)
                                   if (class(Cpurity) != "numeric") {
                                     Cpurity <- NA
                                   }
@@ -816,7 +846,7 @@ oneStep_process_assess <- function(
                                 } else if (Cb_metric == "Rand index (RI)") {
                                   # Criterion B Precision-RI
                                   resCRI <- try(RI(data = test_KNN$subdata_cluster_DEG, sub_cluster_label = sub_cluster_label, FlowSeed = 40), silent = T)
-                                  CRI <- try(round(mean(resCRI, na.rm = TRUE), 3), silent = T)
+                                  CRI <- try(round(mean(resCRI, na.rm = TRUE), 5), silent = T)
                                   if (class(CRI) != "numeric") {
                                     CRI <- NA
                                   }
@@ -834,7 +864,7 @@ oneStep_process_assess <- function(
                                 } else if (Cc_metric == "relative weighted consistency (CWrel)") {
                                   resCS <- try(CWfun(CS_preres = CS_preres, top = ntop), silent = T)
                                 }
-                                CS <- try(round(mean(resCS$consistency, na.rm = TRUE), 3), silent = T)
+                                CS <- try(round(mean(resCS$consistency, na.rm = TRUE), 5), silent = T)
                                 if (class(CS) != "numeric") {
                                   CS <- NA
                                 }
@@ -843,11 +873,18 @@ oneStep_process_assess <- function(
 
 
                                 # Criterion D Biological Meaning
-                                if (DEP == "" || is.null(DEP)) {
+                                if ((is.null(marker_path)||is.null(known_celltype_path))& DEP == "" || is.null(DEP)) {
                                   Cd <- NA
-                                } else {
+                                } else if (!is.null(marker_path) && !is.null(known_celltype_path)) {
+                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster,
+                                                                  marker_path = marker_path, known_celltype_path = known_celltype_path), 5), silent = T)
+                                  if (class(CRecall) != "numeric") {
+                                    CRecall <- NA
+                                  }
+                                  Cd <- CRecall
+                                } else if (!is.null(DEP)) {
                                   known_marker <- unlist(strsplit(DEP, "\\s*,\\s*"))
-                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 3), silent = T)
+                                  CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 5), silent = T)
                                   if (class(CRecall) != "numeric") {
                                     CRecall <- NA
                                   }
@@ -876,13 +913,19 @@ oneStep_process_assess <- function(
                                 try(source("./PTI/cycle_pseudotime.R"), silent = T)
                                 try(source("./PTI/reverse_pseudotime.R"), silent = T)
                                 try(source("./PTI/check_pairs.R"), silent = T)
-
+                                try(source("./PTI/ANPELA_FLOWMAP.R"))
+                                try(source("./PTI/ANPELA_FLOWMAP-function.R"))
                                 try(source("./PTI/plot.R"), silent = T)
 
                                 # AP2_processed_D_TI
                                 index <- stringr::str_replace_all(index_TIclass, "\\(.*", "")
-                                res <- try(load.Data(res, index = index, measurement.time = as.matrix(metadata$timepoint), TIM = TIM), silent = T)
-
+                                if ("condition" %in% colnames(metadata)){
+                                  res <- try(load.Data(res, index = index, measurement.condition = as.matrix(metadata$condition),
+                                                       measurement.time = as.matrix(metadata$timepoint), TIM = TIM), silent = T)
+                                } else {
+                                  res <- try(load.Data(res, index = index, measurement.time = as.matrix(metadata$timepoint), TIM = TIM), silent = T)
+                                }
+                                dataset_name <-rownames(workflow)[i]
                                 if (class(res) == "try-error") {
                                   res <- data.frame(Ca = NA, Cb = NA, Cc = NA, Cd = NA)
                                   rownames(res) <- rownames(workflow)[i]
@@ -893,11 +936,14 @@ oneStep_process_assess <- function(
                                 rm(index, res)
 
                                 # TIress
-                                TIres <- try(TI(AP2_processed_D_TI, method = TIM))
+                                TIres <- try(TI(D = AP2_processed_D_TI, method = TIM,
+                                                dataset_name = dataset_name,clustering.var = clustering.var))
+                                print(paste0("TIres","_",i))
 
                                 if(class(TIres) == "try-error") {
                                   res <- data.frame(Ca = NA, Cb = NA, Cc = NA, Cd = NA)
                                   rownames(res) <- rownames(workflow)[i]
+                                  print(paste0("TIres","error"))
                                   return(res)
                                 }
 
@@ -908,7 +954,7 @@ oneStep_process_assess <- function(
                                 if (class(Ca) != "numeric") {
                                   Ca <- NA
                                 } else {
-                                  Ca <- round(Ca, 3)
+                                  Ca <- round(Ca, 5)
                                 }
 
 
@@ -921,19 +967,20 @@ oneStep_process_assess <- function(
                                   if (Cb > 0.05) {
                                     Cb <- 0
                                   } else {
-                                    Cb <- round(1 - 20*Cb, 3)
+                                    Cb <- round(1 - 20*Cb, 5)
                                   }
                                 }
                                 rm(R)
 
                                 # Criterion C Robustness-Robustness
-                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.8), silent = T)
+                                Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.8, clustering.var = clustering.var,
+                                                       dataset_name = dataset_name), silent = T)
                                 if (class(Rob0) != "list") {
                                   Cc <- NA
                                 } else {
                                   Cc <- switch (Cc_metric,
-                                                "Spearman rank correlation" = round(Rob0$Robustness_result[1], 3),
-                                                "Kendall rank correlation" = round(Rob0$Robustness_result[2], 3)
+                                                "Spearman rank correlation" = round(Rob0$Robustness_result[1], 5),
+                                                "Kendall rank correlation" = round(Rob0$Robustness_result[2], 5)
                                   )
                                 }
                                 rm(Rob0)
@@ -941,23 +988,40 @@ oneStep_process_assess <- function(
 
                                 # Criterion D Biological Meaning-Biological consistency
                                 if (!is.null(pathwayhierarchy) && file.exists(pathwayhierarchy)) {
-                                  Cd <- try(suppressWarnings(Bio_con(AP2_processed_D_TI, pathwayhierarchy, nruns = 3, dr_method = TIres$dr_method, TIres = TIres)), silent = T)
+                                  Cd <- try(suppressWarnings(Bio_con(AP2_processed_D_TI, Pathway_Hierarchy_file = pathwayhierarchy, nruns = 3, dr_method = TIres$dr_method, TIres = TIres)), silent = T)
                                   if (class(Cd) != "numeric") {
                                     Cd <- NA
                                   } else {
-                                    Cd <- round(Cd, 3)
+                                    Cd <- round(Cd, 5)
+                                  }
+                                } else if(is.null(pathwayhierarchy) && "condition" %in% colnames(metadata)){
+                                  Cd <- try(suppressWarnings(Bio_con(AP2_processed_D_TI,  nruns = 3, dr_method = TIres$dr_method, TIres = TIres)), silent = T)
+                                  if (class(Cd) != "numeric") {
+                                    Cd <- NA
+                                  } else {
+                                    Cd <- round(Cd, 5)
                                   }
                                 } else Cd <- NA
+
                                 rm(AP2_processed_D_TI, TIres)
                                 gc()
 
                                 res <- data.frame(Ca, Cb, Cc, Cd)
                                 rownames(res) <- rownames(workflow)[i]
+                                #save(res, file = paste0(savepath, "/each_robfp_1e80_startclus/workflow",i,"_",dataset_name, "_assess.RData"))
+                                #cat(sprintf("[%s] Worker PID %d: Finished task %d\n", Sys.time(), pid, i))
                                 return(res)
                               }
 
 
                             }
+
+  # # 关闭 sink（每个 worker 退出时关闭）
+  # parallel::clusterEvalQ(cl, {
+  #   try(sink(), silent = TRUE)
+  #   try(sink(type = "message"), silent = TRUE)
+  #   NULL
+  # })
 
   parallel::stopCluster(cl)
   print(proc.time()-time)
@@ -967,41 +1031,38 @@ oneStep_process_assess <- function(
 
     colnames(table) <- c("Accuracy", "Tightness", "Robustness", "Correspondence")
     table2 <- table
-    table2["Accuracy"][table2["Accuracy"] >= 0.9] <- 10
-    table2["Accuracy"][table2["Accuracy"] < 0.9 & table2["Accuracy"] > 0.7] <- 8
-    table2["Accuracy"][table2["Accuracy"] <= 0.7] <- 1
+    table2["Accuracy"][table2["Accuracy"] > 0.7] <- 10
+    table2["Accuracy"][table2["Accuracy"] <= 0.7] <- 4
 
-    table2["Tightness"][table2["Tightness"] >= 0.7] <- 10
-    table2["Tightness"][table2["Tightness"] < 0.7 & table2["Tightness"] > 0.5] <- 8
-    table2["Tightness"][table2["Tightness"] <= 0.5] <- 1
+    table2["Tightness"][table2["Tightness"] > 0.5] <- 10
+    table2["Tightness"][table2["Tightness"] <= 0.5] <- 4
 
-    table2["Robustness"][table2["Robustness"] >= 0.3] <- 10
-    table2["Robustness"][table2["Robustness"] < 0.3 & table2["Robustness"] > 0.15] <- 8
-    table2["Robustness"][table2["Robustness"] <= 0.15] <- 1
+    table2["Robustness"][table2["Robustness"] > 0.35] <- 10
+    table2["Robustness"][table2["Robustness"] <= 0.35] <- 4
 
-    table2["Correspondence"][table2["Correspondence"] >= 0.8] <- 10
-    table2["Correspondence"][table2["Correspondence"] < 0.8 & table2["Correspondence"] > 0.5] <- 8
-    table2["Correspondence"][table2["Correspondence"] <= 0.5] <- 1
+    if (!is.null(marker_path) && !is.null(known_celltype_path)) {
+      table2["Correspondence"][table2["Correspondence"] > 0.7] <- 10
+      table2["Correspondence"][table2["Correspondence"] <= 0.5] <- 4
+    } else {
+      table2["Correspondence"][table2["Correspondence"] > 0.5] <- 10
+      table2["Correspondence"][table2["Correspondence"] <= 0.5] <- 4
+    }
 
   } else if (studytype == "PTI") {
 
     colnames(table) <- c("Conformance", "Smoothness", "Robustness", "Correspondence")
     table2 <- table
-    table2["Conformance"][table2["Conformance"] >= 0.8] <- 10
-    table2["Conformance"][table2["Conformance"] < 0.8 & table2["Conformance"] > 0.6] <- 8
-    table2["Conformance"][table2["Conformance"] <= 0.6] <- 1
+    table2["Conformance"][table2["Conformance"] > 0.6] <- 10
+    table2["Conformance"][table2["Conformance"] <= 0.6] <- 4
 
-    table2["Smoothness"][table2["Smoothness"] >= 0.98] <- 10
-    table2["Smoothness"][table2["Smoothness"] < 0.98 & table2["Smoothness"] > 0.8] <- 8
-    table2["Smoothness"][table2["Smoothness"] <= 0.8] <- 1
+    table2["Smoothness"][table2["Smoothness"] > 0.8] <- 10
+    table2["Smoothness"][table2["Smoothness"] <= 0.8] <- 4
 
-    table2["Robustness"][table2["Robustness"] >= 0.85] <- 10
-    table2["Robustness"][table2["Robustness"] < 0.85 & table2["Robustness"] > 0.5] <- 8
-    table2["Robustness"][table2["Robustness"] <= 0.5] <- 1
+    table2["Robustness"][table2["Robustness"] > 0.5] <- 10
+    table2["Robustness"][table2["Robustness"] <= 0.5] <- 4
 
-    table2["Correspondence"][table2["Correspondence"] >= 0.8] <- 10
-    table2["Correspondence"][table2["Correspondence"] < 0.8 & table2["Correspondence"] > 0.6] <- 8
-    table2["Correspondence"][table2["Correspondence"] <= 0.6] <- 1
+    table2["Correspondence"][table2["Correspondence"] == 1] <- 10
+    table2["Correspondence"][table2["Correspondence"] < 1] <- 4
   }
 
   assess_res <- list(table = table, table2 = table2)

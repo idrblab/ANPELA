@@ -17,3 +17,4 @@ Getmarker <- function(datapath) {
   colnames(a@exprs) <- paste0(a@parameters@data$desc, "(", a@parameters@data$name, ")")
   cat(paste0("\"", paste0(as.character(colnames(a@exprs)), collapse = ", \n"), "\""))
 }
+

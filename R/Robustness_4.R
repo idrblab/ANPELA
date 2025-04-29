@@ -3,7 +3,7 @@
 # nruns: define how many different datasets will be contrasted
 # cell.subset : how many cells should be used (we used 20% )
 
-Robustness <- function(TIres, D, nruns = 4, cell.subset = 0.9, clustering.var = NULL, ...){
+Robustness <- function(TIres, D, nruns = 4, cell.subset = 0.9, clustering.var = NULL,dataset_name =NULL, ...){
   
   
   Robustness_result <- c()
@@ -67,7 +67,8 @@ Robustness <- function(TIres, D, nruns = 4, cell.subset = 0.9, clustering.var = 
     if ("FLOWMAP" %in% TIres$dr_method) {
       subIndex <- sample(1:perfile.cells, perfile.nsub.cells)
       subMatrix <- list(expr = lapply(expr_matrix[["expr"]], function(df) df[subIndex,]))
-      tempMatrix <- do.call(FUN, list(subMatrix, TIres$dr_method, clustering.var = clustering.var, subsamples = FALSE, cluster.numbers = perfile.nsub.cells))
+      tempMatrix <-  BBmisc::suppressAll(do.call(FUN, list(subMatrix, TIres$dr_method, clustering.var = clustering.var, subsamples = FALSE, 
+                                      cluster.numbers = perfile.nsub.cells,dataset_name=dataset_name)))
       input_subIndex <- unlist(lapply(subMatrix[["expr"]], function(df) as.integer(rownames(df))),use.names = FALSE)
       tempMatrix[["subIndex"]] <- input_subIndex
     } else {

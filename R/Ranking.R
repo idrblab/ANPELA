@@ -6,7 +6,7 @@
 #' @param data Character, the R object resulting from the function "Assess" "CSIassess" or "PTIassess", or obtained by loading from the resulting RData file of these funcitons.
 #' @param savepath Character, the absolute path of the folder which will store the overall ranking data and figure file.
 #'
-#' @return A CSV file named "_Ranking_Table.csv", recording the overall ranking and the values of criteria. <br>A PDF file named "_Ranking_Figure.pdf", helping users better understand the differences among various data processing workflows, where the different colors represent different performance assessment levels: dark green indicates "superior," light green indicates "good," and red indicates "poor".
+#' @return A CSV file named "_Ranking_Table.csv", recording the overall ranking and the values of criteria. <br>A PDF file named "_Ranking_Figure.pdf", helping users better understand the differences among various data processing workflows, where the different colors represent different performance assessment levels: green indicates "good," and red indicates "poor".
 #'
 #' @export
 #'
@@ -14,7 +14,7 @@
 #' \donttest{
 #' }
 
-Ranking <- function(data, name = "result", savepath = "./") {
+Ranking <- function(data, name = "result", savepath = "./ANPELA_res") {
   if (any(!is.na(data$table[, 4]))) {
     table <- data$table
     table2 <- data$table2
@@ -37,8 +37,8 @@ Ranking <- function(data, name = "result", savepath = "./") {
   pheatmap::pheatmap(pheatmapresult, cluster_rows = FALSE, cluster_cols = FALSE,
                      angle_col = "90", annotation_legend = FALSE, show_rownames = TRUE, show_colnames = TRUE,
                      border_color = "white", cellheight = 9, cellwidth = 30, fontsize_row = 6, fontsize_col = 8,
-                     color = c("#CA2125", "#B5DC00", "#008237"), legend = FALSE,
-                     breaks = c(seq(1, 7, by = 7), seq(7 ,10, by = 1.5)),
+                     color = c("#CA2125", "#008237"), legend = FALSE,
+                     breaks = c(1,4,10),
                      legend_breaks = c(seq(1, 10, by = 1.5)))
   dev.off()
 }

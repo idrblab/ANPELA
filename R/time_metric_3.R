@@ -21,37 +21,33 @@ time_metric <- function(TIres, D, nruns = 10) {
     pseudo.time <- input_matrix[, npar + 2]
     
     
-    # repeat for the forward and reverce trajectory direction
-    P <- c(0,0)
-    for (d in 1:2){
-      if (d == 2) pseudo.time <- reverse_pseudotime(pseudo.time)
+    P <- 0
+  
+    # create all possible combinations of experimental timepoints
+    # measurement.times = unique(exp.time)
+    measurement.times <- unique(sort(exp.time))
+    exp.time.combns <- combn(length(measurement.times),2)
+    
+    # initialization of P( PT[i]<PT[j] | ET[i]<ET[j], for i != j)
+    hits <- 0
+    
+    for (c in 1:dim(exp.time.combns)[2]){
+      # Create all pairs from a sample of n cells where ET[i] < ET[j]
+      set.seed(21)
+      i <- sample(which(exp.time == measurement.times[exp.time.combns[1,c]]), nruns, replace = T)
+      set.seed(22)
+      j <- sample(which(exp.time == measurement.times[exp.time.combns[2,c]]), nruns, replace = T)
+      pairs <- rbind(rep(i, each = nruns), rep(j, nruns))
       
-      # create all possible combinations of experimental timepoints
-      # measurement.times = unique(exp.time)
-      measurement.times <- unique(sort(exp.time))
-      exp.time.combns <- combn(length(measurement.times),2)
-      
-      # initialization of P( PT[i]<PT[j] | ET[i]<ET[j], for i != j)
-      hits <- 0
-      
-      for (c in 1:dim(exp.time.combns)[2]){
-        # Create all pairs from a sample of n cells where ET[i] < ET[j]
-        set.seed(21)
-        i <- sample(which(exp.time == measurement.times[exp.time.combns[1,c]]), nruns, replace = T)
-        set.seed(22)
-        j <- sample(which(exp.time == measurement.times[exp.time.combns[2,c]]), nruns, replace = T)
-        pairs <- rbind(rep(i, each = nruns), rep(j, nruns))
-        
-        # Check for every pair whether also PT[i] < PT[j]
-        for (k in 1:nruns^2){
-          if (pseudo.time[pairs[1,k]] <= pseudo.time[pairs[2,k]]) 
-            hits <- hits + 1
-        }
+      # Check for every pair whether also PT[i] < PT[j]
+      for (k in 1:nruns^2){
+        if (pseudo.time[pairs[1,k]] <= pseudo.time[pairs[2,k]]) 
+          hits <- hits + 1
       }
-      
-      P[d] <- hits / (dim(exp.time.combns)[2]*nruns^2)
-    }
-    max_Ps[lineage] <-  max(P)
+    
+    P <- hits / (dim(exp.time.combns)[2]*nruns^2)
+  }
+    max_Ps[lineage] <-  P
   }
   return(mean(max_Ps))
 }

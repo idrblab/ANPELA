@@ -43,7 +43,7 @@ load.Data <- function(files.paths, index, measurement.time, measurement.conditio
   }
   
   # find the mean at each timepoint
-  exp_means <- flowCore::fsApply(data,each_col,mean)
+  exp_means <- flowCore::fsApply(data,flowCore::each_col,mean)
   
   D <- list()
   D$N <- N

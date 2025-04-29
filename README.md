@@ -132,7 +132,7 @@ CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot"
                    "ggpubr", "gridExtra", "MLmetrics", "fossil", "clusterCrit",
                    "VennDiagram","stringr", "bbmle", "mc2d", "doSNOW", "foreach",
                    "igraph","mclust", "pheatmap", "magrittr", "withr", "tree",
-                   "sampling", "ellipse")
+                   "sampling", "ellipse", "BBmisc", "ggpointdensity", "openxlsx")
 install.packages(CRAN_packages, dependencies = TRUE)
 ```
 
@@ -153,6 +153,13 @@ Bioconductor_packages <- c("flowCore", "limma", "SCORPIUS", "slingshot", "destin
 BiocManager::install(Bioconductor_packages, ask = FALSE)
 ```
 
+Installed through ***Remote*** : SDMTools.
+
+``` r
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+remotes::install_version("SDMTools", "1.1-221")
+```
+
 Installed from ***GitHub*** (can also from other repositories):
 Rtsne.multicore, Rphenograph, CytoSpill and autospill.
 
@@ -165,6 +172,8 @@ devtools::install_github("RGLab/Rtsne.multicore")
 devtools::install_github("JinmiaoChenLab/Rphenograph")
 devtools::install_github("qmiao19/CytoSpill")
 devtools::install_github("carlosproca/autospill")
+devtools::install_github("ParkerICI/vite")
+devtools::install_github("zunderlab/FLOWMAP")
 ```
 
 - **Tool 3. ANPELA** ***R*** **Package**

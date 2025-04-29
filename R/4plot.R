@@ -1,3 +1,5 @@
+library(ggplot2)
+library(patchwork)
 dr_tsne <- function(data = data, tsneSeed = 42) {
   data <- as.matrix(data)
   if (is.numeric(tsneSeed)) set.seed(tsneSeed)
@@ -25,7 +27,7 @@ mergedimred <- function(subdata_cluster_DEG) {
   if (is.null(subdata_cluster_DEG)) return(NULL)
   data <- dplyr::select(subdata_cluster_DEG, -dplyr::one_of(vars))
   data_dimred <- try(dr_tsne(data = data, tsneSeed = 42), silent = T)
-  if (class(data_dimred) == "try-error") return(NULL)
+  if (any(class(data_dimred) == "try-error")) return(NULL)
   dplyr::left_join(tibble::rownames_to_column(subdata_cluster_DEG),
                    tibble::rownames_to_column(as.data.frame(data_dimred)),
                    by = "rowname", copy = TRUE)
@@ -94,10 +96,22 @@ heatmap_plot <- function (i, subdata_cluster_DEG) {
   data_pure <- dplyr::select(data, -dplyr::one_of(c("filename", "condition", "cluster")))
   data_heatmap <- aggregate(data_pure, by = list(data$filename, data$condition), mean)
   rownames(data_heatmap) <- data_heatmap[, 1]
-  data_heatmap <- data_heatmap[, -1]
+  data_heatmap <- data_heatmap[, -c(1,2)]
   
-  metabolomics::HeatMap(data_heatmap, colramp = gplots::colorpanel(100, "#c10022", "#ffffbd", "#2c3298"), dendrogram = "both",
-                        margins = c(10, 10), key = FALSE, cexRow = 0.8, main = paste("cluster", i))
+  
+  data_heatmap <- t(data_heatmap)
+  pheatmap::pheatmap(
+    data_heatmap,
+    color = gplots::colorpanel(100, "#c10022", "#ffffbd", "#2c3298"),
+    cluster_rows = TRUE,
+    cluster_cols = TRUE,
+    main = paste("Cluster", i),
+    fontsize_row = 8,
+    fontsize_col = 8,
+    show_rownames = TRUE,
+    show_colnames = TRUE,
+    legend = FALSE
+  )
   
 }
 
@@ -112,8 +126,8 @@ heatmap_plot <- function (i, subdata_cluster_DEG) {
 venn_plot <- function (i, CConsistency_marker) {
   futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
   data <- CConsistency_marker[[i]]
-  if (is.null(data)) return(NULL)
-  grid::grid.draw(VennDiagram::venn.diagram(
+  return(
+  VennDiagram::venn.diagram(
     data, filename = NULL, category.names = c("Set 1" , "Set 2" , "Set 3"), main = paste("Cluster", i),
     col = "black", fill = c("#00ced1", "#F87168", "#fec600")
   ))
@@ -149,7 +163,7 @@ volcano_plot <- function (i, volcanodata) {
                       "Not")
   
   data <- cbind(data, threshold)
-  ggplot(data, aes(x = log2FC, y = pvalue, colour = threshold)) +
+  ggplot2::ggplot(data, aes(x = log2FC, y = pvalue, colour = threshold)) +
     xlab("log2FC") + ylab("-log10pvalue") +
     labs(title = paste("Cluster", i)) +
     geom_point(size = 2, alpha = 1) +
@@ -186,7 +200,7 @@ cluster_plot <- function (data_with_cluster) {
   plot2 <- plot1 + facet_wrap(~ condition, nrow = 1) + ggtitle("Grid plot divided by condition")
   
   # return(ggpubr::ggarrange(plot1, plot2, ncol = 2, common.legend = TRUE, legend = "bottom", widths = c(1, 2)))
-  return(ggpubr::ggarrange(plot1, plot2, ncol = 1, common.legend = TRUE, legend = "bottom", widths = c(2, 1)))
+  return(ggpubr::ggarrange(plot1, plot2, ncol = 1, common.legend = TRUE, legend = "bottom", heights = c(2, 1)))
 }
 
 
@@ -259,3 +273,208 @@ pointdensity_plot <- function(data, x_marker, y_marker) {
           legend.title = element_text(size = 10))
   return(p1)
 }
+
+merge_multi <- function(multi_flowFrame,condition_info) {
+  
+  exprsL <- list()
+  label <- list()
+  condition <- list()
+  
+  #
+  multi_flowFrame <- Filter(function(x) length(x@exprs) > 0, multi_flowFrame)
+  
+  for (i in 1:length(multi_flowFrame)) {
+    
+    fcsFile <- multi_flowFrame[i]
+    index <- sapply(strsplit(rownames(fcsFile[[1]]@exprs), split = "_"), function(x) x[length(x)])
+    condition[[i]] <- rep(condition_info[i], length(index))
+    
+    
+    name <- names(fcsFile)
+    fcs <- fcsFile[[1]]
+    
+    pd <- fcs@parameters@data # abstract the protein name and its characterization
+    
+    size_channels <- grep("FSC|SSC", colnames(fcs@exprs), ignore.case = TRUE)
+    
+    marker_id <- seq_along(colnames(fcs@exprs))
+    
+    exprs <- fcs@exprs[, marker_id, drop = FALSE] # data after removed the "Time" and "Event"
+    
+    if (length(size_channels) > 0) { # judge whether it is FC data
+      if (any(size_channels %in% marker_id)) {
+        used_size_channel <- size_channels[size_channels %in% marker_id]
+        used_size_channel_id <- match(used_size_channel, marker_id)
+        exprs[, used_size_channel_id] <- apply(exprs[, used_size_channel_id, drop = FALSE], 2,
+                                               function(x) scaleData(x, range = c(0,4.5))) # scale the "FSC" and "SSC" data
+      }
+    }
+    col_names <- paste0(pd$desc, "(", pd$name, ")")
+    colnames(exprs) <- col_names[marker_id]
+    row.names(exprs) <- paste(name, 1:nrow(exprs), sep = "_")
+    exprsL[[i]] <- exprs
+  }
+  
+  merged_data <- do.call(rbind, exprsL)
+  merged_lable <- unlist(label)
+  merged_condition <- unlist(condition)
+  
+  return(list(data = merged_data,
+              condition = merged_condition))
+}
+
+get_markers <- function(marker_path) {
+  
+  # check 'marker_path'
+  if(grepl(".csv$", marker_path)){
+    markers <- read.csv(file = marker_path, header = T)
+  } else if(grepl(".xlsx$", marker_path)){
+    markers <- openxlsx::read.xlsx(marker_path)
+  } else if(sum(dim(marker_path))==0){
+    stop("No CSV or XLSX file found, please check the parameter of 'marker_path'.")
+  }
+  
+  markers$posGene <- gsub(" ", "", markers$posGene)
+  markers$negGene <- gsub(" ", "", markers$negGene)
+  
+  # correct gene symbols from the given    (up-genes)
+  markers$posGene <- sapply(1:nrow(markers), function(i){
+    markers_all <- gsub(" ", "", unlist(strsplit(markers$posGene[i], ",")))
+    markers_all <- toupper(markers_all[markers_all != "NA" & markers_all != ""])
+    markers_all <- sort(markers_all)
+    
+    return(paste0(markers_all, collapse=","))
+  })
+  
+  # correct gene symbols from the given DB (down-genes)
+  markers$negGene <- sapply(1:nrow(markers), function(i){
+    markers_all <- gsub(" ", "", unlist(strsplit(markers$negGene[i],",")))
+    markers_all <- toupper(markers_all[markers_all != "NA" & markers_all != ""])
+    markers_all <- sort(markers_all)
+    
+    return(paste0(markers_all, collapse = ","))
+    
+  })
+  
+  markers$posGene <- gsub("///",",",markers$posGene)
+  markers$posGene <- gsub(" ","",markers$posGene)
+  markers$negGene <- gsub("///",",",markers$negGene)
+  markers$negGene <- gsub(" ","",markers$negGene)
+  
+  gs <- lapply(1:nrow(markers), function(j) gsub(" ","",unlist(strsplit(toString(markers$posGene[j]),","))))
+  names(gs) <- markers$cellName
+  gs2 <- lapply(1:nrow(markers), function(j) gsub(" ","",unlist(strsplit(toString(markers$negGene[j]),","))))
+  names(gs2) <- markers$cellName
+  
+  return(list(gs_positive = gs, gs_negative = gs2))
+}
+
+cell_annotation <- function(data, marker_path, colsToUse = NULL,
+                            resolution = "cell") {
+  
+  if (resolution == "cluster") {
+    set.seed(123)
+    data_cluster <- suppressWarnings(FlowSOM::FlowSOM(as.matrix(data), nClus = 50,  colsToUse = colsToUse))
+    node_lable <- data_cluster[["map"]][["mapping"]][,1]
+    cluster_label <- data_cluster[["metaclustering"]][node_lable]
+    if (any(table(cluster_label) == 0)) {
+      cluster_label <- droplevels(cluster_label)
+    }
+
+  }
+  
+  colnames(data) <- gsub(pattern = "\\(.*\\)", "", x = colnames(data))
+  data <- t(data)
+  
+  markers <- get_markers(marker_path = marker_path)
+  
+  # assign cell types
+  es.max <- anno_score(input_data = data, scaled = TRUE, gs = markers$gs_positive, gs2 = markers$gs_negative)
+  
+  # predicted label
+  if (resolution == "cell") {
+    pred_label <- apply(es.max, 2, function(col) {
+      rownames(es.max)[which.max(col)]
+    })
+  } else if (resolution == "cluster") {
+    # Extract top cell types for each cluster
+    cL_resutls <- do.call("rbind", lapply(unique(cluster_label), function(cl){
+      if (is.array(es.max[, cluster_label == cl])) {
+        es.max.cl <- sort(rowSums(es.max[, cluster_label == cl]), decreasing = T)
+      } else {
+        es.max.cl <- sort(es.max[, cluster_label == cl], decreasing = T)
+      }
+      
+      return(head(data.frame(cluster = cl, type = names(es.max.cl), scores = es.max.cl, 
+                             ncells = sum(cluster_label == cl)), 10))
+    }))
+    anno_scores <- cL_resutls %>% group_by(cluster) %>% top_n(n = 1, wt = scores)
+    anno_scores$type[as.numeric(as.character(anno_scores$scores)) < anno_scores$ncells/4] <- "Unknown"
+    anno_scores <- anno_scores[order(anno_scores$cluster),]
+    pred_label <- anno_scores$type[cluster_label]
+  }
+  return(pred_label)
+}
+
+anno_score <- function(input_data, scaled = T, gs, gs2 = NULL, to_uppercase = T){
+  
+  # check input matrix
+  if(!is.matrix(input_data)){
+    warning("input_data doesn't seem to be a matrix")
+  } else {
+    if(sum(dim(input_data))==0){
+      warning("The dimension of input input_data matrix equals to 0, is it an empty matrix?")
+    }
+  }
+  
+  # marker sensitivity
+  marker_stat <- sort(table(unlist(gs)), decreasing = T)
+  marker_sensitivity <- data.frame(score_marker_sensitivity = scales::rescale(as.numeric(marker_stat), 
+                                                                              to = c(0,1), 
+                                                                              from = c(length(gs),1)),
+                                   gene_ = names(marker_stat), stringsAsFactors = F)
+  
+  # convert gene names to Uppercase
+  if(to_uppercase){
+    rownames(input_data) = toupper(rownames(input_data));
+  }
+  
+  # subselect genes only found in data
+  names_gs_cp = names(gs); names_gs_2_cp = names(gs2);
+  gs = lapply(1:length(gs), function(d_){
+    GeneIndToKeep = rownames(input_data) %in% as.character(gs[[d_]])
+    rownames(input_data)[GeneIndToKeep]})
+  gs2 = lapply(1:length(gs2), function(d_){ 
+    GeneIndToKeep = rownames(input_data) %in% as.character(gs2[[d_]]); rownames(input_data)[GeneIndToKeep]})
+  names(gs) = names_gs_cp; names(gs2) = names_gs_2_cp;
+  cell_markers_genes_score = marker_sensitivity[marker_sensitivity$gene_ %in% unique(unlist(gs)),]
+  
+  # z-scale if not
+  if(scaled) Z <- t(scale(t(input_data))) else Z <- input_data
+  
+  # multiple by marker sensitivity
+  for(jj in 1:nrow(cell_markers_genes_score)){
+    Z[cell_markers_genes_score[jj,"gene_"], ] = Z[cell_markers_genes_score[jj,"gene_"], ] * cell_markers_genes_score[jj, "score_marker_sensitivity"]
+  }
+  
+  # subselect only with marker genes
+  Z = Z[unique(c(unlist(gs),unlist(gs2))), ]
+  
+  # combine scores
+  es = do.call("rbind", lapply(names(gs), function(gss_){
+    sapply(1:ncol(Z), function(j) {
+      gs_z = Z[gs[[gss_]], j]; gz_2 = Z[gs2[[gss_]], j] * -1
+      sum_t1 = (sum(gs_z) / sqrt(length(gs_z))); sum_t2 = sum(gz_2) / sqrt(length(gz_2));
+      if(is.na(sum_t2)){
+        sum_t2 = 0;
+      }
+      sum_t1 + sum_t2
+    })
+  })) 
+  
+  dimnames(es) = list(names(gs), colnames(Z))
+  es.max <- es[!apply(is.na(es) | es == "", 1, all),] # remove na rows
+  
+  return(es.max)
+}
+

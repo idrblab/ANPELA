@@ -63,9 +63,15 @@ Imports:
     PeacoQC,
     systemPipeR,
     flowTrans,
-    flowVS
+    flowVS,
+    BBmisc,
+    ggpointdensity,
+    openxlsx
 Remotes:
+    SDMTools,
     RGLab/Rtsne.multicore,
     JinmiaoChenLab/Rphenograph,
     qmiao19/CytoSpill,
-    carlosproca/autospill
+    carlosproca/autospill,
+    ParkerICI/vite,
+    zunderlab/FLOWMAP
