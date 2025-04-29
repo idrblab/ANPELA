@@ -14,12 +14,13 @@ Assess(
   Phenograph_k = 30,
   DEP = NULL,
   TIM = c("scorpius_distSpear", "scorpius_distPear", "scorpius_distEucl",
-    "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA",
-    "slingshot_diffMaps", "prinCurves_diffMaps"),
+    "scorpius_distManh", "slingshot_tSNE", "slingshot_FLOWMAP", "slingshot_PCA",
+    "slingshot_diffMaps"),
   pathwayhierarchy = NULL,
+  clustering.var = NULL,
   cores = floor(parallel::detectCores()/2),
   save_processed_res = "one_folder",
-  savepath = "./"
+  savepath = "./ANPELA_res"
 )
 }
 \arguments{
@@ -44,9 +45,12 @@ Assess(
 \item{DEP}{Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
 \if{html}{\out{<br>}}It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".}
 
-\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
+\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of tra-jectory reconstruction and data space representation, including ‘scorpius_distSpear’, ‘scorpius_distPear’, ‘scorpius_distEucl’, ‘scorpius_distManh’, ‘slingshot_tSNE’, ‘slingshot_FLOWMAP’, ‘slingshot_PCA’, ‘slingshot_diffMaps’.}
 
 \item{pathwayhierarchy}{Character, the absolute filepath of the pathway hierarchy file.}
+
+\item{clustering.var}{Character, the vector naming channels to be used to calculate distances/differences between cells for clustering (if re-quested) and edge-drawing steps.
+\if{html}{\out{<br>}}Only needed when ‘slingshot_FLOWMAP’ is included in the parameter of ‘TIM’.}
 
 \item{cores}{Integer, the number of CPU cores to be employed for performing parallel computing.
 \if{html}{\out{<br>}}To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.}

@@ -9,12 +9,13 @@ PTIassess(
   data,
   respath,
   TIM = c("scorpius_distSpear", "scorpius_distPear", "scorpius_distEucl",
-    "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA",
-    "slingshot_diffMaps", "prinCurves_diffMaps"),
+    "scorpius_distManh", "slingshot_tSNE", "slingshot_FLOWMAP", "slingshot_PCA",
+    "slingshot_diffMaps"),
   Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
   pathwayhierarchy = NULL,
   save_processed_res = "one_folder",
-  savepath = "./",
+  savepath = "./ANPELA_res",
+  clustering.var = NULL,
   cores = floor(parallel::detectCores()/2),
   ...
 )
@@ -26,7 +27,7 @@ PTIassess(
 
 \item{respath}{Character, the absolute path of the folder storing the resulting "info_saved.RData" file and the "process_res" folder of the function "Process", "FCprocess" or "MCprocess" when the \code{save_processed_res} parameter in these functions is set to "one_folder".}
 
-\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of trajectory reconstruction and data space representation, including "scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps".}
+\item{TIM}{Character, the method of trajectory inference for the processed data prior to performance assessment, consisted of tra-jectory reconstruction and data space representation, including ‘scorpius_distSpear’, ‘scorpius_distPear’, ‘scorpius_distEucl’, ‘scorpius_distManh’, ‘slingshot_tSNE’, ‘slingshot_FLOWMAP’, ‘slingshot_PCA’, ‘slingshot_diffMaps’.}
 
 \item{Cc_metric}{Character, the assessing metric under Criterion Cc for the "PTI" study type, including "Spearman correlation" and "Kendall Rank Correlation".
 \if{html}{\out{<br>}}\strong{Spearman correlation}: a metric that measures the monotonic relationship between two ranked variables by measuring how well the relationship between the variables can be described by a monotonic function, with values closer to ±1 indicating a stronger monotonic association.*
@@ -37,6 +38,9 @@ PTIassess(
 \item{save_processed_res}{Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
 
 \item{savepath}{Character, the absolute path of the folder which will store the assessment results.}
+
+\item{clustering.var}{Character, the vector naming channels to be used to calculate distances/differences between cells for clustering (if re-quested) and edge-drawing steps.
+\if{html}{\out{<br>}}Only needed when ‘slingshot_FLOWMAP’ is included in the parameter of ‘TIM’.}
 
 \item{cores}{Integer, the number of CPU cores to be employed for performing parallel computing.
 \if{html}{\out{<br>}}To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.}

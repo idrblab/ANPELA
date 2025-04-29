@@ -41,7 +41,6 @@ Imports:
     stringr,
     bbmle,
     mc2d,
-    parallel,
     doSNOW,
     foreach,
     igraph,

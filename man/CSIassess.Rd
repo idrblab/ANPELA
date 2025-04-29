@@ -16,8 +16,10 @@ CSIassess(
   Cc_metric = "relative weighted consistency (CWrel)",
   ntop = NULL,
   DEP = NULL,
+  marker_path = NULL,
+  known_celltype_path = NULL,
   save_processed_res = "one_folder",
-  savepath = "./",
+  savepath = "./ANPELA_res",
   cores = floor(parallel::detectCores()/2),
   ...
 )
@@ -60,6 +62,10 @@ CSIassess(
 
 \item{DEP}{Character, the absolute filepath of the CSV file including the differentially expressed proteins used as the prior knowledge for the fourth criterion.
 \if{html}{\out{<br>}}It is a table of one column without the column name, each table cell includes one protein typically in the format of "channel description (channel name)", for example: "CD20(FITC.A)".}
+
+\item{marker_path}{Character, the absolute file path of the CSV or XLSX file containing the markers for cell type annotation, and detailed format requirements can be found on the website https://github.com/idrblab/ANPELA.}
+
+\item{known_celltype_path}{Character, the absolute file path of the CSV file containing the gold-standard cell type annotation results, with the first column being cell IDs and the second column being cell types, and these cell types should correspond pre-cisely to those in the ‘marker_path’ file.}
 
 \item{save_processed_res}{Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.}
 

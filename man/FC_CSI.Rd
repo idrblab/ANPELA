@@ -7,6 +7,7 @@
 FC_CSI(
   name = "result",
   datapath,
+  technique = "FC",
   mergeM = "Fixed",
   fixedNum = 200,
   compensationM = c("AutoSpill", "FlowCore", "MetaCyto", "None"),
@@ -25,6 +26,44 @@ FC_CSI(
   SSC = "SSC-H",
   control.dir = NULL,
   control.def.file = NULL,
+  arcsinha = 0,
+  arcsinhb = 1/150,
+  arcsinhc = 0,
+  anna = 0,
+  annb = 1/150,
+  annc = 0,
+  annthreshold = 1,
+  arna = 0,
+  arnb = 1/150,
+  arnc = 0,
+  arnthreshold = 1,
+  bepa = 0.5,
+  bepb = 1,
+  bepc = 0.5,
+  bepd = 1,
+  bepf = 0,
+  bepw = 0,
+  tol = .Machine$double.eps^0.25,
+  maxit = as.integer(5000),
+  hpla = 1,
+  hplb = 1,
+  lineara = 2,
+  linearb = 0,
+  lntr = 1,
+  lntd = 1,
+  logbase = 10,
+  logr = 1,
+  logd = 1,
+  lgtw = 0.5,
+  lgtt = 262144,
+  lgtm = 4.5,
+  lgta = 0,
+  Quadratica = 1,
+  Quadraticb = 1,
+  Quadraticc = 0,
+  Truncatea = 1,
+  Segment = 200,
+  Segment2 = 200,
   min_cells = 3,
   max_bins = 10,
   step = 10,
@@ -35,13 +74,15 @@ FC_CSI(
   Phenograph_k = 30,
   cores = parallel::detectCores()/2,
   save_processed_res = "one_folder",
-  savepath = "./"
+  savepath = "./ANPELA_res"
 )
 }
 \arguments{
 \item{name}{Character, the filename of the RData file when the "save_processed_res" parameter is set to "one_RData", and the filename of all the files in the "assess_res" folder which will store the assessment results.}
 
 \item{datapath}{Character, the absolute path of the folder storing the FCS raw data files and metadata file.}
+
+\item{technique}{Character, the technique type used in acquiring the SCP data.}
 
 \item{mergeM}{Character, the method of merging multiple FCS files. When multiple FCS files are selected, cells can be combined using one of the four different methods including "Fixed", "Ceil", "All" and "Min".
 \if{html}{\out{<br>}}\strong{Fixed}: a fixed num (specified by fixedNum) of cells are sampled (with replacement when the total number of cell is less than fixedNum) from each FCS file and combined for analysis.
@@ -80,6 +121,120 @@ FC_CSI(
 
 \item{control.def.file}{Character, the absolute filepath of the CSV file defining the filenames and corresponding channels of the single-color controls.
 \if{html}{\out{<br>}}Only needed when "AutoSpill" is included in the argument of "compensationM".}
+
+\item{arcsinha}{Double, the argument offset coefficient ‘a’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Arcsinh Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{arcsinhb}{Double, the input scaling coefficient ‘b’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Arcsinh Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{arcsinhc}{Double, the output offset coefficient ‘c’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Arcsinh Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{anna}{Double, the argument offset coefficient ‘a’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{annb}{Double, the input scaling coefficient ‘b’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{annc}{Double, the output offset coefficient ‘c’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{annthreshold}{Double, the input cutoff value ‘threshold’ below which the input x is replaced by the threshold itself before the asinh calculation.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Non-negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{arna}{Double, the argument offset coefficient ‘a’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{arnb}{Double, the input scaling coefficient ‘b’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{arnc}{Double, the output offset coefficient ‘c’ in equation y = asinh(a + b*x) + c.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{arnthreshold}{Double, the input cutoff value ‘threshold’ below which the input x is replaced by a small random value before the asinh calculation.
+\if{html}{\out{<br>}}Only needed when ‘Asinh with Randomized Negative Value’ is included in the parameter of ‘transformationM’.}
+
+\item{bepa}{Double, the positive exponential scaling coefficient ‘a’ in equation y = a\emph{exp(b}(x-w)) - c\emph{exp(-d}(x-w)) + f.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{bepb}{Double, the positive exponential rate coefficient ‘b’ in equation y = a\emph{exp(b}(x-w)) - c\emph{exp(-d}(x-w)) + f.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{bepc}{Double, the negative exponential scaling coefficient ‘c’ in equation y = a\emph{exp(b}(x-w)) - c\emph{exp(-d}(x-w)) + f.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{bepd}{Double, the negative exponential rate coefficient ‘d’ in equation y = a\emph{exp(b}(x-w)) - c\emph{exp(-d}(x-w)) + f.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{bepf}{Double, the vertical offset coefficient ‘f’ in equation y = a\emph{exp(b}(x-w)) - c\emph{exp(-d}(x-w)) + f.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{bepw}{Double, the horizontal shift coefficient ‘w’ defining the center point in equation y = a\emph{exp(b}(x-w)) - c\emph{exp(-d}(x-w)) + f.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{tol}{Double, the numerical tolerance value ‘tol’ used by the root-finding algorithm during the inversion of the function.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{maxit}{Integer, the maximum iterations value ‘maxit’ allowed for the root-finding algorithm during the inversion of the function.
+\if{html}{\out{<br>}}Only needed when ‘Biexponential Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{hpla}{Double, the scaling parameter ‘a’ determining the overall compression level and transition characteristics.
+\if{html}{\out{<br>}}Only needed when ‘Hyperlog Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{hplb}{Double, the linear coefficient ‘b’ controlling the width of the linear region near zero.
+\if{html}{\out{<br>}}Only needed when ‘Hyperlog Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{lineara}{Double, the multiplicative factor "a" in equation y = a*x+b.
+\if{html}{\out{<br>}}Only needed when "Linear Transformation" is included in the argument of "transformationM".}
+
+\item{linearb}{Double, the additive factor "b" in equation y = a*x+b.
+\if{html}{\out{<br>}}Only needed when "Linear Transformation" is included in the argument of "transformationM".}
+
+\item{lntr}{Double, the numerator scaling coefficient ‘r’ in equation y = log(x) * (r / d).
+\if{html}{\out{<br>}}Only needed when ‘Ln Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{lntd}{Double, the denominator scaling coefficient ‘d’ in equation y = log(x) * (r / d).
+\if{html}{\out{<br>}}Only needed when ‘Ln Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{logbase}{Integer, the base of the Log Transformation.
+\if{html}{\out{<br>}}Only needed when "Log Transformation" is included in the argument of "transformationM".}
+
+\item{logr}{Double, the numerator scaling coefficient ‘r’ in equation y = log(x, logbase) * (r / d).
+\if{html}{\out{<br>}}Only needed when ‘Log Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{logd}{Double, the denominator scaling coefficient ‘d’ in equation y = log(x, logbase) * (r / d).
+\if{html}{\out{<br>}} Only needed when ‘Log Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{lgtw}{Double, the linear region width value ‘w’ defining the scale behavior near zero.
+\if{html}{\out{<br>}} Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{lgtt}{Double, the top-of-scale value ‘t’ representing the maximum expected input data value.
+\if{html}{\out{<br>}} Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{lgtm}{Double, the total display range ‘m’ setting the overall width of the transformed output scale.
+\if{html}{\out{<br>}} Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{lgta}{Double, the additional negative range ‘a’ controlling the extent of negative input values included in the display.
+\if{html}{\out{<br>}} Only needed when ‘Logicle Transformation’ is included in the parameter of ‘transformationM’.}
+
+\item{Quadratica}{Double, the quadratic coefficient "a" in equation y = a*x^2+b*x+c.
+\if{html}{\out{<br>}}Only needed when "QuadraticTransform" is included in the argument of "transformationM".}
+
+\item{Quadraticb}{Double, the linear coefficient "b" in equation y = a*x^2+b*x+c.
+\if{html}{\out{<br>}}Only needed when "QuadraticTransform" is included in the argument of "transformationM".}
+
+\item{Quadraticc}{Double, the intercept "c" in equation y = a*x^2+b*x+c.
+\if{html}{\out{<br>}}Only needed when "QuadraticTransform" is included in the argument of "transformationM".}
+
+\item{Truncatea}{Double, the value at which to truncate.
+\if{html}{\out{<br>}}Only needed when "TruncateTransform" is included in the argument of "transformationM".}
+
+\item{Segment}{Integer, the value specifying the number of events in each segment to be analyzed.
+\if{html}{\out{<br>}}Only needed when ‘FlowClean is included in the parameter of ‘signalcleanM’.}
+
+\item{Segment2}{Integer, the value representing the minimum number of cells a population must have to be included in analysis.
+\if{html}{\out{<br>}}Only needed when ‘FlowClean is included in the parameter of ‘signalcleanM’.}
 
 \item{min_cells}{Integer, the minimum amount of cells (nonzero values) that should be present in one bin.
 \if{html}{\out{<br>}}Only needed when "PeacoQC" is included in the argument of "signalcleanM". Lowering this parameter can affect the robustness of the peak detection.}
