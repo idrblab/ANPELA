@@ -35,7 +35,6 @@
 #' @param known_celltype_path Character, the absolute file path of the CSV file containing the gold-standard cell type annotation results, with the first column being cell IDs and the second column being cell types, and these cell types should correspond pre-cisely to those in the ‘marker_path’ file.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store the assessment results.
-#'
 #' @return The **assess_res** folder stores the assessment output file named `name`**_assess.RData**, which contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
 #'   <br>In addition, the file **log.txt** is also generated simultaneously, recording the processing details.
 #' @export
@@ -43,6 +42,7 @@
 #' @examples
 #' \donttest{
 #' }
+
 
 
 
@@ -379,7 +379,7 @@ CSIassess <- function(name = "result", data, respath,
                                     CRecall <- NA
                                   }
                                   Cd <- CRecall
-                                } else if (!is.null(DEP)) {
+                                } else if (!DEP == "" && !is.null(DEP)) {
                                   known_marker <- unlist(strsplit(DEP, "\\s*,\\s*"))
                                   CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 5), silent = T)
                                   if (class(CRecall) != "numeric") {
@@ -606,12 +606,12 @@ CSIassess <- function(name = "result", data, respath,
                                   Cd <- NA
                                 } else if (!is.null(marker_path) && !is.null(known_celltype_path)) {
                                   CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster,
-                                                                  marker_path = marker_path, known_celltype_path = known_celltype_path), 5), silent = T)
+                                                                  marker_path = marker_path, known_celltype_path = known_celltype_path), 5))#, silent = T)
                                   if (class(CRecall) != "numeric") {
                                     CRecall <- NA
                                   }
                                   Cd <- CRecall
-                                } else if (!is.null(DEP)) {
+                                } else if (!DEP == "" && !is.null(DEP)) {
                                   known_marker <- unlist(strsplit(DEP, "\\s*,\\s*"))
                                   CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster, known_marker = known_marker), 5), silent = T)
                                   if (class(CRecall) != "numeric") {

@@ -16,7 +16,6 @@
 #' @param clustering.var Character, the vector naming channels to be used to calculate distances/differences between cells for clustering (if re-quested) and edge-drawing steps.
 #' @param pathwayhierarchy Character, the absolute file path of the pathway hierarchy file.
 #' @param Cc_metric Character, the assessing metric under Criterion Cc for the ‘PTI’ study type, including ‘Spearman correlation’ and ‘Kendall Rank Correlation’.
-#'
 #' @return PNG files visualizing the assessment standards.
 #' @export
 #'
@@ -26,16 +25,15 @@
 
 Visualize <- function(
     studytype = c("CSI","PTI"),
-    respath,  save_processed_res ="one_folder", workflow, savepath,studyname,
+    respath,  save_processed_res ="one_folder", workflow, savepath = "./ANPELA_res", studyname = NULL,
     plot_metric = c("Ca_metric","Cb_metric","Cc_metric","Cd_metric"),
     #CSI
     clusteringM = c("FlowSOM"), ncluster = 8,
     ntop = NULL, DEP = NULL,
     #PTI
-    TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh",
-            "slingshot_tSNE","slingshot_FLOWMAP","slingshot_PCA", "slingshot_diffMaps"),
+    TIM = "scorpius_distSpear",
     clustering.var = NULL, pathwayhierarchy = NULL,
-    Cc_metric = c("Spearman rank correlation", "Kendall rank correlation")
+    Cc_metric = "Spearman rank correlation"
 ){
 
   #load data&metadata
@@ -380,15 +378,14 @@ Visualize <- function(
     try(source("./PTI/check_pairs.R"))
 
     try(source("./PTI/plot.R"))
+    try(source("./PTI/ANPELA_FLOWMAP.R"))
+    try(source("./PTI/ANPELA_FLOWMAP-function.R"))
 
 
     # TIM
     if (missing(TIM)) {
       TIM <- "scorpius_distSpear"
-    } else {
-      TIM <- match.arg(TIM)
     }
-
     # Cc_metric
     if (missing(Cc_metric)) {
       Cc_metric <- "Spearman rank correlation"
@@ -492,7 +489,7 @@ Visualize <- function(
         if ("Cb_metric" %in% plot_metric) {
           heightB_plot <- ceiling(ncol(AP2_processed_D_TI$expr)/4) * 2.75
           widthB_plot <- 12
-          PTI_Cb_plot <- try(roughness_plot(result, AP2_processed_D_TI), silent = T)
+          PTI_Cb_plot <- try(roughness_plot(TIres = result, D = AP2_processed_D_TI), silent = T)
           if (any(class(PTI_Cb_plot) == "try-error")) {
             PTI_Cb_plot <- errorplot
           }

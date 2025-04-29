@@ -30,15 +30,15 @@ comp_anpela <- function(data, method, index,
 trans_anpela <- function(data, method, index,
                          arcsinha, arcsinhb, arcsinhc,
                          anna,annb, annc, annthreshold,
-                         arna, arnb, arnc, arnthreshold, 
+                         arna, arnb, arnc, arnthreshold,
                          bepa, bepb, bepc, bepd, bepf, bepw, tol, maxit,
-                         hpla, hplb, 
-                         lineara, linearb, 
-                         lntr, lntd, 
-                         logbase,logr,logd, 
+                         hpla, hplb,
+                         lineara, linearb,
+                         lntr, lntd,
+                         logbase,logr,logd,
                          lgtw, lgtt, lgtm, lgta,
                          Quadratica, Quadraticb, Quadraticc,
-                         Truncatea) { 
+                         Truncatea) {
   res <- switch (method,
                  "Arcsinh Transformation" = arcsinh_trans(frame_list = data, col_names = index,a = arcsinha, b = arcsinhb ,c = arcsinhc),
                  "Asinh with Non-negative Value" = ANN_trans(frame_list = data, col_names = index,a = anna, b = annb, c = annc, threshold = annthreshold),
@@ -517,19 +517,19 @@ biexp_trans <- function(frame_list, col_names, a = 0.5, b = 1, c = 0.5, d = 1, f
 #   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
 #   col_names1 <- sub("\\(", "", col_names1)
 #   col_names1 <- sub("\\)", "", col_names1)
-# 
+#
 #   frame_list1 <- lapply(frame_list, function(x) {
 #     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
 #     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
 #     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
 #     return(x)
 #   })
-# 
+#
 #   dataTransform <- lapply(frame_list1, function(x){
 #     x@exprs[,col_names1] <- flowClust::box(x@exprs[,col_names1], lambda = lambda)
 #     return(x)
 #   })
-# 
+#
 #   dataTransform <- lapply(dataTransform, function(x) {
 #     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
 #     return(x)
@@ -540,14 +540,14 @@ BoxCox_trans <- function(frame_list, col_names) {
   col_names1 <- stringr::str_extract(col_names, "\\(.*\\)")
   col_names1 <- sub("\\(", "", col_names1)
   col_names1 <- sub("\\)", "", col_names1)
-  
+
   frame_list1 <- lapply(frame_list, function(x) {
     colnames(x@exprs) <- stringr::str_extract(colnames(x@exprs), "\\(.*\\)")
     colnames(x@exprs) <- sub("\\(", "", colnames(x@exprs))
     colnames(x@exprs) <- sub("\\)", "", colnames(x@exprs))
     return(x)
   })
-  
+
   dataTransform_pre <- lapply(frame_list1, flowTrans::flowTrans,
                               fun = "mclMultivBoxCox", dims = col_names1,
                               n2f = F, parameters.only = F)
@@ -556,7 +556,7 @@ BoxCox_trans <- function(frame_list, col_names) {
     dataTransform[[j]]@exprs <- dataTransform_pre[[j]][["result"]]@exprs
     rownames(dataTransform[[j]]@exprs) <- rownames(frame_list[[j]]@exprs)
   }
-  
+
   dataTransform <- lapply(dataTransform, function(x) {
     colnames(x@exprs) <- colnames(frame_list[[1]]@exprs)
     return(x)

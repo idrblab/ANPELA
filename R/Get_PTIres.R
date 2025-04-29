@@ -16,10 +16,9 @@
 #' }
 
 Get_PTIres <- function(
-    respath, save_processed_res ="one_folder", workflow, savepath,
-    TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh",
-            "slingshot_tSNE","slingshot_FLOWMAP","slingshot_PCA", "slingshot_diffMaps"),
-    clustering.var = NULL,plot =c(T, F)
+    respath, save_processed_res ="one_folder", workflow, savepath = "./ANPELA_res",
+    TIM = "scorpius_distSpear",
+    clustering.var = NULL, plot =c(T, F)
 ){
   try(source("./PTI/load_data2.R"))
   try(source("./PTI/TI_method.R"))
@@ -49,8 +48,6 @@ Get_PTIres <- function(
   # TIM
   if (missing(TIM)) {
     TIM <- "scorpius_distSpear"
-  } else {
-    TIM <- match.arg(TIM)
   }
 
   for ( i in 1:length(workflow)){

@@ -1,13 +1,16 @@
 #ANPELA_MultiUpsample---------------------------------------------------
 ANPELA_MultiUpsample <- function (file.names, FLOWMAP.clusters, fcs.files, var.remove, 
-                                  var.annotate, clustering.var, transform = TRUE) 
+                                  var.annotate, clustering.var) 
 {
   fixed.FLOWMAP.clusters <- FLOWMAP.clusters
   for (t in 1:length(FLOWMAP.clusters)) {
     for (f in 1:length(FLOWMAP.clusters[[t]]$cluster.counts)) {
       original.fcs.file <- ANPELA_LoadCleanFCS(file.names[[t]][f], 
                                                channel.remove = var.remove, channel.annotate = var.annotate, 
-                                               subsamples = FALSE,transform = transform)
+                                               subsamples = FALSE,transform = transform)#new added
+      # original.fcs.file <- LoadCleanFCS(file.names[[t]][[f]], 
+      #                                   channel.remove = var.remove, channel.annotate = var.annotate, 
+      #                                   subsamples = FALSE)
       original.fcs.file <- original.fcs.file[[1]]
       original.fcs.file <- original.fcs.file[, clustering.var]
       downsample.fcs.file <- fcs.files[[t]][[f]]
@@ -39,7 +42,7 @@ ANPELA_MultiUpsample <- function (file.names, FLOWMAP.clusters, fcs.files, var.r
 }
 
 #ANPELA_MakeOutFolder---------------------------------------------------
-ANPELA_MakeOutFolder <- function (dataset_name,runtype, maximum, minimum, k = "", out_folder_basename = NA, graph.out, iter2) 
+ANPELA_MakeOutFolder <- function (dataset_name,runtype, maximum, minimum, k = "", out_folder_basename = NA) 
 {
   output <- graph.out#new added
   if (is.na(out_folder_basename)) {
@@ -47,10 +50,10 @@ ANPELA_MakeOutFolder <- function (dataset_name,runtype, maximum, minimum, k = ""
     name <- gsub(":", ".", name, fixed = TRUE)
     #new added
     if(is.null(dataset_name)){
-    	output.folder <- paste("iter2",iter2,output,"max", maximum, "_k", k, name, 
-                                runtype, "run", sep = "_")
-    } else {output.folder <- paste(dataset_name,"iter2",iter2, "max", maximum, "_k", k,
-                                   sep = "_")
+      output.folder <- paste("iter2",iter2,output,"max", maximum, "_k", k, name, 
+                             runtype, "run", sep = "_")
+    } else {output.folder <- paste(dataset_name,"iter2",iter2,output,"max", maximum, "_k", k, name, 
+                                   runtype, "run", sep = "_")
     }
     #new added-end
     # output.folder <- paste("max", maximum, "_k", k, name, 
@@ -88,6 +91,15 @@ ANPELA_RunForceDirectedLayout <- function (mode, graph, orig.times = NULL, which
   }
   # fixed.file <- ConvertToGraphML(output.graph = fixed.graph, 
   #                                file.name = fixed.file.name)
+  #获取降维坐标
+  # all.attr <- get.vertex.attribute(fixed.graph)
+  # attr.x <- all.attr$x
+  # attr.y <- all.attr$y
+  # this.df <- c()
+  # this.df <- cbind(this.df, attr.x,attr.y)
+  # this.df <- as.data.frame(this.df)
+  # colnames(this.df) <- c("flowmap_x","flowmap_y")
+  
   all.attr <- igraph::get.vertex.attribute(fixed.graph)
   this.df <- c()
   for (x in 1:length(all.attr)) {
@@ -107,22 +119,22 @@ ANPELA_RunForceDirectedLayout <- function (mode, graph, orig.times = NULL, which
 #ANPELA_ForceDirectedXY---------------------------------------------------
 ANPELA_ForceDirectedXY <- function (graph,iter2 = 1000) ##new added iter2 = 1000
 {
-  #set.seed(123)
+  set.seed(123)
   igraph::V(graph)$size <- rep(20, igraph::vcount(graph))
-  force.graph1 <- ANPELA_layout_forceatlas2(graph, iter = 10000, 
+  force.graph1 <- vite::layout_forceatlas2(graph, iter = 10000, 
                                            stopping.tolerance = 0.001, prevent.overlap = FALSE)
   graph.with.xy <- graph
   igraph::V(graph.with.xy)$x <- force.graph1$lay[, 1]
   igraph::V(graph.with.xy)$y <- force.graph1$lay[, 2]
   # set.seed(1)
-  force.graph2 <- ANPELA_layout_forceatlas2(graph.with.xy,
-                                           iter = iter2, stopping.tolerance = 0.001, prevent.overlap = TRUE)#new added
-  # for (i in 1:10) {
-  #   set.seed(i)
-  #   force.graph2 <- ANPELA_layout_forceatlas2(graph.with.xy,
-  #                                            iter = iter2, stopping.tolerance = 0.001, prevent.overlap = T)
-  #   if (!any(is.na(force.graph2$lay[, 1]))) {break}
-  # }
+  # force.graph2 <- vite::layout_forceatlas2(graph.with.xy,
+  #                                          iter = iter2, stopping.tolerance = 0.001, prevent.overlap = T)#new added
+  for (i in 1:10) {
+    set.seed(i)
+    force.graph2 <- vite::layout_forceatlas2(graph.with.xy,
+                                             iter = iter2, stopping.tolerance = 0.001, prevent.overlap = T)
+    if (!any(is.na(force.graph2$lay[, 1]))) {break}
+  }
   
   igraph::V(graph.with.xy)$x <- force.graph2$lay[, 1]
   igraph::V(graph.with.xy)$y <- force.graph2$lay[, 2]
@@ -149,7 +161,7 @@ ANPELA_MultiFolderParseTimes <- function (fcs.file.names, name.sort)
 
 #ANPELA_LoadMultiCleanFCS----------------------------------------------------
 ANPELA_LoadMultiCleanFCS <- function (list.of.file.names, channel.remove, channel.annotate, 
-                                      subsamples = 1000, transform = TRUE) 
+                                      subsamples = 1000, transform = FALSE) 
 {
   list.of.FCS.files <- list()
   subsamp.orig <- subsamples
@@ -196,7 +208,7 @@ ANPELA_LoadMultiCleanFCS <- function (list.of.file.names, channel.remove, channe
 
 #ANPELA_LoadCleanFCS---------------------------------------------------
 ANPELA_LoadCleanFCS <- function (fcs.file.names, channel.remove, channel.annotate, 
-                                 subsamples = 1000, transform = TRUE) 
+                                 subsamples = 1000, transform = FALSE) 
 {
   clean.fcs.files <- list()
   print("Subamples variable: ")
@@ -258,11 +270,10 @@ ANPELA_LoadCleanFCS <- function (fcs.file.names, channel.remove, channel.annotat
         "\n")
     fcs.file <- subset(fcs.file, select = colnames(fcs.file)[!colnames(fcs.file) %in% 
                                                                channel.remove])
-    if (transform) {
-	  cat("Transforming data from:", current.file, "\n")
-      fcs.file <- apply(fcs.file, 2, FLOWMAPR:::Asinh)
-    }
-    
+    # if (transform) {
+    #   cat("Transforming data from:", current.file, "\n")
+    #   fcs.file <- apply(fcs.file, 2, Asinh)
+    # }
     fcs.file <- as.data.frame(fcs.file)
     fcs.file <- FLOWMAPR:::RemoveExistingTimeVar(fcs.file)
     clean.fcs.files[[i]] <- fcs.file
@@ -270,35 +281,6 @@ ANPELA_LoadCleanFCS <- function (fcs.file.names, channel.remove, channel.annotat
   }
   return(clean.fcs.files)
 }
-
-#ANPELA_ConvertNumericLabel----------------------------------------------------
-ANPELA_ConvertNumericLabel <- function (list.of.clean.FCS.files.with.labels) 
-{
-  label.key <- list()
-  fixed.list.FCS.files <- list()
-  for (i in 1:length(list.of.clean.FCS.files.with.labels)) {
-    label.key[[i]] <- names(list.of.clean.FCS.files.with.labels[[i]])
-    tmp.label.fcs <- list.of.clean.FCS.files.with.labels[[i]]
-    for (n in 1:length(tmp.label.fcs)) {
-      inds <- matrix(integer(0))
-      for (l in 1:length(label.key[[i]])){
-        if (length(inds) == 0){
-          inds <- which(tmp.label.fcs[[n]] == label.key[[i]][l], 
-                        arr.ind = TRUE)
-        } else {
-          next
-        }
-      }
-      col.ind <- unname(inds[1, 2])
-      tmp.label.fcs[[n]][, col.ind] <- as.numeric(n)
-    }
-    fixed.list.FCS.files[[i]] <- tmp.label.fcs
-  }
-  names(fixed.list.FCS.files) <- names(list.of.clean.FCS.files.with.labels)
-  return(list(fixed.list.FCS.files = fixed.list.FCS.files, 
-              label.key = label.key))
-}
-
 #ANPELA_MultiClusterFCS---------------------------------------------------
 ANPELA_MultiClusterFCS <- function (list.of.files, clustering.var, numcluster, distance.metric, 
                                     cluster.mode) 
@@ -471,15 +453,8 @@ ANPELA_BuildMultiFLOWMAPkNN <- function (remodel.FLOWMAP.clusters, k, min, max, 
                                           nrow = length(unlist(knn.out$indexes[1]))))
   knn.out$distances <- as.data.frame(matrix(unlist(knn.out$distances), 
                                             nrow = length(unlist(knn.out$distances[1]))))
-  # for (i in 1:nrow(knn.out$indexes)) knn.out$indexes[i, ] <- knn.out$indexes[i, order(unlist(knn.out$distances[i, ]))]
-  # for (i in 1:nrow(knn.out$distances)) knn.out$distances[i, ] <- knn.out$distances[i, ][order(unlist(knn.out$distances[i, ]))]
-  
-  #github update
-  dist_order = t(apply(knn.out$distances, 1, order))
-  for(i in 1:nrow(knn.out$indexes)) knn.out$indexes[i,] <- knn.out$indexes[i,dist_order[i,]] #order indexes by increasing distance (necessary to incorporate second timepoint connections into overall order)
-  for(i in 1:nrow(knn.out$distances)) knn.out$distances[i,] <- knn.out$distances[i,][dist_order[i,]] #increasing order distances
-  #github update end
-  
+  for (i in 1:nrow(knn.out$indexes)) knn.out$indexes[i, ] <- knn.out$indexes[i, order(unlist(knn.out$distances[i, ]))]
+  for (i in 1:nrow(knn.out$distances)) knn.out$distances[i, ] <- knn.out$distances[i, ][order(unlist(knn.out$distances[i, ]))]
   knn.out$indexes <- as.data.frame(matrix(unlist(knn.out$indexes), 
                                           nrow = length(unlist(knn.out$indexes[1]))))
   knn.out$distances <- as.data.frame(matrix(unlist(knn.out$distances), 
@@ -495,7 +470,7 @@ ANPELA_BuildMultiFLOWMAPkNN <- function (remodel.FLOWMAP.clusters, k, min, max, 
                                                     directed = FALSE)
   igraph::E(output.graph.final)$weight <- unlist(lapply(igraph::E(output.graph)$weight, 
                                                         function(x) 1/as.numeric(x)))
-  output.graph.final <- ANPELA_AnnotateMultiGraph(output.graph, remodel.FLOWMAP.clusters, 
+  output.graph.final <- FLOWMAPR:::AnnotateMultiGraph(output.graph, remodel.FLOWMAP.clusters, 
                                                       label.key)
   output.graph.final <- igraph::simplify(output.graph.final)
   return(list(output.graph = output.graph.final, knn.out = knn.out))
@@ -570,22 +545,22 @@ ANPELA_ConnectSubgraphs <- function (output.graph, edge.list, offset, table.brea
 {
   print("in connected")
   orig.nrow.edge.list <- nrow(edge.list)
-  time.prox.graph <- igraph::graph.empty()
+  time.prox.graph <- graph.empty()
   edge.list$id_num <- edge.list$id - offset + 1
   edge.list$index_num <- edge.list$index - offset + 1
-  time.prox.graph <- igraph::graph_from_edgelist(as.matrix(cbind(edge.list$id_num, 
+  time.prox.graph <- graph_from_edgelist(as.matrix(cbind(edge.list$id_num, 
                                                          edge.list$index_num)), directed = FALSE)
-  igraph::E(time.prox.graph)$weight <- edge.list$dist
-  time.prox.graph <- igraph::set_vertex_attr(time.prox.graph, 
-                                     "name", index = igraph::V(time.prox.graph), as.character(offset:table.breaks[n + 
+  E(time.prox.graph)$weight <- edge.list$dist
+  time.prox.graph <- set_vertex_attr(time.prox.graph, #yuan set.vertex.attribute
+                                     "name", index = V(time.prox.graph), as.character(offset:table.breaks[n + 
                                                                                                             2]))
-  subgraphs.ls <- igraph::decompose(time.prox.graph)#yuan decompose.graph
+  subgraphs.ls <- decompose(time.prox.graph)#yuan decompose.graph
   y <- 0
   to.add.df <- NA
   while (length(subgraphs.ls) >= 2) {
     y <- y + 1
     print(y)
-    if (length(igraph::as_edgelist(subgraphs.ls[[2]])) != 0) {  #yuan get.edgelist
+    if (length(as_edgelist(subgraphs.ls[[2]])) != 0) {  #yuan get.edgelist
       print("in loop")
       rownames(clusters) <- c(offset:table.breaks[n + 
                                                     2])
@@ -606,18 +581,18 @@ ANPELA_ConnectSubgraphs <- function (output.graph, edge.list, offset, table.brea
           sj.graph <- subgraphs.ls[[m]]
           if (distance.metric == "manhattan") {
             print("Manhattan distance no longer supported. Using euclinean distance.")
-            inter.sub.nns <- RANN::nn2(data = clusters[igraph::V(sj.graph)$name, 
-            ], query = clusters[igraph::V(si.graph)$name, 
+            inter.sub.nns <- RANN::nn2(data = clusters[V(sj.graph)$name, 
+            ], query = clusters[V(si.graph)$name, 
             ], k = 1, searchtype = "priority", eps = 0.1)
           }
           else if (distance.metric == "euclidean") {
-            inter.sub.nns <- RANN::nn2(data = clusters[igraph::V(sj.graph)$name, 
-            ], query = clusters[igraph::V(si.graph)$name, 
+            inter.sub.nns <- RANN::nn2(data = clusters[V(sj.graph)$name, 
+            ], query = clusters[V(si.graph)$name, 
             ], k = 1, searchtype = "priority", eps = 0.1)
           }
-          temp.inter.sub.nns.df <- data.frame(id = igraph::V(si.graph)$name)
+          temp.inter.sub.nns.df <- data.frame(id = V(si.graph)$name)
           temp.inter.sub.nns.df <- cbind(temp.inter.sub.nns.df, 
-                                         as.data.frame(igraph::V(sj.graph)$name[as.numeric(inter.sub.nns$nn.idx)]), 
+                                         as.data.frame(V(sj.graph)$name[as.numeric(inter.sub.nns$nn.idx)]), 
                                          as.data.frame(inter.sub.nns$nn.dists))
           colnames(temp.inter.sub.nns.df) <- c("id", 
                                                "index", "dist")
@@ -635,17 +610,17 @@ ANPELA_ConnectSubgraphs <- function (output.graph, edge.list, offset, table.brea
       to.add.df$index_num <- to.add.df$index - offset + 
         1
       edge.list <- rbind(edge.list, to.add.df)
-      output.graph.update <- igraph::graph.empty()
-      output.graph.update <- igraph::graph_from_edgelist(as.matrix(edge.list[, 
+      output.graph.update <- graph.empty()
+      output.graph.update <- graph_from_edgelist(as.matrix(edge.list[, 
                                                                      c("id_num", "index_num")]), directed = FALSE)
-      igraph::E(output.graph.update)$weight <- edge.list$dist
-      output.graph.update <- igraph::set.vertex.attribute(output.graph.update, 
-                                                  "name", index = igraph::V(output.graph.update), as.character(offset:table.breaks[n + 
+      E(output.graph.update)$weight <- edge.list$dist
+      output.graph.update <- set.vertex.attribute(output.graph.update, 
+                                                  "name", index = V(output.graph.update), as.character(offset:table.breaks[n + 
                                                                                                                              2]))
-      subgraphs.ls <- igraph::decompose.graph(output.graph.update)
+      subgraphs.ls <- decompose.graph(output.graph.update)
       subgraphs.el.ls <- list()
       for (ind in 1:length(subgraphs.ls)) {
-        subgraphs.el.ls[[ind]] <- igraph::as_edgelist(subgraphs.ls[[ind]])
+        subgraphs.el.ls[[ind]] <- get.edgelist(subgraphs.ls[[ind]])
       }
     }
     else {
@@ -653,17 +628,17 @@ ANPELA_ConnectSubgraphs <- function (output.graph, edge.list, offset, table.brea
     }
   }
   if (any(!is.na(to.add.df))) {#yuan any
-    output.graph.update <- igraph::graph.empty()
-    og.el <- igraph::as_edgelist(output.graph)
+    output.graph.update <- graph.empty()
+    og.el <- get.edgelist(output.graph)
     colnames(og.el) <- c("id", "index")
     og.el <- rbind(og.el[, 1:2], edge.list[(orig.nrow.edge.list + 
                                               1):nrow(edge.list), c("id", "index")])
-    output.graph.update <- igraph::graph_from_edgelist(as.matrix(og.el), 
+    output.graph.update <- graph_from_edgelist(as.matrix(og.el), 
                                                directed = FALSE)
-    ogu.weights <- c(igraph::E(output.graph)$weight, edge.list[(orig.nrow.edge.list + 
+    ogu.weights <- c(E(output.graph)$weight, edge.list[(orig.nrow.edge.list + 
                                                           1):nrow(edge.list), "dist"])
-    igraph::E(output.graph.update)$weight <- ogu.weights
-    igraph::V(output.graph.update)$name <- 1:length(igraph::V(output.graph.update))
+    E(output.graph.update)$weight <- ogu.weights
+    V(output.graph.update)$name <- 1:length(V(output.graph.update))
     output.graph <- output.graph.update
   }
   edgelist.with.distances <- edge.list[, c("id", "index", 
@@ -815,143 +790,6 @@ ANPELA_RunUMAPlayout <- function (graph, knn.in, file.clusters, clustering.var, 
   # }
 }
 
-#ANPELA_layout_forceatlas2---------------------------------------------------
-Rcpp::sourceCpp("./PTI/forceatlas2.cpp") # load ANPELA_layout_forceatlas2Cpp
-ANPELA_layout_forceatlas2 <- function (G, ew.influence = 1, kgrav = 1, iter = 1000, prevent.overlap = FALSE, 
-                                       fixed = NULL, stopping.tolerance = 0.001, barnes.hut = FALSE) 
-{
-  v.count <- igraph::vcount(G)
-  if (v.count >= 2000) {
-    barnes.hut <- TRUE
-  }
-  if (v.count > 2000) {
-    stopping.tolerance <- 0.01
-  } else if (v.count > 800) {
-    stopping.tolerance <- 0.005
-  } else stopping.tolerance <- 0.001
-  
-  if (is.null(fixed)) {
-    fixed <- rep(FALSE, v.count)
-  }
-  
-  lay <- NULL
-  
-  if (is.null(igraph::get.vertex.attribute(G, "x"))) {
-    lay <- matrix(ncol = 2, nrow = v.count, data = rnorm(v.count * 
-                                                           2, 10, 2))
-    colnames(lay) <- c("x", "y")
-  } else {
-    lay <- cbind(x = igraph::V(G)$x, y = igraph::V(G)$y)
-    w <- is.na(lay[, "x"])
-    if (any(w)) 
-      lay[w, ] <- rnorm(sum(w) * 2, 10, 2)
-  }
-  if (is.null(igraph::get.vertex.attribute(G, "size"))) {
-    igraph::V(G)$size <- rep(10, v.count)
-  }
-  mass <- 1 + igraph::degree(G)
-  F_att <- (igraph::E(G)$weight^ew.influence)
-  edge_list <- igraph::as_edgelist(G, names = F) - 1
-  avg_displ <- numeric(iter)
-  max_displ <- numeric(iter)
-  if (barnes.hut) {
-    message("Using Barnes-Hut approximation\n")
-  }
-  message(sprintf("Stopping tolerance: %f\n", stopping.tolerance))
-  flush.console()
-  ANPELA_layout_forceatlas2Cpp(lay, F_att, mass, igraph::V(G)$size, edge_list, 
-                               avg_displ, kgrav, iter, prevent.overlap, fixed, max_displ, 
-                               stopping.tolerance, barnes.hut)
-  return(list(lay = lay, avg_displ = avg_displ, max_displ = max_displ))
-}
-
-#ANPELA_RemodelFLOWMAPClusterList---------------------------------------------------
-ANPELA_RemodelFLOWMAPClusterList <- function (list.of.FLOWMAP.clusters, label.key) 
-{
-  full.clusters <- data.frame()
-  table.breaks <- c()
-  table.lengths <- c()
-  cluster.medians <- list()
-  cluster.counts <- list()
-  cell.assgn <- list()
-  for (t in 1:length(list.of.FLOWMAP.clusters)) {
-    temp.medians <- data.frame()
-    temp.cell.assgn <- data.frame()
-    temp.counts <- data.frame()
-    for (c in 1:length(list.of.FLOWMAP.clusters[[t]]$cluster.medians)) {
-      temp.medians <- rbind(temp.medians, list.of.FLOWMAP.clusters[[t]]$cluster.medians[[c]])
-      temp.cell.assgn <- rbind(temp.cell.assgn, list.of.FLOWMAP.clusters[[t]]$cell.assgn[[c]])
-      temp.counts <- c(unlist(temp.counts), unlist(list.of.FLOWMAP.clusters[[t]]$cluster.counts[[c]]))
-      temp.counts <- as.data.frame(temp.counts)
-      colnames(temp.counts) <- c("Counts")
-    }
-    cluster.medians[[t]] <- temp.medians
-    rownames(temp.counts) <- 1:nrow(temp.counts)
-    cluster.counts[[t]] <- temp.counts
-    cell.assgn[[t]] <- temp.cell.assgn
-    table.lengths <- c(table.lengths, dim(temp.medians)[1])
-    table.breaks <- c(table.breaks, sum(table.lengths))
-    full.clusters <- rbind(full.clusters, temp.medians)
-  }
-  full.clusters <- ANPELA_ConvertCharacterLabel(full.clusters, label.key)
-  remodeled.FLOWMAP.clusters <- FLOWMAPR:::FLOWMAPcluster(full.clusters, 
-                                               table.breaks, table.lengths, cluster.medians, cluster.counts, 
-                                               cell.assgn)
-  return(remodeled.FLOWMAP.clusters)
-}
-
-#ANPELA_ConvertCharacterLabel---------------------------------------------------
-ANPELA_ConvertCharacterLabel <- function (data.frame.with.numeric.labels, label.key) 
-{
-  data.frame.with.character.labels <- data.frame.with.numeric.labels
-  times <- unique(data.frame.with.numeric.labels[, "Time"])
-  for (t in 1:length(times)) {
-    this.label <- label.key[[t]]
-    this.ind <- which(data.frame.with.numeric.labels[, "Time"] == 
-                        times[t])
-    for (i in 1:length(this.label)) {
-      fix.ind <- which(data.frame.with.numeric.labels[, 
-                                                      "Condition"] == i)
-      use.ind <- intersect(fix.ind, this.ind)
-      data.frame.with.character.labels[use.ind, "Condition"] <- this.label[i]
-    }
-  }
-  return(data.frame.with.character.labels)
-}
-
-#ANPELA_AnnotateMultiGraph------------------------------------------------------------
-ANPELA_AnnotateMultiGraph <- function (output.graph, list.of.FLOWMAP.clusters, label.key) 
-{
-  anno <- list()
-  times <- 1:length(list.of.FLOWMAP.clusters$cluster.medians)
-  anno$medians <- data.frame()
-  anno$count <- data.frame()
-  anno$percent.total <- data.frame()
-  for (t in times) {
-    cat("Annotating graph for file", t, "\n")
-    anno$medians <- rbind(anno$medians, list.of.FLOWMAP.clusters$cluster.medians[[t]])
-    anno$medians[, "Condition"]
-    anno$count <- rbind(anno$count, list.of.FLOWMAP.clusters$cluster.counts[[t]])
-    total.cell <- sum(list.of.FLOWMAP.clusters$cluster.counts[[t]])
-    percent.total <- data.frame(list.of.FLOWMAP.clusters$cluster.counts[[t]]/total.cell)
-    colnames(percent.total) <- "percent.total"
-    anno$percent.total <- rbind(anno$percent.total, percent.total)
-  }
-  output.anno <- cbind(anno$medians, anno$count, anno$percent.total)
-  global.output.anno.pre <<- output.anno
-  print("label.key")
-  print(label.key)
-  output.anno <- ANPELA_ConvertCharacterLabel(output.anno, label.key)
-  global.output.anno.post <<- output.anno
-  for (c in colnames(output.anno)) {
-    output.graph <- igraph::set.vertex.attribute(output.graph, c, 
-                                         index = as.numeric(1:dim(output.anno)[1]), value = output.anno[, 
-                                                                                                        c])
-  }
-  igraph::V(output.graph)$name <- 1:length(igraph::V(output.graph))
-  global.output.graph <<- output.graph
-  return(output.graph)
-}
 
 #(待改)ANPELA_ConstructVarAnnotate---------------------------------------------------
 ANPELA_ConstructVarAnnotate <- function (FCS.file.name) 
@@ -979,5 +817,3 @@ for (i in 1:length(marker.names)) {
 }
 return(var.annotate)
 }
-
-

@@ -38,8 +38,8 @@ Assess <- function(
     Phenograph_k = 30,
     DEP = NULL,
 
-    TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE","slingshot_FLOWMAP",
-            "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
+    TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh",
+            "slingshot_tSNE", "slingshot_FLOWMAP", "slingshot_PCA", "slingshot_diffMaps"),
     pathwayhierarchy = NULL,
     clustering.var = NULL,
     cores = floor(parallel::detectCores()/2),

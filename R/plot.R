@@ -150,7 +150,10 @@ abund_pt_single <- function(to_plot, prot, dat) {
 
 robustness_new_plot <- function(input_matrix, finalMatrix, method = method) {
   plist <- list()
-  time_point <- initial_order <- subset_order <- as.data.frame(matrix(nrow = nrow(finalMatrix[[1]]$pseudotime), ncol = length(finalMatrix)))
+  time_point <- initial_order <- subset_order <- try(as.data.frame(matrix(nrow = nrow(finalMatrix[[1]]$pseudotime), ncol = length(finalMatrix))))
+  if (class(initial_order) == "try-error") {
+    time_point <- initial_order <- subset_order <- as.data.frame(matrix(nrow = length(finalMatrix[[1]]$pseudotime), ncol = length(finalMatrix)))
+  }
   
     # # Compare the initial ordering with those returned by the subsets
     for (n in 1:length(finalMatrix)){
@@ -217,7 +220,11 @@ robustness_new_plot <- function(input_matrix, finalMatrix, method = method) {
 
 roughness_plot <- function(TIres, D) {
   # load the data
-  input_matrix <- cbind(D$expr, D$timepoint, TIres$pseudotime)
+  if ("FLOWMAP" %in% TIres$dr_method) {
+    input_matrix <- cbind(TIres$expr, TIres$timepoint, TIres$pseudotime[drop = FALSE])
+  } else {
+    input_matrix <- cbind(D$expr, D$timepoint, TIres$pseudotime)
+  }
   colnames(input_matrix)[(length(input_matrix)-1):length(input_matrix)] <- c("D.timepoint", "pseudot")
   
   # calculate plot parameters
@@ -304,7 +311,11 @@ roughness_plot <- function(TIres, D) {
 
 abund_pt_plot <- function(TIres, D) {
   # load the data
-  input_matrix <- cbind(D$expr, D$timepoint, TIres$pseudotime)
+  if ("FLOWMAP" %in% TIres$dr_method) {
+    input_matrix <- cbind(TIres$expr, TIres$timepoint, TIres$pseudotime[drop = FALSE])
+  } else {
+    input_matrix <- cbind(D$expr, D$timepoint, TIres$pseudotime)
+  }
   colnames(input_matrix)[(length(input_matrix)-1):length(input_matrix)] <- c("D.timepoint", "pseudot")
   
   # calculate plot parameters

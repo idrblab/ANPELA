@@ -133,7 +133,6 @@
 #' @param savepath Character, the absolute path of the folder which will store the processed results.
 #' @return The **process_res** folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter `save_processed_res`: "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder \[*default ="one_folder"*\].
 #'   <br>In addition, the file **info_saved.RData** is also generated simultaneously, recording the information related to "metadata" and "index_protein".
-
 #' @export
 #'
 #' @examples
@@ -155,7 +154,7 @@ Process <- function(
     normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None"),
     signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None"),
     workflow = NULL,
-    spillpath = NULL, spillname = NULL, FSC = "FSC-H", SSC = "SSC-H",
+    spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H",
     control.dir = NULL, control.def.file = NULL,
     single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = "nnls",
     sce_bead = NULL, marker_to_barc = NULL,
@@ -164,11 +163,11 @@ Process <- function(
     arna = 0, arnb = NULL, arnc = 0, arnthreshold = 1,
     bepa = 0.5, bepb = 1, bepc = 0.5, bepd = 1, bepf = 0, bepw = 0, tol = .Machine$double.eps^0.25, maxit = as.integer(5000),
     hpla = 1, hplb = 1,
+    lineara = 2, linearb = 0,
     lntr = 1, lntd = 1,
     logbase = 10,logr = 1,logd = 1,
     lgtw = 0.5, lgtt = 262144, lgtm = 4.5, lgta = 0,
     Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
-    lineara = 2, linearb = 0,
     Truncatea = 1,
     beads_mass = NULL,
     Segment = 200,
@@ -225,7 +224,7 @@ Process <- function(
                                normalizationM = normalizationM,
                                signalcleanM = signalcleanM,
                                workflow = workflow,
-                               spillpath = spillpath, spillname = spillname, FSC = FSC,  SSC = SSC,
+                               spillpath = spillpath, FSC = FSC,  SSC = SSC,
                                control.dir = control.dir, control.def.file = control.def.file,
                                arcsinha, arcsinhb = arcsinhb, arcsinhc,
                                anna = anna, annb = annb, annc = annc, annthreshold = annthreshold,

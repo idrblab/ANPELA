@@ -16,7 +16,6 @@
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store the assessment results.
-#'
 #' @return The **assess_res** folder stores the assessment output file named `name`**_assess.RData**, which contains 2 lists, "table" and "table2", providing the raw scores for different assessment criteria and performance assessment levels categorized by thresholds, respectively.
 #'   <br>In addition, the file **log.txt** is also generated simultaneously, recording the processing details.
 #' @export
@@ -27,8 +26,8 @@
 
 
 PTIassess <- function(name = "result", data, respath,
-                      TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE", "slingshot_FLOWMAP",
-                              "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
+                      TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh",
+                              "slingshot_tSNE", "slingshot_FLOWMAP", "slingshot_PCA", "slingshot_diffMaps"),
                       Cc_metric = c("Spearman rank correlation", "Kendall rank correlation"),
                       pathwayhierarchy = NULL,
                       save_processed_res = "one_folder",
@@ -106,6 +105,8 @@ PTIassess <- function(name = "result", data, respath,
                                 try(source("./PTI/check_pairs.R"))
 
                                 try(source("./PTI/plot.R"))
+                                try(source("./PTI/ANPELA_FLOWMAP.R"))
+                                try(source("./PTI/ANPELA_FLOWMAP-function.R"))
 
                                 # AP2_processed_D_TI
                                 index <- stringr::str_replace_all(data$index_TIclass, "\\(.*", "")
@@ -381,8 +382,8 @@ PTIassess <- function(name = "result", data, respath,
   table2["Robustness"][table2["Robustness"] > 0.5] <- 10
   table2["Robustness"][table2["Robustness"] <= 0.5] <- 4
 
-  table2["Correspondence"][table2["Correspondence"] == 1] <- 10
-  table2["Correspondence"][table2["Correspondence"] < 1] <- 4
+  table2["Correspondence"][table2["Correspondence"] > 0.6] <- 10
+  table2["Correspondence"][table2["Correspondence"] <= 0.6] <- 4
 
   assess_res <- list(table = table, table2 = table2)
   if (!dir.exists(paste0(savepath, "/assess_res"))) {

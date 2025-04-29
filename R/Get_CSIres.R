@@ -8,7 +8,6 @@
 #' @param marker_path Character, the absolute file path of the CSV or XLSX file containing the markers for cell type annotation, and detailed format requirements can be found on the website https://github.com/idrblab/ANPELA.
 #' @param color Character, the vector of color specifications used to visually distinguish different cell annotation categories within the generated t-SNE plot.
 #' @param plot Logical, the logical flag determining whether the t-SNE visualization plot based on the analysis results should be generated and saved as a PNG file.
-#'
 #' @return An RData file named "workflow_CSIres.RData", recording the CSI results. Optionally a PNG file in addition.
 #' @export
 #'
@@ -17,7 +16,7 @@
 #' }
 
 Get_CSIres <- function(
-    respath, save_processed_res ="one_folder", workflow, savepath,
+    respath, save_processed_res ="one_folder", workflow, savepath = "./ANPELA_res",
     marker_path,color =c("#F39B7FFF","#3C5488FF","#7E6148FF","#B09C85FF","#8491B4FF","#4DBBD5FF","#00A087FF",
                          "#91D1C2FF","#E64B35FF","grey80",RColorBrewer::brewer.pal(12, "Set3")),
     plot = c(T,F)){
@@ -43,7 +42,9 @@ Get_CSIres <- function(
       load(paste0(respath, "/info_saved.RData"))
     }
   }
-
+  if(!dir.exists(savepath)){
+    dir.create(savepath, recursive = TRUE)
+  }
 
   for ( i in 1:length(workflow)){
 

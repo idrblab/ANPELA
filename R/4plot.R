@@ -1,5 +1,5 @@
 library(ggplot2)
-library(patchwork)
+
 dr_tsne <- function(data = data, tsneSeed = 42) {
   data <- as.matrix(data)
   if (is.numeric(tsneSeed)) set.seed(tsneSeed)
@@ -277,7 +277,6 @@ pointdensity_plot <- function(data, x_marker, y_marker) {
 merge_multi <- function(multi_flowFrame,condition_info) {
   
   exprsL <- list()
-  label <- list()
   condition <- list()
   
   #
@@ -316,7 +315,6 @@ merge_multi <- function(multi_flowFrame,condition_info) {
   }
   
   merged_data <- do.call(rbind, exprsL)
-  merged_lable <- unlist(label)
   merged_condition <- unlist(condition)
   
   return(list(data = merged_data,

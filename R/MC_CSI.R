@@ -142,7 +142,6 @@
 #' @examples
 #' \donttest{
 #' }
-
 MC_CSI <- function(name = "result", datapath, technique = "MC",
                    mergeM = "Fixed", fixedNum = 200,
                    compensationM = c("CATALYST", "CytoSpill", "spillR", "None"),
@@ -160,11 +159,11 @@ MC_CSI <- function(name = "result", datapath, technique = "MC",
                    arna = 0, arnb = 1/5, arnc = 0, arnthreshold = 1,
                    bepa = 0.5, bepb = 1, bepc = 0.5, bepd = 1, bepf = 0, bepw = 0, tol = .Machine$double.eps^0.25, maxit = as.integer(5000),
                    hpla = 1, hplb = 1,
+                   lineara = 2, linearb = 0,
                    lntr = 1, lntd = 1,
                    logbase = 10,logr = 1,logd = 1,
                    lgtw = 0.5, lgtt = 262144, lgtm = 4.5, lgta = 0,
                    Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
-                   lineara = 2, linearb = 0,
                    Truncatea = 1,
                    beads_mass = NULL,
                    Segment = 200,

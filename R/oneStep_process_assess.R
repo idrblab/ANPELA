@@ -14,7 +14,7 @@ oneStep_process_assess <- function(
   normalizationM = c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None"),
   signalcleanM = c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None"),
   workflow = NULL,
-  spillpath = NULL, spillname = NULL, FSC = "FSC-H", SSC = "SSC-H",
+  spillpath = NULL, FSC = "FSC-H", SSC = "SSC-H",
   control.dir = NULL, control.def.file = NULL,
   single_pos_fcs = NULL, single_pos_mass = NULL, CATALYSTM = "nnls",
   sce_bead = NULL, marker_to_barc = NULL,
@@ -23,11 +23,11 @@ oneStep_process_assess <- function(
   arna = 0, arnb = NULL, arnc = 0, arnthreshold = 1,
   bepa = 0.5, bepb = 1, bepc = 0.5, bepd = 1, bepf = 0, bepw = 0, tol = .Machine$double.eps^0.25, maxit = as.integer(5000),
   hpla = 1, hplb = 1,
+  lineara = 2, linearb = 0,
   lntr = 1, lntd = 1,
   logbase = 10,logr = 1,logd = 1,
   lgtw = 0.5, lgtt = 262144, lgtm = 4.5, lgta = 0,
   Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
-  lineara = 2, linearb = 0,
   Truncatea = 1,
   beads_mass = NULL,
   Segment = 200,
@@ -47,8 +47,8 @@ oneStep_process_assess <- function(
   DEP = NULL,
   marker_path = NULL, known_celltype_path = NULL,
 
-  TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh", "slingshot_tSNE","slingshot_FLOWMAP",
-          "prinCurves_tSNE", "slingshot_PCA", "slingshot_diffMaps", "prinCurves_diffMaps"),
+  TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh",
+          "slingshot_tSNE","slingshot_FLOWMAP", "slingshot_PCA", "slingshot_diffMaps"),
   pathwayhierarchy = NULL,
   clustering.var = NULL,
 
@@ -1060,8 +1060,8 @@ oneStep_process_assess <- function(
     table2["Robustness"][table2["Robustness"] > 0.5] <- 10
     table2["Robustness"][table2["Robustness"] <= 0.5] <- 4
 
-    table2["Correspondence"][table2["Correspondence"] == 1] <- 10
-    table2["Correspondence"][table2["Correspondence"] < 1] <- 4
+    table2["Correspondence"][table2["Correspondence"] > 0.6] <- 10
+    table2["Correspondence"][table2["Correspondence"] <= 0.6] <- 4
   }
 
   assess_res <- list(table = table, table2 = table2)

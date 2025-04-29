@@ -246,21 +246,23 @@ CWfun <- function(CS_preres = CS_preres, top = 10) {
 }
 
 # 4. Biological Meaning -----------------------------------------------------------
-AP2_Recall <- function(data_with_cluster, info_saved, known_marker = NULL,marker_path = NULL, known_celltype_path = NULL) {
+AP2_Recall <- function(data_with_cluster, known_marker = NULL,marker_path = NULL, known_celltype_path = NULL) {
   if (!is.null(marker_path) && !is.null(known_celltype_path)) {
-    label <- read.csv(known_celltype_path, header = T, row.names = 1)
-    data_with_cluster$label <- label
+    label <- read.csv(known_celltype_path, header = T)
+    data_with_cluster$index <- rownames(data_with_cluster)
+    merge(data_with_cluster, label, by = "index", all.x = T, all.y = F) -> data_with_cluster
+    
 
-    data_with_cluster$anno_res_clus <- try(cell_annotation(data = data_with_cluster[,!names(data_with_cluster) %in% c("condition", "filename", "cluster", "label")], 
+    data_with_cluster$anno_res_clus <- try(cell_annotation(data = data_with_cluster[,!names(data_with_cluster) %in% c("index", "condition", "filename", "cluster", "celltype")], 
                                 marker_path = marker_path, 
-                                colsToUse = names(data_with_cluster)[1:(ncol(data_with_cluster) - 3)]))
-    if  (class(data_rd_j$anno_res_clus) == "try-error") {
+                                colsToUse = names(data_with_cluster)[2:(ncol(data_with_cluster) - 4)]))
+    if  (class(data_with_cluster$anno_res_clus) == "try-error") {
       recall <- NA
     } else {
-      data_rd_j$acc <- as.factor(ifelse((as.character(data_with_cluster$anno_res_clus) == data_with_cluster$label), 1, 0))
-      if (table(data_with_cluster$acc)["1"] <- NA){
+      data_with_cluster$acc <- as.factor(ifelse((as.character(data_with_cluster$anno_res_clus) == data_with_cluster$celltype), 1, 0))
+      if (is.na(table(data_with_cluster$acc)["1"]) == T){
         recall <- 0
-      } else if (table(data_with_cluster$acc)["0"] <- NA){
+      } else if (is.na(table(data_with_cluster$acc)["0"]) == T){
         recall <- 1
       } else {
         recall <- table(data_with_cluster$acc)["1"]/(table(data_with_cluster$acc)["1"]+table(data_with_cluster$acc)["0"])

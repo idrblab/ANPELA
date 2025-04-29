@@ -121,7 +121,6 @@
 #'   <br>To avoid memory explosion due to parallel computing, the default is the largest integers not greater than half of the number of CPU cores on the current host.
 #' @param save_processed_res Character, the format of the data processing output files. "no" denotes that the results would not be saved. "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder. "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder.
 #' @param savepath Character, the absolute path of the folder which will store files of the processed results.
-#'
 #' @return The **process_res** folder stores the results of various data processing workflows. The form of data processing output files is decided by the parameter `save_processed_res`: "one_folder" denotes that successfully processed results will be saved as separate RData files in the "process_res" folder; "one_RData" denotes that all processed results will be saved as one RData file in the "process_res" folder \[*default ="one_folder"*\].
 #'   <br>In addition, the file **info_saved.RData** is also generated simultaneously, recording the information related to "metadata" and "index_protein".
 #' @export
@@ -152,11 +151,11 @@ MCprocess <- function(name = "result",
                       arna = 0, arnb = 1/5, arnc = 0, arnthreshold = 1,
                       bepa = 0.5, bepb = 1, bepc = 0.5, bepd = 1, bepf = 0, bepw = 0, tol = .Machine$double.eps^0.25, maxit = as.integer(5000),
                       hpla = 1, hplb = 1,
+                      lineara = 2, linearb = 0,
                       lntr = 1, lntd = 1,
                       logbase = 10,logr = 1,logd = 1,
                       lgtw = 0.5, lgtt = 262144, lgtm = 4.5, lgta = 0,
                       Quadratica = 1, Quadraticb = 1, Quadraticc = 0,
-                      lineara = 2, linearb = 0,
                       Truncatea = 1,
                       beads_mass = NULL,
                       Segment = 200,
