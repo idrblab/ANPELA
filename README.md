@@ -132,7 +132,8 @@ CRAN_packages <- c("dplyr", "doParallel", "rstan", "Rtsne", "pastecs", "cowplot"
                    "ggpubr", "gridExtra", "MLmetrics", "fossil", "clusterCrit",
                    "VennDiagram","stringr", "bbmle", "mc2d", "doSNOW", "foreach",
                    "igraph","mclust", "pheatmap", "magrittr", "withr", "tree",
-                   "sampling", "ellipse", "BBmisc", "ggpointdensity", "openxlsx")
+                   "sampling", "ellipse", "BBmisc", "ggpointdensity", "openxlsx",
+                   "R.rsp")
 install.packages(CRAN_packages, dependencies = TRUE)
 ```
 
@@ -148,7 +149,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 Bioconductor_packages <- c("flowCore", "limma", "SCORPIUS", "slingshot", "destiny", 
                            "flowStats", "flowAI", "flowCut", "flowClean", "spillR",
-                           "PeacoQC", "systemPipeR", "flowTrans", "flowVS")
+                           "PeacoQC", "systemPipeR", "flowTrans", "flowVS", "BiocStyle")
 
 BiocManager::install(Bioconductor_packages, ask = FALSE)
 ```

@@ -17,7 +17,8 @@ RoxygenNote: 7.3.2
 Suggests: 
     R.rsp,
     knitr,
-    rmarkdown
+    rmarkdown,
+    BiocStyle
 VignetteBuilder: 
     R.rsp,
     knitr
