@@ -261,4 +261,7 @@ vignette("FC_CSI")
 vignette("MC_CSI")
 vignette("FC_PTI")
 vignette("MC_PTI")
+vignette("Get_CSIres")
+vignette("Get_PTIres")
+vignette("Visualize")
 ```
