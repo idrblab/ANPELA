@@ -157,7 +157,7 @@ Installed through ***Remote*** : SDMTools.
 
 ``` r
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_version("SDMTools", "1.1-221")
+remotes::install_version("SDMTools", "1.1-221.2")
 ```
 
 Installed from ***GitHub*** (can also from other repositories):
