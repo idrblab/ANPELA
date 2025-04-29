@@ -24,6 +24,7 @@ VignetteBuilder:
 News: NEWS.md
 biocViews:
 Imports: 
+    Rcpp,
     dplyr,
     doParallel,
     rstan,
@@ -75,3 +76,4 @@ Remotes:
     carlosproca/autospill,
     ParkerICI/vite,
     zunderlab/FLOWMAP
+LinkingTo: Rcpp
