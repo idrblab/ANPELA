@@ -35,9 +35,9 @@ readfcs_single <- function(fcsFile) {
   }
   col_names <- paste0(pd$desc, "(", pd$name, ")")
   colnames(exprs) <- col_names[marker_id]
-  if (!nrow(exprs) == 0) {
-    row.names(exprs) <- paste(name, 1:nrow(exprs), sep = "_")
-  }
+  # if (!nrow(exprs) == 0) {
+  #   row.names(exprs) <- paste(name, 1:nrow(exprs), sep = "_")
+  # }
   return(exprs)
 }
 

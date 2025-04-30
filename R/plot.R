@@ -13,12 +13,16 @@ dr_multi <- function(TIres, D){
       pch=16, cex = 1.2,
       asp = 1,axes = T,xlab = "reduced dimension 1", ylab = "reduced dimension 2")
   lines(slingshot::SlingshotDataSet(TIres$crv1), lwd=6, col="grey40")
-  legend("topright",
+  par(xpd = TRUE)  
+  legend(x = "topright", y = NULL, bty = "n",
          legend = levels(as.factor(timepoint)),
          col = colors,
-         inset=0.8,
-         pch = 16)
-  
+         horiz = T,
+         pch = 16,
+         cex = 1, 
+         inset = c(0, -0.05) 
+  )
+  par(xpd = FALSE) 
 }
 
 
@@ -167,6 +171,7 @@ robustness_new_plot <- function(input_matrix, finalMatrix, method = method) {
       
       
       df <- data.frame(a = initial_order[,n], b = subset_order[,n], c = time_point[,n])
+      colnames(df) <- c("a", "b", "c")
       df <- na.omit(df)
       df$a <-  (df$a - min(df$a)) / (max(df$a) - min(df$a))
       df$b <-  (df$b - min(df$b)) / (max(df$b) - min(df$b))
@@ -239,6 +244,10 @@ roughness_plot <- function(TIres, D) {
   # y_max <- max(dat)
   
   # sort the plot values in ascending pseudotime order
+  valid_idx <- !is.na(Pseudotime)
+  Pseudotime <- Pseudotime[valid_idx]
+  dat <- dat[valid_idx, ]
+  
   ix <- order(Pseudotime)
   dat0 <- dat[ix,]
   set.seed(123)
@@ -360,7 +369,7 @@ abund_pt_plot <- function(TIres, D) {
   # Pseudotime_zscore <- shift_start(exp.time = Timepoints, pseudotime = Pseudotime_zscore, ps.ordered = T, circular = T, randomize_t0 = T)
   
   # add the spline fit
-  spline.df <- calc_spline(dat, Pseudotime_zscore)
+  spline.df <- calc_spline(dat = dat, tm =Pseudotime_zscore)
   dfm <- reshape2::melt(spline.df, id.vars = 'time')
   
   cols <- c(RColorBrewer::brewer.pal(12, "Paired"), 
@@ -384,7 +393,7 @@ abund_pt_plot <- function(TIres, D) {
       geom_point(aes(color = t), alpha = 0.5, size = 0.5) +
       scale_color_manual(values = cols, name = "time") +
       ylim(y_min,y_max) + xlim(0,1) +
-      geom_line(data = subset(dfm, variable == names(dat)[j]), aes(x = time, y = value), size = 1) +
+      geom_line(data = subset(dfm, variable == make.names(names(dat))[j]), aes(x = time, y = value), size = 1) +
       ggtitle(colnames(dat)[j]) +
       theme_bw() +
       theme(axis.title.x = element_blank(),

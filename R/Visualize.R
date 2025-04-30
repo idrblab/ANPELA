@@ -134,6 +134,7 @@ Visualize <- function(
 
     for ( w in 1:length(workflow)){
       dataset_name <- workflow[w]
+      print(paste0("The visualization of data processed by workflow '", dataset_name, "' begins."))
       if (save_processed_res == "one_folder"){
         load(grep(dataset_name, datapath, value = T))
       } else if (save_processed_res == "one_RData") {
@@ -247,6 +248,7 @@ Visualize <- function(
           }
         }
         dev.off()
+        print("The plot illustrating the CSI Ca metric is stored in the 'savpath' folder")
         rm(resAUC, case_problist, CSI_Ca_plot)
       }
 
@@ -261,6 +263,7 @@ Visualize <- function(
                        width = 10, height = 15, res=300, units ="in")
         print(CSI_Cb_plot)
         dev.off()
+        print("The plot illustrating the CSI Cb metric is stored in the 'savpath' folder")
         rm(CSI_Cb_plot)
       }
 
@@ -331,6 +334,7 @@ Visualize <- function(
                        units = "in")
         print(combined_plot)
         dev.off()
+        print("The plot illustrating the CSI Cc metric is stored in the 'savpath' folder")
         rm(volcanodata, CSI_Cc_plot_Volcano, combined_plot)
       }
 
@@ -354,12 +358,14 @@ Visualize <- function(
                            width = widthE_plot, height = 7, res=300, units ="in")
             print(CSI_Cd_plot)
             dev.off()
+            print("The plot illustrating the CSI Cd metric is stored in the 'savpath' folder")
             rm(CSI_Cd_plot)
           }
         }
       }
       rm(data_with_cluster, test_KNN)
       gc()
+      print(paste0("The visualization of data processed through workflow: ", dataset_name, " is finished"))
     }
     ###########PTI Visualize#####################
   } else if (studytype == "PTI") {
@@ -397,6 +403,7 @@ Visualize <- function(
 
     for (w in 1:length(workflow)){
       dataset_name <- workflow[w]
+      print(paste0("The visualization of data processed by workflow '", dataset_name, "' begins."))
 
       #load data
       if (save_processed_res == "one_folder"){
@@ -439,6 +446,7 @@ Visualize <- function(
           print(errorplot)
         }
         dev.off()
+
         rm(PTI_Ca_Plot_time)
       }
       #abunf_pt
@@ -462,9 +470,10 @@ Visualize <- function(
           PTI_Ca_Plot_prot <- list()
           combined_plot <- NULL
           for (i in 1:length(index)) {
-            PTI_Ca_Plot_prot[[i]] <- try(abund_pt_single(bio_meaning$to_plot, index[i], bio_meaning$dat), silent = T)
+            PTI_Ca_Plot_prot[[i]] <- try(abund_pt_single(to_plot = bio_meaning$to_plot, prot = index[i], dat = bio_meaning$dat), silent = T)
             if (any(class(PTI_Ca_Plot_prot[[i]]) == "try-error")) {
               PTI_Ca_Plot_prot[[i]] <- errorplot
+              print(i)
             }
             if (is.null(combined_plot)) {
               combined_plot <- PTI_Ca_Plot_prot[[i]]
@@ -482,12 +491,13 @@ Visualize <- function(
                          bg = "white",width = widthA2_plot*2, height = heightA2_plot*num_rows, res=300, units ="in")
           print(combined_plot)
           dev.off()
+          print(paste0("The plot illustrating the PTI Ca metric of trajectory",traj_idx, " is stored in the 'savpath' folder"))
           rm(PTI_Ca_Plot_prot, combined_plot)
         }
 
         # PTI_Cb_plot #####
         if ("Cb_metric" %in% plot_metric) {
-          heightB_plot <- ceiling(ncol(AP2_processed_D_TI$expr)/4) * 2.75
+          heightB_plot <- ceiling(length(index)/4) * 2.75
           widthB_plot <- 12
           PTI_Cb_plot <- try(roughness_plot(TIres = result, D = AP2_processed_D_TI), silent = T)
           if (any(class(PTI_Cb_plot) == "try-error")) {
@@ -497,6 +507,7 @@ Visualize <- function(
                          bg = "white",width = widthB_plot, height = heightB_plot, res=300, units ="in")
           print(PTI_Cb_plot)
           dev.off()
+          print(paste0("The plot illustrating the PTI Cb metric of trajectory",traj_idx, " is stored in the 'savpath' folder"))
           rm(PTI_Cb_Plot)
         }
 
@@ -505,8 +516,8 @@ Visualize <- function(
           Rob <- try(Robustness(TIres = result, D = AP2_processed_D_TI, nruns = 4, cell.subset = 0.8,
                                 clustering.var = clustering.var, dataset_name =dataset_name), silent = T)
 
-          PTI_Cc_plot <- try(robustness_new_plot(input_matrix = Rob$input_matrix,
-                                                 finalMatrix = Rob$finalMatrix, method =Cc_metric), silent = T)
+          PTI_Cc_plot <- BBmisc::suppressAll(try(robustness_new_plot(input_matrix = Rob$input_matrix,
+                                                                     finalMatrix = Rob$finalMatrix, method =Cc_metric), silent = T))
           if (any(class(PTI_Cc_plot) == "try-error")) {
             PTI_Cc_plot <- errorplot
           }
@@ -515,13 +526,14 @@ Visualize <- function(
                          bg = "white",width = 10, height = 10, res=300, units ="in")
           print(PTI_Cc_plot)
           dev.off()
+          print(paste0("The plot illustrating the PTI Cc metric of trajectory",traj_idx, " is stored in the 'savpath' folder"))
           rm(PTI_Cc_plot,Rob)
         }
 
         # PTI_Cd_plot ####
         if ("Cd_metric" %in% plot_metric) {
           if (!is.null(pathwayhierarchy) && file.exists(pathwayhierarchy)) {
-            heightD1_plot <- ceiling(ncol(AP2_processed_D_TI$expr)/4) * 2.75
+            heightD1_plot <- ceiling(length(index)/4) * 2.75
 
             PTI_Cd_plot <- try(bio_meaning$p3, silent = T)
             if (any(class(PTI_Cd_plot) == "try-error")) {
@@ -532,7 +544,10 @@ Visualize <- function(
                            bg = "white",width = 12, height = heightD1_plot, res=300, units ="in")
             print(PTI_Cd_plot)
             dev.off()
+            print(paste0("The plot illustrating the PTI Cd metric of trajectory",traj_idx, " is stored in the 'savpath' folder"))
             rm(PTI_Cd_plot)
+          } else {
+            print("Please input the filepath of the csv file for parameter 'pathwayhierarchy'.")
           }
         }
         rm(bio_meaning)
@@ -540,6 +555,7 @@ Visualize <- function(
 
       rm(AP2_processed_D_TI, TIres)
       gc()
+      print(paste0("The visualization of data processed through workflow: ", dataset_name, " is finished"))
     }
   }
 }

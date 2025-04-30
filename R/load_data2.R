@@ -16,9 +16,9 @@ load.Data <- function(files.paths, index, measurement.time, measurement.conditio
   
   # make a flowSet with only the abundances of the markers of choice. (optional: arcsinh transform)
   data <- flowCore::fsApply(data.raw, function(x, cofactor=5){
-    colnames(x) <- make.names(data.info$desc)
+    colnames(x) <- data.info$desc
     # colnames(x) <- paste0(data.info$desc, "(", data.info$name, ")")
-    index <- make.names(index)
+    # index <- make.names(index)
     expr <- flowCore::exprs(x)
     expr <- expr[, index]
     flowCore::exprs(x) <- expr

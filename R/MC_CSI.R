@@ -142,6 +142,7 @@
 #' @examples
 #' \donttest{
 #' }
+
 MC_CSI <- function(name = "result", datapath, technique = "MC",
                    mergeM = "Fixed", fixedNum = 200,
                    compensationM = c("CATALYST", "CytoSpill", "spillR", "None"),

@@ -310,7 +310,7 @@ merge_multi <- function(multi_flowFrame,condition_info) {
     }
     col_names <- paste0(pd$desc, "(", pd$name, ")")
     colnames(exprs) <- col_names[marker_id]
-    row.names(exprs) <- paste(name, 1:nrow(exprs), sep = "_")
+    #row.names(exprs) <- paste(name, 1:nrow(exprs), sep = "_")
     exprsL[[i]] <- exprs
   }
   

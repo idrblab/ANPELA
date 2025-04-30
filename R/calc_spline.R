@@ -6,7 +6,7 @@ calc_spline <- function(dat,tm){
   if (length(which(knts == 0))>1 | length(which(knts == 1))>1 ) {
     knts <-  knts[-c(1:(length(which(knts == 0))-1) , (length(knts)-length(which(knts==1))+1) :(length(knts)-1))] 
   }
-  
+  names(dat) <- make.names(names(dat))
   # build the model
   fit1 <- lm(formula(paste("cbind(",paste(names(dat), collapse = ","),") ~ splines::ns(tm, knots = knts)")), data = dat, drop=TRUE)
   

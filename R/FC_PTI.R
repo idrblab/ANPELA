@@ -140,6 +140,7 @@
 #' \donttest{
 #' }
 
+
 FC_PTI <- function(name = "result", datapath, technique = "FC",
                    mergeM = "Fixed", fixedNum = 200,
                    compensationM = c("AutoSpill", "FlowCore", "MetaCyto", "None"),

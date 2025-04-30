@@ -101,7 +101,7 @@ run_slingshot <- function(D, drMethod = c("tSNE", "PCA", "diffMaps","FLOWMAP"),
   #cl1 <- kmeans(data_drMethod, centers = 9)$cluster
   set.seed(1)
   library(mclust, quietly = TRUE)
-  cl1 <- mclust::Mclust(data_drMethod)$classification
+  BBmisc::suppressAll(cl1 <- mclust::Mclust(data_drMethod)$classification)
   #cl1 <- FlowSOM_integrate2cytofkit2(data_drMethod, 14)
 
   #判断起点

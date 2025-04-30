@@ -42,10 +42,6 @@
 #' @examples
 #' \donttest{
 #' }
-
-
-
-
 CSIassess <- function(name = "result", data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
@@ -402,7 +398,7 @@ CSIassess <- function(name = "result", data, respath,
     # parallel end
   } else if (save_processed_res == "one_folder") {
     # parallel start
-    opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))
+    opts <- list(progress = function(n) setTxtProgressBar(txtProgressBar(min = 1, max = length(datapath), style = 3), n))#
     cl <- parallel::makeCluster(cores, type = "SOCK", outfile = paste0(savepath,"/CSIassess_log.txt"))
     doSNOW::registerDoSNOW(cl)
     time = proc.time()
