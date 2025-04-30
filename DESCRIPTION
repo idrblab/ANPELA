@@ -77,4 +77,4 @@ Remotes:
     ParkerICI/vite,
     zunderlab/FLOWMAP
 LinkingTo:
-    Rcpp, list, vector
+    Rcpp
