@@ -76,4 +76,5 @@ Remotes:
     carlosproca/autospill,
     ParkerICI/vite,
     zunderlab/FLOWMAP
-LinkingTo: Rcpp
+LinkingTo:
+    Rcpp, list, vector
