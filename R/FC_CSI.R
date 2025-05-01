@@ -175,6 +175,7 @@ FC_CSI <- function(name = "result", datapath, technique = "FC",
                    clusteringM = "FlowSOM",
                    ncluster = 8,
                    Phenograph_k = 30,
+                   marker_path = NULL, known_celltype_path = NULL,
 
                    cores = parallel::detectCores()/2,
                    save_processed_res = "one_folder",
@@ -213,6 +214,7 @@ FC_CSI <- function(name = "result", datapath, technique = "FC",
                                cores = cores)
     FCprocess_assess_res <- CSIassess(name = name, data = FCprocess_res, clusteringM = clusteringM,
                                       Phenograph_k = Phenograph_k, ncluster = ncluster, DEP = DEP,
+                                      marker_path = marker_path, known_celltype_path = known_celltype_path,
                                       save_processed_res = save_processed_res, savepath = savepath,
                                       cores = cores)
   } else if (save_processed_res == "one_folder") {
@@ -246,6 +248,7 @@ FC_CSI <- function(name = "result", datapath, technique = "FC",
 
       clusteringM = clusteringM, Phenograph_k = Phenograph_k,
       ncluster = ncluster, DEP = DEP,
+      marker_path = marker_path, known_celltype_path = known_celltype_path,
 
       cores = cores,
       save_processed_res = save_processed_res,

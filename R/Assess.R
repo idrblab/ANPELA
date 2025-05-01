@@ -37,11 +37,13 @@ Assess <- function(
     ncluster = 8,
     Phenograph_k = 30,
     DEP = NULL,
+    marker_path = NULL, known_celltype_path = NULL,
 
     TIM = c("scorpius_distSpear", "scorpius_distPear","scorpius_distEucl", "scorpius_distManh",
             "slingshot_tSNE", "slingshot_FLOWMAP", "slingshot_PCA", "slingshot_diffMaps"),
     pathwayhierarchy = NULL,
     clustering.var = NULL,
+
     cores = floor(parallel::detectCores()/2),
     save_processed_res = "one_folder",
     savepath = "./ANPELA_res"
@@ -50,6 +52,7 @@ Assess <- function(
     assess_res <- CSIassess(name = name, data = data, respath = respath, clusteringM = clusteringM,
                             Phenograph_k = Phenograph_k, ncluster = ncluster,
                             DEP = DEP, cores = cores,
+                            marker_path = marker_path, known_celltype_path = known_celltype_path,
                             save_processed_res = save_processed_res, savepath = savepath)
 
 
