@@ -35,7 +35,8 @@ Visualize <- function(
     clustering.var = NULL, pathwayhierarchy = NULL,
     Cc_metric = "Spearman rank correlation"
 ){
-
+  library(ggplot2)
+  library(igraph)
   #load data&metadata
   datapath <- list.files(paste0(respath, "/process_res/"), pattern = "\\.RData$", full.names = T)
   if (length(datapath)==0){
@@ -80,10 +81,10 @@ Visualize <- function(
                    panel.border = ggplot2::element_blank())
   ################CSI Visualize#####################
   if (studytype == "CSI") {
-    try(source("./CSI/1readfcs.R"))
-    try(source("./CSI/2cluster.R"))
-    try(source("./CSI/3criteria.R"))
-    try(source("./CSI/4plot.R"))
+    try(source("./CSI/1readfcs.R"), silent = T)
+    try(source("./CSI/2cluster.R"), silent = T)
+    try(source("./CSI/3criteria.R"), silent = T)
+    try(source("./CSI/4plot.R"), silent = T)
     #arg_check
     # clusteringM
     if (missing(clusteringM)) {
@@ -369,23 +370,23 @@ Visualize <- function(
     }
     ###########PTI Visualize#####################
   } else if (studytype == "PTI") {
-    try(source("./PTI/load_data2.R"))
-    try(source("./PTI/TI_method.R"))
+    try(source("./PTI/load_data2.R"), silent = T)
+    try(source("./PTI/TI_method.R"), silent = T)
 
-    try(source("./PTI/Bio_con_4.R"))
-    try(source("./PTI/time_metric_3.R"))
-    try(source("./PTI/Robustness_4.R"))
-    try(source("./PTI/Rough_3.R"))
+    try(source("./PTI/Bio_con_4.R"), silent = T)
+    try(source("./PTI/time_metric_3.R"), silent = T)
+    try(source("./PTI/Robustness_4.R"), silent = T)
+    try(source("./PTI/Rough_3.R"), silent = T)
 
-    try(source("./PTI/shift_start.R"))
-    try(source("./PTI/calc_spline.R"))
-    try(source("./PTI/cycle_pseudotime.R"))
-    try(source("./PTI/reverse_pseudotime.R"))
-    try(source("./PTI/check_pairs.R"))
+    try(source("./PTI/shift_start.R"), silent = T)
+    try(source("./PTI/calc_spline.R"), silent = T)
+    try(source("./PTI/cycle_pseudotime.R"), silent = T)
+    try(source("./PTI/reverse_pseudotime.R"), silent = T)
+    try(source("./PTI/check_pairs.R"), silent = T)
 
-    try(source("./PTI/plot.R"))
-    try(source("./PTI/ANPELA_FLOWMAP.R"))
-    try(source("./PTI/ANPELA_FLOWMAP-function.R"))
+    try(source("./PTI/plot.R"), silent = T)
+    try(source("./PTI/ANPELA_FLOWMAP.R"), silent = T)
+    try(source("./PTI/ANPELA_FLOWMAP-function.R"), silent = T)
 
 
     # TIM

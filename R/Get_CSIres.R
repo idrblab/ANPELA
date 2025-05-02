@@ -22,8 +22,8 @@ Get_CSIres <- function(
     plot = c(T,F)){
 
   #try(source("./CSI/1readfcs.R"))
-  try(source("./CSI/4plot.R"))
-
+  try(source("./CSI/4plot.R"), silent = T)
+  library(ggplot2)
   CSIres_list <- list()
 
   #load data

@@ -20,11 +20,13 @@ Get_PTIres <- function(
     TIM = "scorpius_distSpear",
     clustering.var = NULL, plot =c(T, F)
 ){
-  try(source("./PTI/load_data2.R"))
-  try(source("./PTI/TI_method.R"))
-  try(source("./PTI/ANPELA_FLOWMAP.R"))
-  try(source("./PTI/ANPELA_FLOWMAP-function.R"))
-  try(source("./PTI/plot.R"))
+  try(source("./PTI/load_data2.R"), silent = T)
+  try(source("./PTI/TI_method.R"), silent = T)
+  try(source("./PTI/ANPELA_FLOWMAP.R"), silent = T)
+  try(source("./PTI/ANPELA_FLOWMAP-function.R"), silent = T)
+  try(source("./PTI/plot.R"), silent = T)
+  library(ggplot2)
+  library(igraph)
 
   PTIres_list <- list()
 
@@ -48,6 +50,10 @@ Get_PTIres <- function(
   # TIM
   if (missing(TIM)) {
     TIM <- "scorpius_distSpear"
+  }
+
+  if(!dir.exists(savepath)){
+    dir.create(savepath, recursive = TRUE)
   }
 
   for ( i in 1:length(workflow)){
@@ -117,7 +123,7 @@ Get_PTIres <- function(
         } else {
           timepoint <- AP2_processed_D_TI$timepoint
         }
-        colors <- colorRampPalette(c("#eef4ed","#97c8c5","#4661a5","#183f7f"))(length(unique(timepoint)))
+        colors <- grDevices::colorRampPalette(c("#eef4ed","#97c8c5","#4661a5","#183f7f"))(length(unique(timepoint)))
         grDevices::png(paste0(savepath, "/", dataset_name,"_PTI.png"),bg = "white",width = 10, height = 10,res=300, units ="in")
         plot(TIres[["dimRed"]], col = colors[as.factor(timepoint)],
              pch=16, cex = 1.5,#点的形状和大小
@@ -136,4 +142,3 @@ Get_PTIres <- function(
     }
   }
 }
-

@@ -179,6 +179,87 @@ Process <- function(
     cores = floor(parallel::detectCores()/2)
 ){
   metadata <- paste0(datapath, "/metadata.csv")
+  # compensationM
+  if (missing(compensationM)) {
+    if (technique == "MC") {
+      compensationM <- c("CATALYST", "CytoSpill", "spillR", "None")
+    } else if (technique == "FC") {
+      compensationM <- c("AutoSpill", "FlowCore", "MetaCyto", "None")
+    }
+  } else {
+    compensationM <- match.arg(compensationM, several.ok = TRUE)
+  }
+
+
+  # transformationM
+  if (missing(transformationM)) {
+    transformationM <- c("Arcsinh Transformation", "Asinh with Non-negative Value", "Asinh with Randomized Negative Value",
+                         "Biexponential Transformation", "Box-Cox Transformation", "FlowVS Transformation", "Hyperlog Transformation", "Linear Transformation",
+                         "Ln Transformation", "Log Transformation", "Logicle Transformation", "Quadratic Transformation", "Split Scale Transformation", "Truncate Transformation",
+                         "Centered Log Ratio Transformation", "None")
+  } else {
+    transformationM <- match.arg(transformationM, several.ok = TRUE)
+  }
+
+
+  # normalizationM
+  if (missing(normalizationM)) {
+    if (technique == "MC") {
+      normalizationM <- c("Bead-based Normalization", "GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None")
+    } else if (technique == "FC") {
+      normalizationM <- c("GaussNorm", "WarpSet", "ZScore", "Mean Normalization", "Min-max Normalization", "None")
+    }
+  } else {
+    normalizationM <- match.arg(normalizationM, several.ok = TRUE)
+  }
+
+
+  # signalcleanM
+  if (missing(signalcleanM)) {
+    if (technique == "MC") {
+      signalcleanM <- c("FlowAI", "FlowCut", "PeacoQC", "None")
+    } else if (technique == "FC") {
+      signalcleanM <- c("FlowAI", "FlowClean", "FlowCut", "PeacoQC", "None")
+    }
+  } else {
+    signalcleanM <- match.arg(signalcleanM, several.ok = TRUE)
+  }
+
+  # arcsinhb
+  if (is.null(arcsinhb)) {
+    if (technique == "MC") {
+      arcsinhb <- 1/5
+    } else if (technique == "FC") {
+      arcsinhb <- 1/150
+    }
+  } else if (arcsinhb == 0) {
+    stop("The value of arcsinhb cannot be 0.")
+  }
+
+
+  # annb
+  if (is.null(annb)) {
+    if (technique == "MC") {
+      annb <- 1/5
+    } else if (technique == "FC") {
+      annb <- 1/150
+    }
+  } else if (annb == 0) {
+    stop("The value of annb cannot be 0.")
+  }
+
+
+  # arnb
+  if (is.null(arnb)) {
+    if (technique == "MC") {
+      arnb <- 1/5
+    } else if (technique == "FC") {
+      arnb <- 1/150
+    }
+  } else if (arnb == 0) {
+    stop("The value of arnb cannot be 0.")
+  }
+
   if (technique == "MC"){
     MCprocess_res <- MCprocess(name = name,
                                datapath = datapath,
