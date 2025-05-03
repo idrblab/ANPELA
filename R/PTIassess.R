@@ -351,41 +351,40 @@ PTIassess <- function(name = "result", data, respath,
                                 res <- data.frame(Tm, R_pvalue, Rob, BC)
                                 rownames(res) <- limma::removeExt(basename(datapath), sep=".")[i]
 
+                                return(res)
                               }
-    return(res)
+
+    # # 关闭 sink（每个 worker 退出时关闭）
+    # parallel::clusterEvalQ(cl, {
+    #   try(sink(), silent = TRUE)
+    #   try(sink(type = "message"), silent = TRUE)
+    #   NULL
+    # })
+    #
+    #
+    parallel::stopCluster(cl)
+    print(proc.time()-time)
+    # parallel end
   }
 
-  # # 关闭 sink（每个 worker 退出时关闭）
-  # parallel::clusterEvalQ(cl, {
-  #   try(sink(), silent = TRUE)
-  #   try(sink(type = "message"), silent = TRUE)
-  #   NULL
-  # })
-  #
-  #
-  parallel::stopCluster(cl)
-  print(proc.time()-time)
-  # parallel end
-}
+  colnames(table) <- c("Conformance", "Smoothness", "Robustness", "Correspondence")
+  table2 <- table
+  table2["Conformance"][table2["Conformance"] > 0.6] <- 10
+  table2["Conformance"][table2["Conformance"] <= 0.6] <- 4
 
-colnames(table) <- c("Conformance", "Smoothness", "Robustness", "Correspondence")
-table2 <- table
-table2["Conformance"][table2["Conformance"] > 0.6] <- 10
-table2["Conformance"][table2["Conformance"] <= 0.6] <- 4
+  table2["Smoothness"][table2["Smoothness"] > 0.8] <- 10
+  table2["Smoothness"][table2["Smoothness"] <= 0.8] <- 4
 
-table2["Smoothness"][table2["Smoothness"] > 0.8] <- 10
-table2["Smoothness"][table2["Smoothness"] <= 0.8] <- 4
+  table2["Robustness"][table2["Robustness"] > 0.5] <- 10
+  table2["Robustness"][table2["Robustness"] <= 0.5] <- 4
 
-table2["Robustness"][table2["Robustness"] > 0.5] <- 10
-table2["Robustness"][table2["Robustness"] <= 0.5] <- 4
+  table2["Correspondence"][table2["Correspondence"] > 0.6] <- 10
+  table2["Correspondence"][table2["Correspondence"] <= 0.6] <- 4
 
-table2["Correspondence"][table2["Correspondence"] > 0.6] <- 10
-table2["Correspondence"][table2["Correspondence"] <= 0.6] <- 4
-
-assess_res <- list(table = table, table2 = table2)
-if (!dir.exists(paste0(savepath, "/assess_res"))) {
-  dir.create(paste0(savepath, "/assess_res"), recursive = T)
-}
-save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
-return(assess_res)
+  assess_res <- list(table = table, table2 = table2)
+  if (!dir.exists(paste0(savepath, "/assess_res"))) {
+    dir.create(paste0(savepath, "/assess_res"), recursive = T)
+  }
+  save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
+  return(assess_res)
 }
