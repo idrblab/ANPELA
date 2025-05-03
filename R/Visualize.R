@@ -25,7 +25,7 @@
 
 Visualize <- function(
     studytype = c("CSI","PTI"),
-    respath,  save_processed_res ="one_folder", workflow, savepath = "./ANPELA_res", studyname = NULL,
+    respath,  save_processed_res ="one_folder", workflow, savepath = "./ANPELA_res", studyname = "result",
     plot_metric = c("Ca_metric","Cb_metric","Cc_metric","Cd_metric"),
     #CSI
     clusteringM = c("FlowSOM"), ncluster = 8,
@@ -37,6 +37,7 @@ Visualize <- function(
 ){
   library(ggplot2)
   library(igraph)
+  library(patchwork)
   #load data&metadata
   datapath <- list.files(paste0(respath, "/process_res/"), pattern = "\\.RData$", full.names = T)
   if (length(datapath)==0){
@@ -560,4 +561,3 @@ Visualize <- function(
     }
   }
 }
-

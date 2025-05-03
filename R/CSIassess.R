@@ -42,6 +42,7 @@
 #' @examples
 #' \donttest{
 #' }
+
 CSIassess <- function(name = "result", data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
@@ -366,7 +367,7 @@ CSIassess <- function(name = "result", data, respath,
 
 
                                 # Criterion D Biological Meaning
-                                if ((is.null(marker_path)||is.null(known_celltype_path))& DEP == "" || is.null(DEP)) {
+                                if ((is.null(marker_path)||is.null(known_celltype_path))& (DEP == "" || is.null(DEP))) {
                                   Cd <- NA
                                 } else if (!is.null(marker_path) && !is.null(known_celltype_path)) {
                                   CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster,
@@ -598,7 +599,7 @@ CSIassess <- function(name = "result", data, respath,
 
 
                                 # Criterion D Biological Meaning
-                                if ((is.null(marker_path)||is.null(known_celltype_path))& DEP == "" || is.null(DEP)) {
+                                if ((is.null(marker_path)||is.null(known_celltype_path))& (DEP == "" || is.null(DEP))) {
                                   Cd <- NA
                                 } else if (!is.null(marker_path) && !is.null(known_celltype_path)) {
                                   CRecall <- try(round(AP2_Recall(data_with_cluster = data_with_cluster,
