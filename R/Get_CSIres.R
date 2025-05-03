@@ -21,7 +21,6 @@ Get_CSIres <- function(
                          "#91D1C2FF","#E64B35FF","grey80",RColorBrewer::brewer.pal(12, "Set3")),
     plot = c(T,F)){
 
-  #try(source("./CSI/1readfcs.R"))
   try(source("./CSI/4plot.R"), silent = T)
   library(ggplot2)
   CSIres_list <- list()
@@ -68,11 +67,11 @@ Get_CSIres <- function(
                              condition_info = condition_info)
     data_j <- try(as.data.frame(merge_res$data, silent = T))
     condition <- merge_res$condition
-    data_rd_j <- data_j[,colsToUse] # 仅使用 MCquan_res$index_TIclass 中的列
+    data_rd_j <- data_j[,colsToUse]
     data_rd_j$condition <- condition
     rm(merge_res,res)
 
-    set.seed(123) # t-SNE降维的随机种子
+    set.seed(123)
     tsne_result <- BBmisc::suppressAll(Rtsne::Rtsne(data_rd_j[,!names(data_rd_j) %in% c("condition")],
                                                     perplexity = 40, dims = 2, verbose = TRUE,
                                                     max_iter = 1000, check_duplicates = F, num_threads= 0)) #10
@@ -98,20 +97,18 @@ Get_CSIres <- function(
         theme(
           legend.position = "right",
           panel.background = element_blank(),
-          plot.background = element_blank(),  # 设置背景为透明
-          panel.grid.major = element_blank(),  # 删除主网格线
-          panel.grid.minor = element_blank(),  # 删除次要网格线
-          axis.text = element_blank(),         # 删除坐标轴的文字
-          axis.ticks = element_blank(),        # 删除坐标轴的刻度线
-          axis.line = element_blank(),         # 删除坐标轴的线条
-          panel.border = element_blank(),       # 删除边框
-          axis.title = element_blank()         # 删除坐标轴的标题
+          plot.background = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          axis.line = element_blank(),
+          panel.border = element_blank(),
+          axis.title = element_blank()
         )
 
       ggsave(paste0(savepath, "/", dataset_name,"_CSI.png"), p, width = 10, height = 10, dpi = 300, bg="transparent")
     }
   }
 }
-
-
 

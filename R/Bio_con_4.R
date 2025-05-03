@@ -8,15 +8,10 @@ Bio_con <- function(D, Pathway_Hierarchy_file = NULL, nruns = 3, dr_method = NUL
     } else {
       Lineage_info$condition<- D[["condition"]]
     }
-    
 
-
-    #计算不同lineage下的condition分布
     Lineage_condition <- as.table(matrix(nrow = ncol(Lineage_info)-1, ncol = length(unique(Lineage_info$condition))))
     dimnames(Lineage_condition) <- list(Lineage = colnames(Lineage_info)[1:(ncol(Lineage_info)-1)], 
                                         condition = unique(Lineage_info$condition))
-    # colnames(Lineage_condition) <- unique(Lineage_info$condition)
-    # rownames(Lineage_condition) <- colnames(Lineage_info)[1:(ncol(Lineage_info)-1)]
     for (i in 1:(ncol(Lineage_info)-1)){
       condition_table<- table(Lineage_info[!is.na(Lineage_info[,i]),ncol(Lineage_info)])
       for(j in 1:(ncol(Lineage_condition))){
@@ -29,21 +24,7 @@ Bio_con <- function(D, Pathway_Hierarchy_file = NULL, nruns = 3, dr_method = NUL
       
     }
     p.value.l <- chisq.test(Lineage_condition,rescale.p =T)[["p.value"]]
-   
-    #  #计算不同condition下的lineage分布
-    # Condition_Lineage <- as.table(matrix(nrow = length(unique(Lineage_info$condition)), ncol = ncol(Lineage_info)-1))
-    # dimnames(Condition_Lineage) <- list(condition = unique(Lineage_info$condition), 
-    #                                     Lineage = colnames(Lineage_info)[1:(ncol(Lineage_info)-1)])
-    # 
-    # 
-    # # colnames(Condition_Lineage) <- colnames(Lineage_info)[1:(ncol(Lineage_info)-1)]
-    # # rownames(Condition_Lineage) <- unique(Lineage_info$condition)
-    # for (i in 1:length(unique(Lineage_info$condition))){
-    #   for (j in 1:(ncol(Lineage_info)-1)){
-    #     Condition_Lineage[unique(Lineage_info$condition)[i],j] <- sum(!is.na(Lineage_info[Lineage_info$condition == unique(Lineage_info$condition)[i],j]))
-    #   }
-    # }
-    # p.value.c <- chisq.test(Condition_Lineage)[["p.value"]]
+  
     if (p.value.l <= 1e-80){
       return(1)
     } else {

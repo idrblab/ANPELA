@@ -434,7 +434,7 @@ oneStep_process_assess <- function(
   common_protein1 <- gsub(".*\\(", "", common_protein)
   common_protein1 <- gsub("\\)", "", common_protein1)
 
-  # class/TI down sample frame list
+  # CSI/PTI down sample frame list
   AP2_pro0_frame <- lapply(1:length(AP2_frame_classTI), function(i, AP2_frame_classTI, AP2_downsample_expr_classTI) {
     res <- AP2_frame_classTI[[i]]
     res@exprs <- AP2_downsample_expr_classTI$down_exprsL[[i]]
@@ -567,36 +567,11 @@ oneStep_process_assess <- function(
 
   table <- foreach::foreach(i = 1:nrow(workflow), .options.snow = opts,
                             .packages = c("dplyr", "flowCore", "foreach", "magrittr","mclust", "Rphenograph"), .combine = rbind) %dopar% {
-                              # # 用一个全局变量防止重复 sink
-                              # if (!exists(".log_started", envir = .GlobalEnv)) {
-                              #   assign(".log_started", TRUE, envir = .GlobalEnv)
-                              #
-                              #   pid <- Sys.getpid()
-                              #   log_file <- paste0("log_worker_", pid, ".txt")
-                              #
-                              #   # 尝试打开 sink
-                              #   try({
-                              #     sink(log_file, split = TRUE)
-                              #     sink(log_file, type = "message", append = TRUE)
-                              #   }, silent = TRUE)
-                              # }
-                              #
-                              # # 日志输出
-                              # pid <- Sys.getpid()
-                              # cat(sprintf("[%s] Worker PID %d started task %d\n", Sys.time(), pid, i))
-                              #
-                              #print(i)
+
                               ########### start data processing ###########
 
                               try(source("./processing.R"), silent = T)
-                              # set.seed(123)
-                              # if(file.exists(paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))) {
-                              #   load(paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))
-                              #   load(paste0(savepath, "/info_saved.RData"))
-                              #   dataFileNames <- info_saved$dataFileNames
-                              #   metadata  <-  info_saved$metadata
-                              #   index_TIclass  <-  info_saved$index_TIclass
-                              # } else {
+
                               AP2_comp_frame <- try(comp_anpela(data = AP2_pro0_frame, method = workflow[i,1], index = index_TIclass,
                                                                 spillpath = spillpath, spillname = spillname, FSC = FSC,  SSC = SSC,
                                                                 control.dir = control.dir, control.def.file = control.def.file,
@@ -666,7 +641,7 @@ oneStep_process_assess <- function(
                               names(res) <- names(AP2_sigcl_frame)
                               rm(AP2_sigcl_frame)
                               gc()
-                              # return(res)
+
 
                               if (save_processed_res == "one_folder"){
                                 if (!dir.exists(paste0(savepath, "/process_res"))) {
@@ -678,7 +653,7 @@ oneStep_process_assess <- function(
                                 }
                                 save(res, file = paste0(savepath, "/process_res/", rownames(workflow)[i], ".RData"))
                               }
-                              #}
+
                               ########### start workflow assessment ###########
 
                               if (studytype == "CSI") {
@@ -688,7 +663,6 @@ oneStep_process_assess <- function(
                                 try(source("./CSI/4plot.R"), silent = T)
 
                                 # AP2_processed_D_class
-                                # res <- data$AP2_pro1_frame_classTI[[i]]
                                 if (is.null(res)) {
                                   res <- data.frame(Ca = NA, Cb = NA, Cc = NA, Cd = NA)
                                   rownames(res) <- rownames(workflow)[i]
@@ -777,7 +751,6 @@ oneStep_process_assess <- function(
 
                                 # sub_cluster_label
                                 sub_cluster_label <- lapply(test_KNN$subdata_cluster_DEG, sub_cluster, FlowSeed = 40)
-                                # return(sub_cluster_label)
 
                                 gc()
 
@@ -1010,16 +983,8 @@ oneStep_process_assess <- function(
 
                                 return(res)
                               }
-
-
                             }
 
-  # # 关闭 sink（每个 worker 退出时关闭）
-  # parallel::clusterEvalQ(cl, {
-  #   try(sink(), silent = TRUE)
-  #   try(sink(type = "message"), silent = TRUE)
-  #   NULL
-  # })
 
   parallel::stopCluster(cl)
   print(proc.time()-time)

@@ -43,6 +43,7 @@
 #' \donttest{
 #' }
 
+
 CSIassess <- function(name = "result", data, respath,
                       clusteringM = c("FlowSOM", "PhenoGraph","Mclust"),
                       Phenograph_k = 30,
@@ -505,7 +506,6 @@ CSIassess <- function(name = "result", data, respath,
 
                                 # sub_cluster_label
                                 sub_cluster_label <- lapply(test_KNN$subdata_cluster_DEG, sub_cluster, FlowSeed = 40)
-                                # return(sub_cluster_label)
 
                                 gc()
 
@@ -658,3 +658,4 @@ CSIassess <- function(name = "result", data, respath,
   save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
   return(assess_res)
 }
+

@@ -319,7 +319,7 @@ Visualize <- function(
           }
         }
 
-        # 根据非空元素数量设置布局
+
         if (length(non_null_indices) > 1) {
           num_rows <- round(length(non_null_indices) / 2+ 1e-10)
           combined_plot <- combined_plot + patchwork::plot_layout(nrow = num_rows, ncol = 2)
@@ -327,7 +327,7 @@ Visualize <- function(
           num_rows <- 2
         }
 
-        # 打开 PNG 设备并保存组合后的图形
+
         grDevices::png(paste0(savepath, "/", studyname, "_", dataset_name, "_CSI_Cc_Volcano.png"),
                        bg = "white",
                        width = 12,

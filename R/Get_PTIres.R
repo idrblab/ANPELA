@@ -126,7 +126,7 @@ Get_PTIres <- function(
         colors <- grDevices::colorRampPalette(c("#eef4ed","#97c8c5","#4661a5","#183f7f"))(length(unique(timepoint)))
         grDevices::png(paste0(savepath, "/", dataset_name,"_PTI.png"),bg = "white",width = 10, height = 10,res=300, units ="in")
         plot(TIres[["dimRed"]], col = colors[as.factor(timepoint)],
-             pch=16, cex = 1.5,#点的形状和大小
+             pch=16, cex = 1.5,
              asp = 1,axes = T,xlab = "reduced dimension 1", ylab = "reduced dimension 2")
         lines(slingshot::SlingshotDataSet(TIres[["crv1"]]), lwd=6, col="grey40")
         legend("topright",

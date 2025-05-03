@@ -90,23 +90,23 @@ PTIassess <- function(name = "result", data, respath,
     #length(data$AP2_pro1_frame_classTI)
     table <- foreach::foreach(i = 1:length(data$AP2_pro1_frame_classTI), .options.snow = opts,
                               .packages = c("flowCore", "foreach", "dplyr", "igraph", "mclust"), .combine = rbind) %dopar% {
-                                try(source("./PTI/load_data2.R"))
-                                try(source("./PTI/TI_method.R"))
+                                try(source("./PTI/load_data2.R"), silent = T)
+                                try(source("./PTI/TI_method.R"), silent = T)
 
-                                try(source("./PTI/Bio_con_4.R"))
-                                try(source("./PTI/time_metric_3.R"))
-                                try(source("./PTI/Robustness_4.R"))
-                                try(source("./PTI/Rough_3.R"))
+                                try(source("./PTI/Bio_con_4.R"), silent = T)
+                                try(source("./PTI/time_metric_3.R"), silent = T)
+                                try(source("./PTI/Robustness_4.R"), silent = T)
+                                try(source("./PTI/Rough_3.R"), silent = T)
 
-                                try(source("./PTI/shift_start.R"))
-                                try(source("./PTI/calc_spline.R"))
-                                try(source("./PTI/cycle_pseudotime.R"))
-                                try(source("./PTI/reverse_pseudotime.R"))
+                                try(source("./PTI/shift_start.R"), silent = T)
+                                try(source("./PTI/calc_spline.R"), silent = T)
+                                try(source("./PTI/cycle_pseudotime.R"), silent = T)
+                                try(source("./PTI/reverse_pseudotime.R"), silent = T)
                                 try(source("./PTI/check_pairs.R"))
 
-                                try(source("./PTI/plot.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP-function.R"))
+                                try(source("./PTI/plot.R"), silent = T)
+                                try(source("./PTI/ANPELA_FLOWMAP.R"), silent = T)
+                                try(source("./PTI/ANPELA_FLOWMAP-function.R"), silent = T)
 
                                 # AP2_processed_D_TI
                                 index <- stringr::str_replace_all(data$index_TIclass, "\\(.*", "")
@@ -221,41 +221,23 @@ PTIassess <- function(name = "result", data, respath,
     table <- foreach::foreach(i = 1:length(datapath), .options.snow = opts,
                               .packages = c("flowCore", "foreach", "dplyr", "igraph", "mclust"), .combine = rbind) %dopar% {
 
-                                # # 用一个全局变量防止重复 sink
-                                # if (!exists(".log_started", envir = .GlobalEnv)) {
-                                #   assign(".log_started", TRUE, envir = .GlobalEnv)
-                                #
-                                #   pid <- Sys.getpid()
-                                #   log_file <- paste0(savepath, "/log_worker_", pid, ".txt")
-                                #
-                                #   # 尝试打开 sink
-                                #   try({
-                                #     sink(log_file, split = TRUE)
-                                #     sink(log_file, type = "message", append = TRUE)
-                                #   }, silent = TRUE)
-                                # }
-                                #
-                                # # 日志输出
-                                # pid <- Sys.getpid()
-                                # cat(sprintf("[%s] Worker PID %d started task %d\n", Sys.time(), pid, i))
+                                try(source("./PTI/load_data2.R"), silent = T)
+                                try(source("./PTI/TI_method.R"), silent = T)
 
-                                try(source("./PTI/load_data2.R"))
-                                try(source("./PTI/TI_method.R"))
+                                try(source("./PTI/Bio_con_4.R"), silent = T)
+                                try(source("./PTI/time_metric_3.R"), silent = T)
+                                try(source("./PTI/Robustness_4.R"), silent = T)
+                                try(source("./PTI/Rough_3.R"), silent = T)
 
-                                try(source("./PTI/Bio_con_4.R"))
-                                try(source("./PTI/time_metric_3.R"))
-                                try(source("./PTI/Robustness_4.R"))
-                                try(source("./PTI/Rough_3.R"))
+                                try(source("./PTI/shift_start.R"), silent = T)
+                                try(source("./PTI/calc_spline.R"), silent = T)
+                                try(source("./PTI/cycle_pseudotime.R"), silent = T)
+                                try(source("./PTI/reverse_pseudotime.R"), silent = T)
+                                try(source("./PTI/check_pairs.R"), silent = T)
 
-                                try(source("./PTI/shift_start.R"))
-                                try(source("./PTI/calc_spline.R"))
-                                try(source("./PTI/cycle_pseudotime.R"))
-                                try(source("./PTI/reverse_pseudotime.R"))
-                                try(source("./PTI/check_pairs.R"))
-
-                                try(source("./PTI/plot.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP.R"))
-                                try(source("./PTI/ANPELA_FLOWMAP-function.R"))
+                                try(source("./PTI/plot.R"), silent = T)
+                                try(source("./PTI/ANPELA_FLOWMAP.R"), silent = T)
+                                try(source("./PTI/ANPELA_FLOWMAP-function.R"), silent = T)
                                 # AP2_processed_D_TI
                                 index <- stringr::str_replace_all(info_saved$index_TIclass, "\\(.*", "")
                                 load(datapath[i])
@@ -354,14 +336,7 @@ PTIassess <- function(name = "result", data, respath,
                                 return(res)
                               }
 
-    # # 关闭 sink（每个 worker 退出时关闭）
-    # parallel::clusterEvalQ(cl, {
-    #   try(sink(), silent = TRUE)
-    #   try(sink(type = "message"), silent = TRUE)
-    #   NULL
-    # })
-    #
-    #
+
     parallel::stopCluster(cl)
     print(proc.time()-time)
     # parallel end
@@ -388,3 +363,4 @@ PTIassess <- function(name = "result", data, respath,
   save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
   return(assess_res)
 }
+

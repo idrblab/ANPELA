@@ -7,11 +7,8 @@ ANPELA_FLOWMAP <- function (mode = "multi",
                             seed.X = 1, savePDFs = FALSE, graph.out = "ForceDirected", 
                             which.palette = "bluered", dataset_name = NULL, exclude.pctile = NULL, target.pctile = NULL, 
                             target.number = NULL, target.percent = NULL, k = 10, umap.n.neighbors = 10, 
-                            umap.n.components = 2,iter2 = 1000,umap_min_dist =0.01, ...) #name.sort = TRUE,subsamples = 200,maximum = 5,savePDFs = TRUE,distance.metric = "manhattan",added:transform = FALSE,dataset_name =NULL,iter2 = 1000
-{
-  
- 
-  
+                            umap.n.components = 2,iter2 = 1000,umap_min_dist =0.01, ...) {
+
   #group fcs files by timepoints
   grouping <- sapply(names(files), function(x) gsub("[^0-9]", "", x))
   files <- split(files, grouping)#added
