@@ -21,7 +21,10 @@ dr_Rtsne.multicore <- function(X, dims = 2, initial_dims = 50,
   if(dims != 2) { stop("Only 2d output is supported due to its c++ implemenation!") }
   if (!is.logical(is_distance)) { stop("is_distance should be a logical variable") }
   if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.") }
-  if (all(!is_distance & nrow(X) - 1 < 3 * perplexity)) { stop("Perplexity is too large.") }
+  if (all(!is_distance & nrow(X) - 1 < 3 * perplexity)) {
+    # stop("Perplexity is too large.")
+    perplexity <- round((nrow(X) - 1)/4)
+  }
   if(!any(class(X) %in% c("dist","matrix"))) { stop("Input X must be matrix or a dist object") }
   if (!(max_iter>0)) { stop("Incorrect number of iterations.") }
 
@@ -71,7 +74,11 @@ run_slingshot <- function(D, drMethod = c("tSNE", "PCA", "diffMaps","FLOWMAP"),
                              DifMap_output <- destiny::DiffusionMap(D$expr)
                              data.frame(cbind(DifMap_output$DC1, DifMap_output$DC2))},
                            FLOWMAP ={
-                           
+                             #FPdir <- list.files("D:/OneDrive/IDRB/ANPELA/Case_Output_All/ABC_newProcess/")
+                             #fail_workflow <- list.files("D:/OneDrive/IDRB/ANPELA/Case_Output_All//ABC_newProcess")[599:645]
+                             # if (any(grepl(dataset_name, fail_workflow)==T)|all(grepl(dataset_name, FPdir)==F)) {
+                             #   data.frame()
+                             # } else {
                              FLOWMAP_output_list <<- try(BBmisc::suppressAll(do.call(ANPELA_FLOWMAP,
                                                                                      list(files = D$expr, clustering.var = clustering.var,
                                                                                           subsamples = subsamples, cluster.numbers = cluster.numbers))),
@@ -81,23 +88,35 @@ run_slingshot <- function(D, drMethod = c("tSNE", "PCA", "diffMaps","FLOWMAP"),
                              } else {
                                FLOWMAP_output <<- FLOWMAP_output_list$FLOWMAP_output
                                data.frame(cbind(FLOWMAP_output[,"x"], FLOWMAP_output[,"y"]))
+                               # }
+                               # FPdir <- list.files("D:/OneDrive/IDRB/ANPELA/Case_Output_All/ABC_newProcess/")
+                               # FPpath <- paste0("D:/OneDrive/IDRB/ANPELA/Case_Output_All/ABC_newProcess/",
+                               #                  FPdir[grepl(dataset_name, FPdir)])
+                               # dataFiles <- list.files(FPpath, pattern = ".csv$", full.names = TRUE)
+                               # FLOWMAP_output <- read.csv(dataFiles)
+                               # FLOWMAP_output[,c("x","y")]
                              }
-                           }
+                           }#flowmap
   )
 
   # 2nd step => trajectory inference
   # Clustering
+  #cl1 <- kmeans(data_drMethod, centers = 9)$cluster
   set.seed(1)
   library(mclust, quietly = TRUE)
   BBmisc::suppressAll(cl1 <- mclust::Mclust(data_drMethod)$classification)
+  #cl1 <- FlowSOM_integrate2cytofkit2(data_drMethod, 14)
 
+  #判断起点
   if (drMethod == "FLOWMAP"){
     cl1_time <- cbind(data.frame(cl1),data.frame(FLOWMAP_output$Time))
   } else {
     cl1_time <- cbind(data.frame(cl1),data.frame(D[["timepoint"]]))
   }
+  # 筛选出 Time 等于 0 的行
   colnames(cl1_time) <- c("cl1","timepoint")
   time_zero_data <- cl1_time[cl1_time$timepoint == sort(unique(cl1_time$timepoint))[1], ]
+  # 找出数量最多的聚类类别
   most_common_cluster <- names(which.max(table(time_zero_data$cl1)))
 
   # Mapping

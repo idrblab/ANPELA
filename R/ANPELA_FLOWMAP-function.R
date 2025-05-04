@@ -21,14 +21,14 @@ ANPELA_MultiUpsample <- function (file.names, FLOWMAP.clusters, fcs.files, var.r
                                     k = 1)
       fixed.counts <- table(all.cells.assign[["nn.idx"]])
       fixed.counts <- as.data.frame(as.matrix(fixed.counts))
-      ########new added-start#####
+
       if (length(fixed.counts) < length(cluster.medians$cluster)) {
         missing.cluster <- setdiff(cluster.medians$cluster,
                                    all.cells.assign$nn.idx)
         new.cluster <- data.frame(V1 = rep(0,length(missing.cluster)), row.names = missing.cluster)
         fixed.counts <- rbind(fixed.counts, new.cluster)
       }
-      ######new added-end######
+
       colnames(fixed.counts) <- c("Counts")
       fixed.FLOWMAP.clusters[[t]]$cluster.counts[[f]]$Counts <- fixed.counts
       rm(original.fcs.file, downsample.fcs.file, cluster.assign,
@@ -52,9 +52,7 @@ ANPELA_MakeOutFolder <- function (dataset_name,runtype, maximum, minimum, k = ""
     } else {output.folder <- paste(dataset_name,"iter2",iter2, "max", maximum, "_k", k,
                                    sep = "_")
     }
-    #new added-end
-    # output.folder <- paste("max", maximum, "_k", k, name,
-    #                        runtype, "run", sep = "_")
+
     print(output.folder)
     dir.create(output.folder)
     cat("output.folder is", output.folder, "\n")
@@ -76,53 +74,37 @@ ANPELA_MakeOutFolder <- function (dataset_name,runtype, maximum, minimum, k = ""
 ANPELA_RunForceDirectedLayout <- function (mode, graph, orig.times = NULL, which.palette = NULL,iter2 = 1000) ##new added iter2 = 1000;delete:file.name
 {
   graph.xy <- ANPELA_ForceDirectedXY(graph = graph,iter2 = iter2)#new added
-  #graph.xy <- ForceDirectedXY(graph = graph)
-  #file.name.xy <- paste(file.name, "xy", sep = "_")
-  # final.file.name <- ConvertToGraphML(output.graph = graph.xy,
-  #                                     file.name = file.name.xy)
-  #fixed.file.name <- paste(file.name.xy, "orig_time", sep = "_")
+
   if (mode != "one" && mode != "one-special") {
     fixed.graph <- FLOWMAPR:::ConvertOrigTime(graph.xy, orig.times)
   } else {
     fixed.graph <- graph.xy
   }
-  # fixed.file <- ConvertToGraphML(output.graph = fixed.graph,
-  #                                file.name = fixed.file.name)
+
   all.attr <- igraph::get.vertex.attribute(fixed.graph)
   this.df <- c()
   for (x in 1:length(all.attr)) {
     this.df <- cbind(this.df, all.attr[[x]])
     this.df <- as.data.frame(this.df)
   }
-  colnames(this.df) <- names(all.attr)#added
-  #FLOWMAPR:::ExportClusterTables(output.graph = fixed.graph, file.name = fixed.file.name)
+  colnames(this.df) <- names(all.attr)
 
-  # if (savePDFs) {
-  #   cat("Printing pdfs.", "\n")
-  #   FLOWMAPR:::ConvertToPDF(graphml.file = fixed.file, which.palette = which.palette)
-  # }
   return(this.df)
 }
 
 #ANPELA_ForceDirectedXY---------------------------------------------------
-ANPELA_ForceDirectedXY <- function (graph,iter2 = 1000) ##new added iter2 = 1000
+ANPELA_ForceDirectedXY <- function (graph,iter2 = 1000)
 {
-  #set.seed(123)
+
   igraph::V(graph)$size <- rep(20, igraph::vcount(graph))
   force.graph1 <- ANPELA_layout_forceatlas2(graph, iter = 10000,
                                            stopping.tolerance = 0.001, prevent.overlap = FALSE)
   graph.with.xy <- graph
   igraph::V(graph.with.xy)$x <- force.graph1$lay[, 1]
   igraph::V(graph.with.xy)$y <- force.graph1$lay[, 2]
-  # set.seed(1)
+
   force.graph2 <- ANPELA_layout_forceatlas2(graph.with.xy,
                                            iter = iter2, stopping.tolerance = 0.001, prevent.overlap = TRUE)#new added
-  # for (i in 1:10) {
-  #   set.seed(i)
-  #   force.graph2 <- ANPELA_layout_forceatlas2(graph.with.xy,
-  #                                            iter = iter2, stopping.tolerance = 0.001, prevent.overlap = T)
-  #   if (!any(is.na(force.graph2$lay[, 1]))) {break}
-  # }
 
   igraph::V(graph.with.xy)$x <- force.graph2$lay[, 1]
   igraph::V(graph.with.xy)$y <- force.graph2$lay[, 2]
@@ -167,15 +149,13 @@ ANPELA_LoadMultiCleanFCS <- function (list.of.file.names, channel.remove, channe
     }
     list.of.FCS.files[[t]] <- ANPELA_LoadCleanFCS(fcs.file.names,
                                                   channel.remove, channel.annotate, subsamples, transform)#added
-    # list.of.FCS.files[[t]] <- LoadCleanFCS(fcs.file.names,
-    #                                        channel.remove, channel.annotate, subsamples, transform)
+
     f.names <- c()
     for (i in 1:length(list.of.FCS.files[[t]])) {
       Time <- rep(as.numeric(t), times = dim(list.of.FCS.files[[t]][[i]])[1])
       list.of.FCS.files[[t]][[i]] <- cbind.data.frame(list.of.FCS.files[[t]][[i]],
                                                       Time, stringsAsFactors = FALSE)
-      this.name <- names(fcs.file.names)[i]#added
-      #this.name <- basename(fcs.file.names[i])
+      this.name <- names(fcs.file.names)[i]
       this.name <- gsub(".fcs", "", this.name)
       if (grepl("-", this.name)) {
         this.name <- unlist(strsplit(this.name, split = "-"))[1]
@@ -211,26 +191,24 @@ ANPELA_LoadCleanFCS <- function (fcs.file.names, channel.remove, channel.annotat
     subsamples <- subsamples
   }
   for (i in 1:length(fcs.file.names)) {
-    current.file <- names(fcs.file.names)[i]#added
-    # current.file <- tail(strsplit(fcs.file.names[i], "/")[[1]],
-    #                      n = 1)# "EB_Diff-Day00.fcs"
+    current.file <- names(fcs.file.names)[i]
+
     cat("Reading FCS file data from:", current.file, "\n")
     if (length(subsamples) == 1) {
       if (subsamples == FALSE) {
-        fcs.file <-fcs.file.names[[i]]#added
-        #fcs.file <- read.FCS(fcs.file.names[i])
+        fcs.file <-fcs.file.names[[i]]
+
         if(class(fcs.file) == "data.frame"){
           fcs.file <- as.data.frame(fcs.file)
         } else {
           fcs.file <- as.data.frame(exprs(fcs.file))
-        }#added
-        #fcs.file <- as.data.frame(exprs(fcs.file))
+        }
         print(nrow(fcs.file))
       } else {
         cat("Subsampling", current.file, "to", subsamples[i],
             "cells\n")
-        fcs.file <-fcs.file.names[[i]]#added
-        #fcs.file <- read.FCS(fcs.file.names[i])
+        fcs.file <-fcs.file.names[[i]]
+
         fcs.file <- as.data.frame(exprs(fcs.file))
         subsample.ids <- runif(subsamples[i], min = 1,
                                max = nrow(fcs.file))
@@ -240,20 +218,15 @@ ANPELA_LoadCleanFCS <- function (fcs.file.names, channel.remove, channel.annotat
     } else {
       cat("Subsampling", current.file, "to", subsamples[i],
           "cells\n")
-      fcs.file <-fcs.file.names[[i]]#added
-      #fcs.file <- read.FCS(fcs.file.names[i])
+      fcs.file <-fcs.file.names[[i]]
+
       fcs.file <- as.data.frame(exprs(fcs.file))
       subsample.ids <- runif(subsamples[i], min = 1, max = nrow(fcs.file))
       fcs.file <- fcs.file[subsample.ids, ]
       rownames(fcs.file) <- c(1:nrow(fcs.file))
     }
     global.colnames.pre.fix <<- colnames(fcs.file)
-    # cat("Fixing channel names from:", current.file, "\n")
-    # for (x in 1:length(colnames(fcs.file))) {
-    #   if (exists(colnames(fcs.file)[x], where = channel.annotate)) {
-    #     colnames(fcs.file)[x] <- channel.annotate[[colnames(fcs.file)[x]]]
-    #   }
-    # }
+
     cat("Removing unnecessary channel names from:", current.file,
         "\n")
     fcs.file <- subset(fcs.file, select = colnames(fcs.file)[!colnames(fcs.file) %in%
@@ -321,9 +294,7 @@ ANPELA_MultiClusterFCS <- function (list.of.files, clustering.var, numcluster, d
       stop("Cluster number not specified for all FCS files!")
     }
     file.clusters <- ANPELA_ClusterFCS(fcs.files, clustering.var,
-                                       numcluster, distance.metric, cluster.mode)#added
-    # file.clusters <- ClusterFCS(fcs.files, clustering.var,
-    #                             numcluster, distance.metric, cluster.mode)
+                                       numcluster, distance.metric, cluster.mode)
     list.of.FLOWMAP.clusters[[t]] <- file.clusters
   }
   return(list.of.FLOWMAP.clusters)
@@ -471,14 +442,11 @@ ANPELA_BuildMultiFLOWMAPkNN <- function (remodel.FLOWMAP.clusters, k, min, max, 
                                           nrow = length(unlist(knn.out$indexes[1]))))
   knn.out$distances <- as.data.frame(matrix(unlist(knn.out$distances),
                                             nrow = length(unlist(knn.out$distances[1]))))
-  # for (i in 1:nrow(knn.out$indexes)) knn.out$indexes[i, ] <- knn.out$indexes[i, order(unlist(knn.out$distances[i, ]))]
-  # for (i in 1:nrow(knn.out$distances)) knn.out$distances[i, ] <- knn.out$distances[i, ][order(unlist(knn.out$distances[i, ]))]
 
-  #github update
   dist_order = t(apply(knn.out$distances, 1, order))
   for(i in 1:nrow(knn.out$indexes)) knn.out$indexes[i,] <- knn.out$indexes[i,dist_order[i,]] #order indexes by increasing distance (necessary to incorporate second timepoint connections into overall order)
   for(i in 1:nrow(knn.out$distances)) knn.out$distances[i,] <- knn.out$distances[i,][dist_order[i,]] #increasing order distances
-  #github update end
+
 
   knn.out$indexes <- as.data.frame(matrix(unlist(knn.out$indexes),
                                           nrow = length(unlist(knn.out$indexes[1]))))
@@ -488,7 +456,7 @@ ANPELA_BuildMultiFLOWMAPkNN <- function (remodel.FLOWMAP.clusters, k, min, max, 
   global.knn.out <<- knn.out
   global.pre.output.graph <<- output.graph
   output.graph.final <- igraph::graph.empty()
-  vertices.edges <- igraph::as_edgelist(output.graph) #get.edgelist
+  vertices.edges <- igraph::as_edgelist(output.graph)
   vertices.edges <- as.matrix(data.frame(lapply(data.frame(vertices.edges),
                                                 function(x) as.numeric(as.character(x)))))
   output.graph.final <- igraph::graph_from_edgelist(vertices.edges,
@@ -579,13 +547,13 @@ ANPELA_ConnectSubgraphs <- function (output.graph, edge.list, offset, table.brea
   time.prox.graph <- igraph::set_vertex_attr(time.prox.graph,
                                      "name", index = igraph::V(time.prox.graph), as.character(offset:table.breaks[n +
                                                                                                             2]))
-  subgraphs.ls <- igraph::decompose(time.prox.graph)#yuan decompose.graph
+  subgraphs.ls <- igraph::decompose(time.prox.graph)
   y <- 0
   to.add.df <- NA
   while (length(subgraphs.ls) >= 2) {
     y <- y + 1
     print(y)
-    if (length(igraph::as_edgelist(subgraphs.ls[[2]])) != 0) {  #yuan get.edgelist
+    if (length(igraph::as_edgelist(subgraphs.ls[[2]])) != 0) {
       print("in loop")
       rownames(clusters) <- c(offset:table.breaks[n +
                                                     2])
@@ -652,7 +620,7 @@ ANPELA_ConnectSubgraphs <- function (output.graph, edge.list, offset, table.brea
       break
     }
   }
-  if (any(!is.na(to.add.df))) {#yuan any
+  if (any(!is.na(to.add.df))) {
     output.graph.update <- igraph::graph.empty()
     og.el <- igraph::as_edgelist(output.graph)
     colnames(og.el) <- c("id", "index")
@@ -695,8 +663,8 @@ ANPELA_RunUMAPlayout <- function (graph, knn.in, file.clusters, clustering.var, 
   knn[["dist"]] <- as.matrix(knn.in$distances[, 1:umap_n_neighbors])
   umap.out <- uwot::umap(file.clusters$full.clusters, ret_nn = TRUE,
                          nn_method = knn, verbose = TRUE, n_components = umap_n_components,
-                         min_dist=umap_min_dist, spread=1)#yuan min.dist=0.01, spread=1
-  #yuan
+                         min_dist=umap_min_dist, spread=1)
+
   all.attr <- igraph::get.vertex.attribute(graph)
   this.df <- c()
   for (x in 1:length(all.attr)) {
@@ -707,112 +675,7 @@ ANPELA_RunUMAPlayout <- function (graph, knn.in, file.clusters, clustering.var, 
   colnames(umap.out$embedding) <- c("x", "y")
   this.df <- cbind(this.df, umap.out$embedding)
   return(this.df)
-  # cat("ran UMAP, outputting files\n")
-  # diff.file.var <- c()
-  # for (i in 1:length(file.clusters$table.lengths)) {
-  #   diff.file.var <- append(diff.file.var, rep(i, file.clusters$table.lengths[i]))
-  # }
-  # if (umap_n_components == 2) {
-  #   data.table::fwrite(umap.out$nn$precomputed$idx, file = "UMAP_knn_indexes.csv",
-  #                      row.names = FALSE, col.names = FALSE, sep = ",")
-  #   data.table::fwrite(umap.out$nn$precomputed$dist, file = "UMAP_knn_distances.csv",
-  #                      row.names = FALSE, col.names = FALSE, sep = ",")
-  #   colnames(umap.out$embedding) <- c("umap_x", "umap_y")
-  #   data.table::fwrite(umap.out$embedding, file = "UMAP_layout.csv",
-  #                      row.names = FALSE, col.names = TRUE, sep = ",")
-  #   FLOWMAPR:::ExportClusterTables(output.graph = graph, file.name = file.name)
-  #   print("Generating 2D layouts colored by cluster")
-  #   umap.layout <- data.frame(cbind(umap.out$embedding,
-  #                                   diff.file.var))
-  #   colnames(umap.layout) <- c("umap_x", "umap_y", "file_var")
-  #   umap.layout$file_var <- as.factor(umap.layout$file_var)
-  #   cluster.size <- igraph::get.vertex.attribute(graph,
-  #                                                "percent.total", index = V(graph))
-  #   cluster.size <- (cluster.size/max(cluster.size)) * (4 -
-  #                                                         1) + 1
-  #   umap.layout$cluster_size <- cluster.size
-  #   PLOT.HEIGHT <- 10
-  #   PLOT.WIDTH <- 10
-  #   ggplot2::ggsave(paste0("umap_layout_TIME", ".png"),
-  #                   plot = ggplot2::ggplot(umap.layout, ggplot2::aes_string(x = "umap_x",
-  #                                                                           y = "umap_y", color = "file_var")) + ggplot2::geom_point(size = umap.layout$cluster_size *
-  #                                                                                                                                      0.1, alpha = 0.2) + ggplot2::geom_jitter() +
-  #                     ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
-  #                                    panel.grid.minor = ggplot2::element_blank(),
-  #                                    panel.background = ggplot2::element_blank(),
-  #                                    axis.line = ggplot2::element_line(colour = "black")),
-  #                   height = PLOT.HEIGHT, width = PLOT.WIDTH)
-  #   if (mode %in% c("multi", "static-multi")) {
-  #     condition.chr.id <- igraph::get.vertex.attribute(graph,
-  #                                                      "Condition", index = V(graph))
-  #     umap.layout$condition.chr.id <- as.factor(condition.chr.id)
-  #     ggplot2::ggsave(paste0("umap_layout_CONDITION",
-  #                            ".png"), plot = ggplot2::ggplot(umap.layout,
-  #                                                            ggplot2::aes_string(x = "umap_x", y = "umap_y",
-  #                                                                                color = "condition.chr.id")) + ggplot2::geom_point(size = umap.layout$cluster_size *
-  #                                                                                                                                     0.2, alpha = 0.4) + ggplot2::geom_jitter() +
-  #                       ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
-  #                                      panel.grid.minor = ggplot2::element_blank(),
-  #                                      panel.background = ggplot2::element_blank(),
-  #                                      axis.line = ggplot2::element_line(colour = "black")),
-  #                     height = PLOT.HEIGHT, width = PLOT.WIDTH)
-  #   }
-  #   print("Generating 2D layouts colored by marker expression")
-  #   clusters.exprs <- file.clusters$full.clusters[, which(colnames(file.clusters$full.clusters) !=
-  #                                                           "Condition")]
-  #   umap.layout <- data.frame(cbind(umap.layout, clusters.exprs))
-  #   umap.layout <- reshape2::melt(umap.layout, id.vars = c("umap_x",
-  #                                                          "umap_y", "file_var", "cluster_size"), measure.vars = colnames(data.frame(clusters.exprs)))
-  #   basic_plot <- function(umap.layout) {
-  #     ggplot2::ggplot(umap.layout, ggplot2::aes_string(x = "umap_x",
-  #                                                      y = "umap_y", color = "value")) + ggplot2::geom_point(size = umap.layout$cluster_size/15,
-  #                                                                                                            alpha = 0.2) + ggplot2::scale_color_viridis_c() +
-  #       ggplot2::ggtitle(umap.layout$variable) + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
-  #                                                               panel.grid.minor = ggplot2::element_blank(),
-  #                                                               panel.background = ggplot2::element_blank(),
-  #                                                               axis.line = ggplot2::element_line(colour = "black"))
-  #   }
-  #   pdf("umap_feature_heatmaps.pdf", width = 20, height = 2 *
-  #         round(length(clusters.exprs)/4))
-  #   do.call(gridExtra::grid.arrange, args = list(grobs = by(umap.layout,
-  #                                                           umap.layout$variable, basic_plot), nrow = round((length(clusters.exprs)/5) +
-  #                                                                                                             0.49)))
-  #   dev.off()
-  # }
-  # else if (umap_n_components == 3) {
-  #   data.table::fwrite(umap.out$nn$precomputed$idx, file = "UMAP_knn_indexes_3D.csv",
-  #                      row.names = FALSE, col.names = FALSE, sep = ",")
-  #   data.table::fwrite(umap.out$nn$precomputed$dist, file = "UMAP_knn_distances_3D.csv",
-  #                      row.names = FALSE, col.names = FALSE, sep = ",")
-  #   colnames(umap.out$embedding) <- c("umap_x", "umap_y",
-  #                                     "umap_z")
-  #   data.table::fwrite(umap.out$embedding, file = "UMAP_layout_3D.csv",
-  #                      row.names = FALSE, col.names = TRUE, sep = ",")
-  #   print("Generating 3D layouts")
-  #   umap.layout <- data.frame(cbind(umap.out$embedding,
-  #                                   diff.file.var))
-  #   colnames(umap.layout) <- c("umap_x", "umap_y", "umap_z",
-  #                              "file_var")
-  #   umap.layout$file_var <- as.factor(umap.layout$file_var)
-  #   cluster.size <- igraph::get.vertex.attribute(graph,
-  #                                                "percent.total", index = V(graph))
-  #   cluster.size <- (cluster.size/max(cluster.size)) * (3) +
-  #     3
-  #   umap.layout$cluster_size <- cluster.size
-  #   global.umap.layout <<- umap.layout
-  #   print("Generating 3D layouts colored by cluster")
-  #   p <- plotly::plot_ly(data = umap.layout, x = ~umap_x,
-  #                        y = ~umap_y, z = ~umap_z, color = ~file_var, opacity = 0.5,
-  #                        colors = c("lightseagreen", "gray50", "darkgreen",
-  #                                   "red4", "red", "turquoise4", "black", "yellow4",
-  #                                   "royalblue1", "lightcyan3", "peachpuff3", "khaki3",
-  #                                   "gray20", "orange2", "royalblue4", "yellow3",
-  #                                   "gray80", "darkorchid1", "lawngreen", "plum2",
-  #                                   "darkmagenta"), type = "scatter3d", mode = "markers",
-  #                        marker = list(size = cluster.size, width = 1))
-  #   htmlwidgets::saveWidget(plotly::as.widget(p), paste0("umap_layout_3d_plotly",
-  #                                                        ".html"))
-  # }
+
 }
 
 #ANPELA_layout_forceatlas2---------------------------------------------------
@@ -952,32 +815,4 @@ ANPELA_AnnotateMultiGraph <- function (output.graph, list.of.FLOWMAP.clusters, l
   global.output.graph <<- output.graph
   return(output.graph)
 }
-
-#(待改)ANPELA_ConstructVarAnnotate---------------------------------------------------
-ANPELA_ConstructVarAnnotate <- function (FCS.file.name)
-{ fcs.file <- FCS.file.name
-#fcs.file <- read.FCS(FCS.file.name)
-fcs.file.matrix <- exprs(fcs.file)
-channel.names <- c()
-marker.names <- c()
-var.annotate <- list()
-for (i in 1:length(names(colnames(fcs.file.matrix)))) {
-  this.name <- names(colnames(fcs.file.matrix))[i]
-  channel.names <- c(channel.names, description(fcs.file)[[this.name]])
-  this.name <- gsub(this.name, pattern = "N", replacement = "S")
-  marker.names <- c(marker.names, description(fcs.file)[[this.name]])
-  rm(this.name)
-}
-for (i in 1:length(marker.names)) {
-  if (marker.names[i] == " ") {
-    marker.names[i] <- channel.names[i]
-  }
-  temp <- gsub(marker.names[i], pattern = "-", replacement = "_")
-  temp <- gsub(temp, pattern = " ", replacement = "_")
-  temp <- gsub(temp, pattern = "/", replacement = "_")
-  var.annotate[[channel.names[i]]] <- temp
-}
-return(var.annotate)
-}
-
 

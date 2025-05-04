@@ -571,7 +571,7 @@ oneStep_process_assess <- function(
                               ########### start data processing ###########
 
                               try(source("./processing.R"), silent = T)
-
+                              set.seed(123)
                               AP2_comp_frame <- try(comp_anpela(data = AP2_pro0_frame, method = workflow[i,1], index = index_TIclass,
                                                                 spillpath = spillpath, spillname = spillname, FSC = FSC,  SSC = SSC,
                                                                 control.dir = control.dir, control.def.file = control.def.file,
