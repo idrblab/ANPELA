@@ -443,6 +443,27 @@ Visualize <- function(
           }
         } else {
           PTI_Ca_Plot_time <- try(dr_multi(TIres, AP2_processed_D_TI), silent = T)
+          if (grepl("FLOWMAP", TIM)){
+            timepoint <- TIres[["timepoint"]]
+          } else {
+            timepoint <- AP2_processed_D_TI$timepoint
+          }
+          colors <- grDevices::colorRampPalette(c("#eef4ed","#97c8c5","#4661a5","#183f7f"))(length(unique(timepoint)))
+          PTI_Ca_Plot_time <-  try(plot(TIres[["dimRed"]], col = colors[as.factor(timepoint)],
+                                        pch=16, cex = 1.5,
+                                        asp = 1,axes = T,xlab = "reduced dimension 1", ylab = "reduced dimension 2"), silent = T)
+          lines(slingshot::SlingshotDataSet(TIres[["crv1"]]), lwd=6, col="grey40")
+          par(xpd = TRUE)
+          legend(x = "topright", y = NULL, bty = "n",
+                 title = "Time point",
+                 legend = levels(as.factor(timepoint)),
+                 col = colors,
+                 horiz = T,
+                 pch = 16,
+                 cex = 1,
+                 inset = c(0, -0.075)
+          )
+          par(xpd = FALSE)
         }
         if (any(class(PTI_Ca_Plot_time) == "try-error")) {
           print(errorplot)

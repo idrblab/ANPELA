@@ -129,11 +129,17 @@ Get_PTIres <- function(
              pch=16, cex = 1.5,
              asp = 1,axes = T,xlab = "reduced dimension 1", ylab = "reduced dimension 2")
         lines(slingshot::SlingshotDataSet(TIres[["crv1"]]), lwd=6, col="grey40")
-        legend("topright",
+        par(xpd = TRUE)
+        legend(x = "topright", y = NULL, bty = "n",
+               title = "Time point",
                legend = levels(as.factor(timepoint)),
                col = colors,
-               inset=0.8,
-               pch = 16)
+               horiz = T,
+               pch = 16,
+               cex = 1,
+               inset = c(0, -0.075)
+        )
+        par(xpd = FALSE)
         if(class(TIres) == "try-error"){
           print(errorplot)
         }
@@ -142,4 +148,3 @@ Get_PTIres <- function(
     }
   }
 }
-

@@ -1,20 +1,35 @@
-library(ggplot2)
-library(igraph)
 dr_multi <- function(TIres, D){
   if (TIres[["dr_method"]] == "FLOWMAP"){
     timepoint <- TIres$timepoint
   } else {
     timepoint <- D$timepoint
   }
-  colors <- colorRampPalette(c("#eef4ed","#97c8c5","#4661a5","#183f7f"))(length(unique(timepoint)))
+  colors <- colorRampPalette(c("#eef4ed","#97c8c5","#4661a5","#183f7f"))(length(unique(D$timepoint)))
   point_colors <- colors[as.factor(timepoint)]
-
-  plot(TIres$dimRed, col = point_colors,
-      pch=16, cex = 1.2,
-      asp = 1,axes = T,xlab = "reduced dimension 1", ylab = "reduced dimension 2")
-  lines(slingshot::SlingshotDataSet(TIres$crv1), lwd=6, col="grey40")
+  if (!is.null(TIres$linInd)) {
+    current_curve <- TIres$linInd
+    sds <- slingshot::SlingshotDataSet(TIres$crv1)
+    curve_weights <- sds@curves[[current_curve]]$w
+    curve_points <- which(curve_weights > 0)
+    point_colors[-curve_points] <- "grey80"
+  }
+  dr.plot <- plot(TIres$dimRed, col = point_colors,
+                  pch=16, cex = 1.2,
+                  asp = 1, axes = T,xlab = "reduced dimension 1", ylab = "reduced dimension 2")
+  if (!is.null(TIres$linInd)) {
+    lines(slingshot::SlingshotDataSet(TIres$crv1)@curves[[TIres$linInd]], lwd=6, col="grey40")
+  } else {
+    check <- try(lines(slingshot::SlingshotDataSet(TIres$crv1), lwd=6, col="grey40"), silent = T)
+    if(class(check) == "try-error"){
+      traj_num <- length(slingshot::SlingshotDataSet(TIres$crv1)@curves)
+      for (i in seq(traj_num)) {
+        dr.plot <- lines(slingshot::SlingshotDataSet(TIres$crv1)@curves[[i]], lwd=6, col="grey40")
+      }
+    }
+  }
   par(xpd = TRUE)  
   legend(x = "topright", y = NULL, bty = "n",
+         title = "Time point",
          legend = levels(as.factor(timepoint)),
          col = colors,
          horiz = T,
@@ -23,8 +38,8 @@ dr_multi <- function(TIres, D){
          inset = c(0, -0.05) 
   )
   par(xpd = FALSE) 
+  return(dr.plot)
 }
-
 
 dr <- function(TIres, D, sub = F, seed = 3, cell.subset = 0.2){
   
@@ -154,7 +169,7 @@ abund_pt_single <- function(to_plot, prot, dat) {
 
 robustness_new_plot <- function(input_matrix, finalMatrix, method = method) {
   plist <- list()
-  time_point <- initial_order <- subset_order <- try(as.data.frame(matrix(nrow = nrow(finalMatrix[[1]]$pseudotime), ncol = length(finalMatrix))))
+  time_point <- initial_order <- subset_order <- try(as.data.frame(matrix(nrow = nrow(as.matrix(finalMatrix[[1]]$pseudotime)), ncol = length(finalMatrix))))
   if (class(initial_order) == "try-error") {
     time_point <- initial_order <- subset_order <- as.data.frame(matrix(nrow = length(finalMatrix[[1]]$pseudotime), ncol = length(finalMatrix)))
   }
