@@ -47,11 +47,17 @@ Bio_con <- function(D, Pathway_Hierarchy_file = NULL, nruns = 3, dr_method = NUL
     for (k in 1:nruns){
       # sort the plot values in ascending pseudotime order
       ix <- order(finalMatrix[[k]]$pseudotime)
-      dat <- D$expr[ix,]
-      Pseudotime <- finalMatrix[[k]]$pseudotime[ix]
-      if (finalMatrix[[k]]$lineages > 1){
-        print(paste0("The algorithm ", TIres$cr_method, " with ", TIres$dr_method, " returned a branching trajectory. Cannot calculate the metric under Criterion Cd!"))
-        return(paste0("The algorithm ", TIres$cr_method, " with ", TIres$dr_method, " returned a branching trajectory. Cannot calculate the metric under Criterion Cd!"))
+      if (length(ix) != nrow(D$expr)) {
+        ix <- order(apply(finalMatrix[[k]]$pseudotime, 1, function(x){
+          mean(x, na.rm = T)
+        }))
+        dat <- D$expr[ix,]
+        Pseudotime <- apply(finalMatrix[[k]]$pseudotime, 1, function(x){
+          mean(x, na.rm = T)
+        })[ix]
+      } else {
+        dat <- D$expr[ix,]
+        Pseudotime <- finalMatrix[[k]]$pseudotime[ix]
       }
       
       # rescale pseudotime to [0,1] for the figures between algorithms to be comparable

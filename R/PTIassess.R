@@ -131,7 +131,7 @@ PTIassess <- function(name = "result", data, respath,
                                 # TIres
                                 TIres <- try(TI(AP2_processed_D_TI, method = TIM,
                                                 dataset_name = dataset_name, clustering.var = clustering.var)) #flowmap
-                                print(paste0("TIres","_",i))
+
                                 if(class(TIres) == "try-error") {
                                   res <- data.frame(Tm = NA, R_pvalue = NA, Rob = NA, BC = NA)
                                   rownames(res) <- names(data$AP2_pro1_frame_classTI)[i]
@@ -201,7 +201,7 @@ PTIassess <- function(name = "result", data, respath,
 
                                 res <- data.frame(Tm, R_pvalue, Rob, BC)
                                 rownames(res) <- names(data$AP2_pro1_frame_classTI)[i]
-                                print(paste0("res","_",i))
+
                                 return(res)
                               }
 
@@ -260,11 +260,10 @@ PTIassess <- function(name = "result", data, respath,
 
                                 # TIres
                                 TIres <- try(TI(D = AP2_processed_D_TI, method = TIM,  dataset_name = dataset_name,clustering.var =clustering.var))
-                                print(paste0("TIres","_",i))
+
                                 if(class(TIres) == "try-error") {
                                   res <- data.frame(Tm = NA, R_pvalue = NA, Rob = NA, BC = NA)
                                   rownames(res) <- limma::removeExt(basename(datapath), sep=".")[i]
-                                  print(paste0("TIres","_",i,"error:",TIres))
                                   return(res)
                                 }
 
@@ -277,7 +276,7 @@ PTIassess <- function(name = "result", data, respath,
                                 } else {
                                   Tm <- round(Tm, 5)
                                 }
-                                print(paste0("TIres","_",i,"_Ca:",Tm))
+
 
                                 # Criterion B Roughness-Roughness
                                 R <- try(Rough(TIres, AP2_processed_D_TI), silent = T)
@@ -292,7 +291,7 @@ PTIassess <- function(name = "result", data, respath,
                                   }
                                 }
                                 rm(R)
-                                print(paste0("TIres","_",i,"_Cb:",R_pvalue))
+
 
                                 # Criterion C Robustness-Robustness
                                 Rob0 <- try(Robustness(TIres, AP2_processed_D_TI, nruns = 4, cell.subset = 0.8, clustering.var = clustering.var,
@@ -307,7 +306,7 @@ PTIassess <- function(name = "result", data, respath,
                                 }
 
                                 rm(Rob0)
-                                print(paste0("TIres","_",i,"_Cc:",Rob))
+
 
                                 # Criterion D Biological Meaning-Biological consistency
                                 if (!is.null(pathwayhierarchy) && file.exists(pathwayhierarchy)) {
@@ -325,7 +324,7 @@ PTIassess <- function(name = "result", data, respath,
                                     BC <- round(BC, 5)
                                   }
                                 } else BC <- NA
-                                print(paste0("TIres","_",i,"_Cd:",BC))
+
 
                                 rm(AP2_processed_D_TI, TIres)
                                 gc()
@@ -363,4 +362,3 @@ PTIassess <- function(name = "result", data, respath,
   save(assess_res, file = paste0(savepath, "/assess_res/", name, "_assess.RData"))
   return(assess_res)
 }
-
